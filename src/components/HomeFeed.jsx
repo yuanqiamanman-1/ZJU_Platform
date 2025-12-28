@@ -7,6 +7,8 @@ import useSWR from 'swr';
 import { fetcher } from '../services/api';
 import { Helmet } from 'react-helmet-async';
 import SmartImage from './SmartImage';
+import { useSettings } from '../context/SettingsContext';
+import { useBackClose } from '../hooks/useBackClose';
 
 const getHighResUrl = (url) => {
   if (!url) return url;

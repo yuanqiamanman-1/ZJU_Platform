@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import api from '../services/api';
 
 /**
@@ -22,21 +22,34 @@ export const useCachedResource = (endpoint, params = {}, options = {}) => {
     const [error, setError] = useState(null);
     const [refreshKey, setRefreshKey] = useState(0);
 
-    // Create a stable query string for the cache key
-    // We sort keys to ensure object order doesn't affect the key
-    const sortedParams = Object.keys(params).sort().reduce((acc, key) => {
-        if (params[key] !== undefined && params[key] !== null) {
-            acc[key] = params[key];
-        }
-        return acc;
-    }, {});
-    
-    const queryString = new URLSearchParams(sortedParams).toString();
-    const cacheKey = `${keyPrefix}${endpoint}?${queryString}`;
+    const queryString = useMemo(() => {
+        const sortedParams = Object.keys(params).sort().reduce((acc, key) => {
+            const value = params[key];
+            if (value !== undefined && value !== null) {
+                acc[key] = value;
+            }
+            return acc;
+        }, {});
+        return new URLSearchParams(sortedParams).toString();
+    }, [params]);
 
-    const refresh = () => {
-        setRefreshKey(prev => prev + 1);
-    };
+    const cacheKey = useMemo(() => `${keyPrefix}${endpoint}?${queryString}`, [keyPrefix, endpoint, queryString]);
+
+    const dependenciesKey = useMemo(() => {
+        try {
+            return JSON.stringify(dependencies);
+        } catch {
+            return String(dependencies?.length ?? 0);
+        }
+    }, [dependencies]);
+
+    const refresh = useCallback((opts) => {
+        const shouldClearCache = opts === true || opts?.clearCache === true;
+        if (shouldClearCache) {
+            localStorage.removeItem(cacheKey);
+        }
+        setRefreshKey((prev) => prev + 1);
+    }, [cacheKey]);
 
     useEffect(() => {
         if (!enabled) return;
@@ -52,16 +65,11 @@ export const useCachedResource = (endpoint, params = {}, options = {}) => {
             if (cached) {
                 try {
                     const parsed = JSON.parse(cached);
-                    const now = Date.now();
-                    // Check TTL
-                    if (!parsed.timestamp || (now - parsed.timestamp) < ttl) {
-                         setData(parsed.data);
-                         if (parsed.pagination) setPagination(parsed.pagination);
-                         // If we found cache, we can stop "loading" indicator for the user
-                         // but we still want to fetch fresh data.
-                         // However, if we set loading=false, we must ensure we don't flicker back to true.
-                         setLoading(false); 
-                         hasCache = true;
+                    if (parsed.data !== undefined) {
+                        setData(parsed.data);
+                        if (parsed.pagination) setPagination(parsed.pagination);
+                        setLoading(false);
+                        hasCache = true;
                     }
                 } catch (e) {
                     console.warn('Cache parse error', e);
@@ -75,7 +83,8 @@ export const useCachedResource = (endpoint, params = {}, options = {}) => {
 
             // 2. Network request (Stale-while-revalidate)
             try {
-                const res = await api.get(endpoint, { params: sortedParams });
+                const requestParams = Object.fromEntries(new URLSearchParams(queryString));
+                const res = await api.get(endpoint, { params: requestParams });
                 
                 // Support both standard envelope { data: [...], pagination: {...} } and direct array
                 const newData = res.data.data !== undefined ? res.data.data : res.data; 
@@ -108,7 +117,7 @@ export const useCachedResource = (endpoint, params = {}, options = {}) => {
         };
 
         fetchData();
-    }, [endpoint, queryString, refreshKey, enabled, ...dependencies]);
+    }, [enabled, cacheKey, endpoint, queryString, refreshKey, ttl, dependenciesKey]);
 
     return { data, pagination, loading, error, setData, refresh };
 };

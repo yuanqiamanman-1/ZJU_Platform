@@ -37,14 +37,14 @@ const TagInput = ({ value = '', onChange }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const fetchTags = async () => {
+  async function fetchTags() {
     try {
       const response = await api.get('/tags');
       setAllTags(response.data);
     } catch (error) {
       console.error('Failed to fetch tags', error);
     }
-  };
+  }
 
   const handleInputChange = (e) => {
     const val = e.target.value;

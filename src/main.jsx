@@ -7,11 +7,19 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 const PWAUpdater = () => {
-  useRegisterSW({
-    onRegisteredSW() {},
-    onNeedRefresh() {},
-    onOfflineReady() {}
-  });
+  const { needRefresh, updateServiceWorker } = useRegisterSW();
+
+  React.useEffect(() => {
+    const onControllerChange = () => window.location.reload();
+    navigator.serviceWorker?.addEventListener('controllerchange', onControllerChange);
+    return () => navigator.serviceWorker?.removeEventListener('controllerchange', onControllerChange);
+  }, []);
+
+  React.useEffect(() => {
+    if (needRefresh?.[0]) {
+      updateServiceWorker(true);
+    }
+  }, [needRefresh, updateServiceWorker]);
   return null;
 };
 

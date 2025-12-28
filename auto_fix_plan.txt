@@ -3,7 +3,7 @@
 # 使用 sshpass 实现非交互式密码登录
 $ServerIP = "118.31.78.72"
 $User = "root"
-$Password = "TuoTu#SQTP#339280760"
+$Password = ""
 
 Write-Host "=========================================="
 Write-Host "      ZJU Platform 自动修复脚本"

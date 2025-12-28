@@ -188,7 +188,7 @@ const SearchPalette = () => {
                         ))}
                     </div>
                 ) : query.length >= 2 ? (
-                    <div className="p-8 text-center text-gray-500">No results found for "{query}"</div>
+                    <div className="p-8 text-center text-gray-500">No results found for &quot;{query}&quot;</div>
                 ) : (
                     <div className="p-12 text-center text-gray-500">
                         <Command className="mx-auto mb-4 opacity-20" size={48} />

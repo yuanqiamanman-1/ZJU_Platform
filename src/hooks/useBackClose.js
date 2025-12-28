@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
 
 /**
  * Hook to handle closing modals/overlays with the system back button.
@@ -8,9 +8,14 @@ import { useEffect, useRef } from 'react';
  * @param {function} onClose - Function to call to close the modal
  */
 export const useBackClose = (isOpen, onClose) => {
+  const id = useId();
   const isClosingRef = useRef(false);
-  const hashRef = useRef(`modal-${Math.random().toString(36).substr(2, 9)}`); // Unique hash for this modal instance
+  const hashRef = useRef(null);
   const onCloseRef = useRef(onClose);
+
+  if (hashRef.current == null) {
+    hashRef.current = `modal-${id.replaceAll(':', '')}`;
+  }
 
   // Keep onCloseRef updated
   useEffect(() => {

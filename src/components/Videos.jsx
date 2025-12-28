@@ -86,6 +86,11 @@ const Videos = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const refresh = () => {
+    setLoading(true);
+    setError(false);
+    setRefreshKey((k) => k + 1);
+  };
 
   return (
     <section className="pt-24 pb-40 md:py-24 px-4 md:px-8 min-h-screen flex items-center justify-center relative z-10">
@@ -248,7 +253,9 @@ const Videos = () => {
                 <div className="p-6 bg-[#111] border-t border-white/10 flex justify-between items-center">
                     <div>
                         <h3 className="text-2xl font-bold text-white mb-1">{selectedVideo.title}</h3>
-                        <p className="text-gray-400 text-sm">{new Date(selectedVideo.created_at || Date.now()).toLocaleDateString()}</p>
+                        {selectedVideo.created_at && (
+                          <p className="text-gray-400 text-sm">{new Date(selectedVideo.created_at).toLocaleDateString()}</p>
+                        )}
                     </div>
                     <FavoriteButton 
                       itemId={selectedVideo.id}

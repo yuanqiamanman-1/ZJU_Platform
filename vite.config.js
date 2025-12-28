@@ -15,7 +15,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       devOptions: {
-        enabled: true
+        enabled: false
       },
       includeAssets: ['newlogo.png'],
       manifest: {
@@ -40,6 +40,7 @@ export default defineConfig({
       workbox: {
         navigateFallback: '/index.html',
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp}'],
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
             urlPattern: /^\/api\/.*$/,

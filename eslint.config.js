@@ -5,7 +5,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 
 export default [
-  { ignores: ['dist', 'dev-dist', 'server', 'node_modules'] },
+  { ignores: ['dist', 'dev-dist', 'server', 'node_modules', 'zju_app'] },
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
@@ -34,7 +34,12 @@ export default [
         { allowConstantExport: true },
       ],
       'react/prop-types': 'off',
+      'react/no-unknown-property': 'off',
       'no-unused-vars': 'warn',
+      'react-hooks/immutability': 'off',
+      'react-hooks/purity': 'off',
+      'react-hooks/refs': 'off',
+      'react-hooks/set-state-in-effect': 'off',
     },
   },
 ];

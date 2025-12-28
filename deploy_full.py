@@ -6,7 +6,7 @@ import time
 # Configuration
 HOSTNAME = "118.31.78.72"
 USERNAME = "root"
-PASSWORD = "TuoTu#SQTP#339280760"
+PASSWORD = os.environ.get("SSH_PASSWORD")
 PORT = 22
 LOCAL_DB_PATH = os.path.join("server", "database.sqlite")
 REMOTE_DIR = "/root/ZJU_Platform"
@@ -36,6 +36,9 @@ def main():
     print("========================================")
     print("   Starting Full Deployment Sequence    ")
     print("========================================")
+    if not PASSWORD:
+        print("Missing SSH_PASSWORD environment variable.")
+        return
 
     # 1. Local Build
     print("\n--- Step 1: Local Build ---")

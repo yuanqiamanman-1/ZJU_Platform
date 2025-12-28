@@ -6,7 +6,7 @@ import time
 # Configuration
 HOSTNAME = "118.31.78.72"
 USERNAME = "root"
-PASSWORD = "TuoTu#SQTP#339280760"
+PASSWORD = os.environ.get("SSH_PASSWORD")
 PORT = 22
 REMOTE_DIR = "/root/ZJU_Platform"
 PACKAGE_NAME = "deploy_package.tar.gz"
@@ -47,6 +47,9 @@ def main():
     print("========================================")
     print("   Starting DIRECT Deployment (SFTP)    ")
     print("========================================")
+    if not PASSWORD:
+        print("Missing SSH_PASSWORD environment variable.")
+        return
 
     # 1. Local Build
     print("\n--- Step 1: Local Build ---")

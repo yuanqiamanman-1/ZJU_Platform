@@ -28,6 +28,7 @@ const AdminDashboard = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const auth = localStorage.getItem('admin_auth');
@@ -175,7 +176,7 @@ const AdminDashboard = () => {
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar Navigation */}
-          <div className="w-full lg:w-72 flex-shrink-0">
+          <div className={`w-full lg:w-72 flex-shrink-0 ${isMobileMenuOpen ? '' : 'hidden'} lg:block`}>
             <div className="bg-[#0a0a0a] rounded-2xl border border-white/10 p-4 space-y-2 sticky top-24 shadow-xl">
               <div className="px-4 py-2 mb-2 text-xs font-bold text-gray-500 uppercase tracking-widest">
                   {t('admin.menu')}
@@ -183,7 +184,10 @@ const AdminDashboard = () => {
               {tabs.map(tab => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    setIsMobileMenuOpen(false);
+                  }}
                   className={`w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-bold transition-all group
                     ${activeTab === tab.id 
                       ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/25 translate-x-1' 

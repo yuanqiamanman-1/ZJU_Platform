@@ -8,26 +8,22 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !!localStorage.getItem('token'));
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      api.get('/auth/me')
-        .then(res => setUser(res.data))
-        .catch((err) => {
-          // Only clear token if it's an authentication error (401/403)
-          // Network errors should NOT log the user out
-          if (err.response && (err.response.status === 401 || err.response.status === 403)) {
-            localStorage.removeItem('token');
-            delete api.defaults.headers.common['Authorization'];
-          }
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    if (!token) return;
+
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    api.get('/auth/me')
+      .then(res => setUser(res.data))
+      .catch((err) => {
+        if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+          localStorage.removeItem('token');
+          delete api.defaults.headers.common['Authorization'];
+        }
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const login = async (username, password) => {

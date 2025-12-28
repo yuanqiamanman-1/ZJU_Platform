@@ -27,6 +27,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
   const [description, setDescription] = useState(initialData?.excerpt || initialData?.description || '');
   const [content, setContent] = useState(initialData?.content || ''); // Full content
   const [artist, setArtist] = useState(initialData?.artist || '');
+  const [dragTarget, setDragTarget] = useState(null);
   
   // Photo specific
   
@@ -91,7 +92,6 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
     }
   };
 
-  const [dragTarget, setDragTarget] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -202,28 +202,28 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
       }
   };
 
-  const handleDragEnter = (e) => {
+  const handleDragEnter = (e, target) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragging(true);
+    setDragTarget(target);
   };
 
   const handleDragLeave = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragging(false);
+    setDragTarget(null);
   };
 
-  const handleDragOver = (e) => {
+  const handleDragOver = (e, target) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragging(true);
+    setDragTarget(target);
   };
 
   const handleDrop = (e, isCover = false) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragging(false);
+    setDragTarget(null);
     
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile) {
@@ -290,7 +290,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                     className={`relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center group transition-all duration-300 bg-white/5 ${dragTarget === 'main' ? 'border-indigo-500 bg-indigo-500/10 scale-[1.02]' : 'border-white/20 hover:border-white/40'}`}
                     onDragEnter={(e) => handleDragEnter(e, 'main')}
                     onDragLeave={handleDragLeave}
-                    onDragOver={handleDragOver}
+                    onDragOver={(e) => handleDragOver(e, 'main')}
                     onDrop={(e) => handleDrop(e, false)}
                 >
                     <input
@@ -341,7 +341,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                         className={`relative border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center group transition-all duration-300 bg-white/5 h-32 ${dragTarget === 'cover' ? 'border-indigo-500 bg-indigo-500/10 scale-[1.02]' : 'border-white/20 hover:border-white/40'}`}
                         onDragEnter={(e) => handleDragEnter(e, 'cover')}
                         onDragLeave={handleDragLeave}
-                        onDragOver={handleDragOver}
+                        onDragOver={(e) => handleDragOver(e, 'cover')}
                         onDrop={(e) => handleDrop(e, true)}
                     >
                         <input

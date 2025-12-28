@@ -13,7 +13,7 @@ import { useBackClose } from '../hooks/useBackClose';
 
 const UserProfileModal = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
-  const { user, logout, updateProfile } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const { settings } = useSettings();
   const [activeTab, setActiveTab] = useState('profile'); // profile, uploads, favorites, security
   const [editing, setEditing] = useState(false);

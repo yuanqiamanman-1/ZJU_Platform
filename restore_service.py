@@ -1,9 +1,10 @@
 import paramiko
+import os
 import time
 
 hostname = "118.31.78.72"
 username = "root"
-password = "TuoTu#SQTP#339280760"
+password = os.environ.get("SSH_PASSWORD")
 port = 22
 
 def run_command(ssh, command):
@@ -21,6 +22,8 @@ def run_command(ssh, command):
     return exit_status
 
 try:
+    if not password:
+        raise SystemExit("Missing SSH_PASSWORD environment variable.")
     print(f"Connecting to {hostname}...")
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())

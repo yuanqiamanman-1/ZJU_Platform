@@ -54,6 +54,7 @@ const Events = () => {
 
   useEffect(() => {
     setLoading(true);
+    setError(false);
     const limit = settings.pagination_enabled === 'true' ? 6 : 1000;
     
     const params = {
@@ -73,13 +74,21 @@ const Events = () => {
             setEvents([]);
         }
         setLoading(false);
+        setError(false);
       })
       .catch(err => {
         console.error("Failed to fetch events:", err);
         setEvents([]); // Ensure events is an array on error
         setLoading(false);
+        setError(true);
       });
-  }, [currentPage, sort, lifecycle, settings.pagination_enabled]);
+  }, [currentPage, sort, lifecycle, settings.pagination_enabled, refreshKey]);
+
+  const refresh = () => {
+    setLoading(true);
+    setError(false);
+    setRefreshKey((k) => k + 1);
+  };
 
   useEffect(() => {
     if (selectedEvent && user) {

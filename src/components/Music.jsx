@@ -76,6 +76,12 @@ const Music = () => {
       });
   }, [currentPage, sort, settings.pagination_enabled, refreshKey]);
 
+  const refresh = () => {
+    setLoading(true);
+    setError(false);
+    setRefreshKey((k) => k + 1);
+  };
+
   const addTrack = (newItem) => {
     api.post('/music', newItem)
     .then(() => {
