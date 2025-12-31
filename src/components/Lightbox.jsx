@@ -8,6 +8,32 @@ import FavoriteButton from './FavoriteButton';
 const Lightbox = ({ photo, onClose, onNext, onPrev, onView3D, onLikeToggle }) => {
   const [showInfo, setShowInfo] = useState(false);
   const { user } = useAuth();
+  const [isApp, setIsApp] = useState(false);
+
+  useEffect(() => {
+    const checkApp = () => {
+        if (window.NativeBridge) {
+            setIsApp(true);
+            return true;
+        }
+        return false;
+    };
+
+    if (checkApp()) return;
+
+    const interval = setInterval(() => {
+        if (checkApp()) {
+            clearInterval(interval);
+        }
+    }, 500);
+
+    const timeout = setTimeout(() => clearInterval(interval), 5000);
+
+    return () => {
+        clearInterval(interval);
+        clearTimeout(timeout);
+    };
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -77,7 +103,7 @@ const Lightbox = ({ photo, onClose, onNext, onPrev, onView3D, onLikeToggle }) =>
             />
             <button 
               onClick={handleDownload}
-              className="p-3 text-white/70 hover:text-green-400 hover:bg-white/10 rounded-full transition-all"
+              className={`p-3 text-white/70 hover:text-green-400 hover:bg-white/10 rounded-full transition-all ${!isApp ? 'hidden md:block' : ''}`}
               title="Download"
             >
               <Download size={20} />
