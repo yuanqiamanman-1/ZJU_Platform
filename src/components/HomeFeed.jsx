@@ -341,10 +341,24 @@ const HomeFeed = () => {
 
       <AnimatePresence>
         {activePhoto && (
-          <LivePhotoViewer 
-            photo={{ ...activePhoto, url: getHighResUrl(activePhoto.url) }} 
-            onClose={() => setActivePhoto(null)} 
-          />
+          <ErrorBoundary fallback={
+             <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-xl" onClick={() => setActivePhoto(null)}>
+                <div className="text-center p-8 bg-[#111] border border-white/10 rounded-2xl">
+                    <p className="text-red-400 mb-4">{t('common.error_loading_viewer') || 'Failed to load 3D viewer'}</p>
+                    <button 
+                        onClick={() => setActivePhoto(null)}
+                        className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all"
+                    >
+                        {t('common.close') || 'Close'}
+                    </button>
+                </div>
+             </div>
+          }>
+            <LivePhotoViewer 
+                photo={{ ...activePhoto, url: getHighResUrl(activePhoto.url) }} 
+                onClose={() => setActivePhoto(null)} 
+            />
+          </ErrorBoundary>
         )}
       </AnimatePresence>
 

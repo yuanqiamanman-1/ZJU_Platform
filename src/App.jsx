@@ -100,7 +100,6 @@ const AppContent = () => {
             <GlobalPlayer />
         </ErrorBoundary>
       )}
-      {!isAdminRoute && <Footer />}
       {!isAdminRoute && <MobileNavbar />}
       <ScrollToTop />
       <PWAInstallPrompt />

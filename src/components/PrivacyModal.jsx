@@ -2,11 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useBackClose } from '../hooks/useBackClose';
 
 const PrivacyModal = () => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
+
+  const handleDisagree = () => {
+    setIsOpen(false);
+    setIsBlocked(true);
+  };
+
+  useBackClose(isOpen, handleDisagree);
 
   useEffect(() => {
     const agreed = localStorage.getItem('privacy_agreed');
@@ -18,11 +26,6 @@ const PrivacyModal = () => {
   const handleAgree = () => {
     localStorage.setItem('privacy_agreed', 'true');
     setIsOpen(false);
-  };
-
-  const handleDisagree = () => {
-    setIsOpen(false);
-    setIsBlocked(true);
   };
 
   const PRIVACY_URL = 'https://agreement-drcn.hispace.dbankcloud.cn/index.html?lang=zh&agreementId=1847185101377532288';

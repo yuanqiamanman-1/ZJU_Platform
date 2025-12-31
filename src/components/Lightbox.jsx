@@ -4,11 +4,14 @@ import { X, ChevronLeft, ChevronRight, Box, Download, Info, Camera, Aperture, Cl
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import FavoriteButton from './FavoriteButton';
+import { useBackClose } from '../hooks/useBackClose';
 
 const Lightbox = ({ photo, onClose, onNext, onPrev, onView3D, onLikeToggle }) => {
   const [showInfo, setShowInfo] = useState(false);
   const { user } = useAuth();
   const [isApp, setIsApp] = useState(false);
+  
+  useBackClose(true, onClose);
 
   useEffect(() => {
     const checkApp = () => {

@@ -36,6 +36,9 @@ const Navbar = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
 
+  useBackClose(isWeatherModalOpen, () => setIsWeatherModalOpen(false));
+  useBackClose(isThemeOpen, () => setIsThemeOpen(false));
+
   // Clock
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 60000);

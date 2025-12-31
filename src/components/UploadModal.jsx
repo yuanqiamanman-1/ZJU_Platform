@@ -6,11 +6,13 @@ import { toast } from 'react-hot-toast';
 import api, { uploadFile } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import TagInput from './TagInput';
+import { useBackClose } from '../hooks/useBackClose';
 
 import { useNavigate } from 'react-router-dom';
 
 const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = null, customFields = [] }) => {
   const { t } = useTranslation();
+  useBackClose(isOpen, onClose);
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const isEditing = !!initialData;
