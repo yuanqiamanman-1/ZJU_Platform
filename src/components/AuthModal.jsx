@@ -15,10 +15,17 @@ const AuthModal = ({ isOpen, onClose }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { login, register } = useAuth();
+  const [agreed, setAgreed] = useState(false);
+  const PRIVACY_URL = 'https://agreement-drcn.hispace.dbankcloud.cn/index.html?lang=zh&agreementId=1847185101377532288';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!username || !password) return;
+
+    if (!agreed) {
+      alert(t('auth.must_agree_privacy', '请先阅读并同意隐私政策'));
+      return;
+    }
 
     setLoading(true);
     const success = isLogin 
