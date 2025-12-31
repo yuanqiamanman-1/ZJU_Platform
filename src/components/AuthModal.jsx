@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Lock, ArrowRight, Loader } from 'lucide-react';
+import { X, User, Lock, ArrowRight, Loader, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { useBackClose } from '../hooks/useBackClose';
@@ -14,16 +14,22 @@ const AuthModal = ({ isOpen, onClose }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const { login, register } = useAuth();
   const [agreed, setAgreed] = useState(false);
   const PRIVACY_URL = 'https://agreement-drcn.hispace.dbankcloud.cn/index.html?lang=zh&agreementId=1847185101377532288';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!username || !password) return;
+    setError('');
+    
+    if (!username || !password) {
+        setError(t('auth.error_missing_fields', 'Please fill in all fields'));
+        return;
+    }
 
     if (!agreed) {
-      alert(t('auth.must_agree_privacy', '请先阅读并同意隐私政策'));
+      setError(t('auth.must_agree_privacy', '请先阅读并同意隐私政策'));
       return;
     }
 
@@ -76,6 +82,20 @@ const AuthModal = ({ isOpen, onClose }) => {
               {isLogin ? t('auth.signin_desc') : t('auth.signup_desc')}
             </p>
           </div>
+
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                exit={{ opacity: 0, y: -10, height: 0 }}
+                className="relative z-10 mb-6 bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex items-center gap-3"
+              >
+                <AlertCircle className="text-red-400 shrink-0" size={18} />
+                <p className="text-red-200 text-sm font-medium">{error}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
             <div>
