@@ -99,6 +99,29 @@ const AuthModal = ({ isOpen, onClose }) => {
               </div>
             </div>
 
+            <div className="flex items-start gap-3 pt-2">
+              <div className="relative flex items-center">
+                <input
+                  type="checkbox"
+                  id="privacy-agree"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-600 bg-black/40 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0"
+                />
+              </div>
+              <label htmlFor="privacy-agree" className="text-sm text-gray-400 leading-tight select-none">
+                {t('auth.agree_to', '我已阅读并同意')}
+                <a 
+                  href={PRIVACY_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-indigo-400 hover:text-indigo-300 underline ml-1"
+                >
+                  {t('auth.privacy_policy', '隐私政策')}
+                </a>
+              </label>
+            </div>
+
             <button 
               type="submit" 
               disabled={loading}

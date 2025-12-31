@@ -17,8 +17,10 @@ import ScrollProgress from './components/ScrollProgress';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import SearchPalette from './components/SearchPalette';
   import MobileNavbar from './components/MobileNavbar';
-  
-  // Lazy load page components
+import PrivacyModal from './components/PrivacyModal';
+import Footer from './components/Footer';
+
+// Lazy load page components
 const Hero = lazy(() => import('./components/Hero'));
 const Gallery = lazy(() => import('./components/Gallery'));
 const Music = lazy(() => import('./components/Music'));
@@ -64,6 +66,7 @@ const AppContent = () => {
             <Navbar />
         </ErrorBoundary>
       )}
+      <PrivacyModal />
       {!isAdminRoute && (
         <ErrorBoundary variant="inline" silent>
             <BackgroundSystem />
@@ -97,6 +100,7 @@ const AppContent = () => {
             <GlobalPlayer />
         </ErrorBoundary>
       )}
+      {!isAdminRoute && <Footer />}
       {!isAdminRoute && <MobileNavbar />}
       <ScrollToTop />
       <PWAInstallPrompt />
