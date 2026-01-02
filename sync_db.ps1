@@ -13,11 +13,17 @@ if (-not (Get-Command scp -ErrorAction SilentlyContinue)) {
 }
 
 # Upload
+Write-Host "1. 正在停止远程服务并清理临时文件..."
+ssh ${User}@${ServerIP} "pm2 stop all; rm -f /root/ZJU_Platform/server/database.sqlite-wal /root/ZJU_Platform/server/database.sqlite-shm"
+
+Write-Host "2. 正在上传数据库文件..."
 scp $LocalPath ${User}@${ServerIP}:${RemotePath}
 
 if ($LASTEXITCODE -eq 0) {
+    Write-Host "3. 正在重启远程服务..."
+    ssh ${User}@${ServerIP} "cd /root/ZJU_Platform/server && pm2 restart all"
+    
     Write-Host "数据库同步成功！" -ForegroundColor Green
-    Write-Host "注意：服务器上的应用可能需要重启才能看到最新数据 (pm2 restart all)" -ForegroundColor Yellow
 } else {
     Write-Error "数据库同步失败。"
 }
