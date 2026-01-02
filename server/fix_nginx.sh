@@ -25,33 +25,12 @@ else
 fi
 
 echo "Fixing sites-available/default..."
-# Check if location /uploads is already there
-if ! grep -q "location /uploads" /etc/nginx/sites-available/default; then
-    # Attempt to insert before the last closing brace '}' of the file
-    # We use a trick to replace the last occurrence of '}' with our block + '}'
-    # Note: This assumes the file ends with the server block closing brace.
-    
-    # Read the file content
-    CONTENT=$(cat /etc/nginx/sites-available/default)
-    
-    # Construct the new block
-    NEW_BLOCK='
-    location /uploads {
-        proxy_pass http://localhost:3001;
-        expires 30d;
-        add_header Cache-Control "public, no-transform";
-    }
-}'
-    
-    # Use sed to replace the last line if it contains '}'
-    # This is a bit brittle, so we'll try a safer insertion point if possible.
-    # Safest is to append inside server block.
-    # Let's try to match the end of the file.
-    
-    sed -i '$s/}/location \/uploads {\n        proxy_pass http:\/\/localhost:3001;\n        expires 30d;\n        add_header Cache-Control "public, no-transform";\n    }\n}/' /etc/nginx/sites-available/default
-else
-    echo "location /uploads already exists in sites-available/default"
-fi
+# Remove any existing location /uploads blocks (plain or regex) to avoid duplicates and ensure priority
+sed -i '/location.*\/uploads.*{/,/}/d' /etc/nginx/sites-available/default
+
+# Add the high-priority block using ^~ modifier
+# This prevents regex matching (like .jpg/.png) from taking precedence over this location
+sed -i '$s/}/location ^~ \/uploads {\n        proxy_pass http:\/\/localhost:3001;\n        expires 30d;\n        add_header Cache-Control "public, no-transform";\n    }\n}/' /etc/nginx/sites-available/default
 
 echo "Testing configuration..."
 nginx -t
