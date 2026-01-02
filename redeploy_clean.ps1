@@ -26,6 +26,7 @@ if ($LASTEXITCODE -ne 0) {
 
 # 2. Remote Commands
 # Note: Using strict Here-String syntax (no indentation for closing tag)
+# Fixed: Removed parentheses in echo commands to avoid bash syntax errors
 $RemoteCommands = @"
 set -e
 
@@ -48,12 +49,12 @@ echo "=== Remote: Installing dependencies ==="
 cd $ProjectDir/server
 npm install
 
-echo "=== Remote: Starting Server (Port 3001) ==="
+echo "=== Remote: Starting Server on Port 3001 ==="
 cd $ProjectDir
 pm2 start ecosystem.config.cjs --env production
 pm2 save
 
-echo "=== Remote: Configuring Port Forwarding (80 -> 3001) ==="
+echo "=== Remote: Configuring Port Forwarding 80 to 3001 ==="
 # Check if rule exists
 if ! iptables -t nat -C PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 3001 2>/dev/null; then
     echo "Adding iptables rule..."
