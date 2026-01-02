@@ -1,7 +1,7 @@
 const { getDb } = require('../config/db');
 const path = require('path');
 const fs = require('fs');
-const { runCrawler } = require('../../crawler');
+// const { runCrawler } = require('../../crawler'); // Removed for now
 
 const searchContent = async (req, res) => {
     try {

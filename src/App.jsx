@@ -95,6 +95,8 @@ const AppContent = () => {
         </Suspense>
       </main>
 
+      {!isAdminRoute && <Footer />}
+
       {!isAdminRoute && (
         <ErrorBoundary variant="inline" silent>
             <GlobalPlayer />
