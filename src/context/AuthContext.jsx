@@ -33,11 +33,11 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(user);
-      toast.success(`Welcome back, ${user.username}!`);
+      toast.success(t('auth.welcome_back_user', { username: user.username }));
       return true;
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.error || 'Login failed');
+      toast.error(err.response?.data?.error || t('auth.login_failed'));
       return false;
     }
   };
@@ -49,11 +49,11 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(user);
-      toast.success(`Welcome, ${user.username}!`);
+      toast.success(t('auth.welcome_user', { username: user.username }));
       return true;
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.error || 'Registration failed');
+      toast.error(err.response?.data?.error || t('auth.registration_failed'));
       return false;
     }
   };
@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     delete api.defaults.headers.common['Authorization'];
     setUser(null);
-    toast.success('Logged out successfully');
+    toast.success(t('auth.logout_success'));
   };
 
   const refreshUser = async () => {

@@ -20,7 +20,7 @@ const SortSelector = ({ sort, onSortChange, className, buttonClassName }) => {
         onChange={onSortChange}
         options={options}
         icon={ArrowUpDown}
-        buttonClassName={buttonClassName || "bg-neutral-900 rounded-full px-4 py-2 border-white/10 hover:bg-neutral-800"}
+        buttonClassName={buttonClassName || "bg-white/5 border border-white/10 hover:bg-white/10 rounded-full px-6 py-2.5 backdrop-blur-md transition-all text-sm font-medium shadow-lg text-white"}
       />
     </div>
   );

@@ -24,7 +24,6 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
   const [coverPreview, setCoverPreview] = useState(initialData?.cover || initialData?.thumbnail || initialData?.image || null);
 
   const [title, setTitle] = useState(initialData?.title || '');
-  const [category, setCategory] = useState(initialData?.category || ''); // Default to empty, will fetch later or user input
   const [tags, setTags] = useState(initialData?.tags || ''); // Tags state
   const [description, setDescription] = useState(initialData?.excerpt || initialData?.description || '');
   const [content, setContent] = useState(initialData?.content || ''); // Full content
@@ -49,7 +48,6 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
 
         if (initialData) {
             setTitle(initialData.title || '');
-            setCategory(initialData.category || t('common.uncategorized'));
             setTags(initialData.tags || '');
             setDescription(initialData.excerpt || initialData.description || '');
             setContent(initialData.content || '');
@@ -61,7 +59,6 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
             setCoverPreview(initialData.cover || initialData.thumbnail || initialData.image || null);
         } else {
             setTitle('');
-            setCategory(t('common.uncategorized')); 
             setTags('');
             setDescription('');
             setContent('');
@@ -129,7 +126,6 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
       const newItem = {
         ...initialData, // Keep existing ID and other fields if editing
         title,
-        category,
         tags, // Include tags
         tag: tags, // For backward compatibility with article 'tag'
         url: fileUrl, 
@@ -391,6 +387,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                     value={tags}
                     onChange={setTags}
                     placeholder={t('upload.tags_placeholder')}
+                    type={type === 'image' ? 'photos' : type === 'audio' ? 'music' : type}
                   />
                 </div>
 
@@ -422,11 +419,11 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                             <div className="relative">
                                 <Link size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                                 <input
-                                    type="url"
+                                    type="text"
                                     value={eventLink}
                                     onChange={e => setEventLink(e.target.value)}
                                     className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none focus:border-white/30"
-                                    placeholder="https://"
+                                    placeholder={t('upload.link_placeholder')}
                                 />
                             </div>
                         </div>

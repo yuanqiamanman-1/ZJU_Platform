@@ -11,23 +11,41 @@ import api from '../services/api';
 import SortSelector from './SortSelector';
 import { useSearchParams } from 'react-router-dom';
 import { useBackClose } from '../hooks/useBackClose';
+import { useCachedResource } from '../hooks/useCachedResource';
+import TagFilter from './TagFilter';
 
 const Videos = () => {
   const { t } = useTranslation();
   const { settings } = useSettings();
   const [searchParams] = useSearchParams();
-  const [videos, setVideos] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [sort, setSort] = useState('newest');
+  const [selectedTags, setSelectedTags] = useState([]);
   const [selectedVideo, setSelectedVideo] = useState(null);
-  const [error, setError] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
   useBackClose(selectedVideo !== null, () => setSelectedVideo(null));
   useBackClose(isUploadOpen, () => setIsUploadOpen(false));
+
+  const limit = settings.pagination_enabled === 'true' ? 12 : 1000;
+
+  const { 
+    data: videos, 
+    pagination, 
+    loading, 
+    error, 
+    setData: setVideos, 
+    refresh 
+  } = useCachedResource('/videos', {
+    page: currentPage,
+    limit,
+    sort,
+    tags: selectedTags.join(',')
+  }, {
+    dependencies: [settings.pagination_enabled, selectedTags.join(',')]
+  });
+
+  const totalPages = pagination?.totalPages || 1;
 
   // Deep linking
   useEffect(() => {
@@ -41,38 +59,10 @@ const Videos = () => {
     }
   }, [searchParams]);
 
-  useEffect(() => {
-    const limit = settings.pagination_enabled === 'true' ? 12 : 1000;
-
-    const params = {
-      page: currentPage,
-      limit,
-      sort,
-    };
-
-    api.get('/videos', { params })
-      .then(res => {
-        setVideos(res.data.data);
-        setTotalPages(res.data.pagination.totalPages);
-        setLoading(false);
-        setError(false);
-      })
-      .catch(err => {
-        console.error("Failed to fetch videos:", err);
-        setLoading(false);
-        setError(true);
-      });
-  }, [currentPage, sort, settings.pagination_enabled, refreshKey]);
-
   const addVideo = (newItem) => {
       api.post('/videos', newItem)
     .then(() => {
-        // Refresh current page
-        return api.get(`/videos?page=${currentPage}&limit=12`);
-    })
-    .then(res => {
-        setVideos(res.data.data);
-        setTotalPages(res.data.pagination.totalPages);
+        refresh();
     })
     .catch(err => console.error("Failed to save video", err));
   };
@@ -86,11 +76,7 @@ const Videos = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const refresh = () => {
-    setLoading(true);
-    setError(false);
-    setRefreshKey((k) => k + 1);
-  };
+
 
   return (
     <section className="pt-24 pb-40 md:py-24 px-4 md:px-8 min-h-screen flex items-center justify-center relative z-10">
@@ -117,7 +103,10 @@ const Videos = () => {
         </motion.div>
 
         {/* Filters */}
-        <div className="flex flex-wrap justify-center items-center gap-4 mb-8">
+        <div className="flex flex-col items-center gap-6 mb-8">
+          <div className="w-full max-w-4xl mx-auto px-4">
+             <TagFilter selectedTags={selectedTags} onChange={setSelectedTags} type="videos" />
+          </div>
           <SortSelector sort={sort} onSortChange={setSort} />
         </div>
 
@@ -136,12 +125,12 @@ const Videos = () => {
           ) : error ? (
             <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
                 <AlertCircle size={48} className="text-red-400 mb-4 opacity-50 mx-auto" />
-                <p className="text-gray-300 mb-6">{t('common.error_fetching_data') || 'Failed to load videos'}</p>
+                <p className="text-gray-300 mb-6">{t('common.error_fetching_data')}</p>
                 <button 
                     onClick={refresh}
                     className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all border border-white/10"
                 >
-                    Retry
+                    {t('common.retry')}
                 </button>
             </div>
           ) : (

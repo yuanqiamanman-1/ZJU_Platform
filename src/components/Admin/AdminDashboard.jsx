@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, Inbox, LayoutGrid, Music, Film, BookOpen, 
   Calendar, LayoutTemplate, Folder, HardDrive, ClipboardList, 
-  Settings, Users, Lock, Home, LogOut, ChevronRight 
+  Settings, Users, Lock, Home, LogOut, ChevronRight, Tag
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
@@ -13,10 +13,7 @@ import api from '../../services/api';
 import Overview from './Overview';
 import PendingReviewManager from './PendingReviewManager';
 import SettingsManager from './SettingsManager';
-import FileManager from './FileManager';
 import UserManager from './UserManager';
-import DatabaseManager from './DatabaseManager';
-import AuditLogViewer from './AuditLogViewer';
 import PageContentEditor from './PageContentEditor';
 import ResourceManager from './ResourceManager';
 import MessageManager from './MessageManager';
@@ -65,22 +62,34 @@ const AdminDashboard = () => {
     toast.success(t('admin.login.logged_out'));
   };
 
-  const tabs = [
-    { id: 'overview', label: t('admin.tabs.overview'), icon: LayoutDashboard },
-    { id: 'pending', label: t('admin.tabs.pending'), icon: Inbox },
-    { id: 'photos', label: t('admin.tabs.photos'), icon: LayoutGrid },
-    { id: 'music', label: t('admin.tabs.music'), icon: Music },
-    { id: 'videos', label: t('admin.tabs.videos'), icon: Film },
-    { id: 'articles', label: t('admin.tabs.articles'), icon: BookOpen },
-    { id: 'events', label: t('admin.tabs.events'), icon: Calendar },
-    { id: 'pages', label: t('admin.tabs.pages'), icon: LayoutTemplate },
-    { id: 'files', label: t('admin.tabs.files'), icon: Folder },
-    { id: 'database', label: t('admin.tabs.database'), icon: HardDrive },
-    { id: 'audit', label: t('admin.tabs.audit'), icon: ClipboardList },
-    { id: 'settings', label: t('admin.tabs.settings'), icon: Settings },
-    { id: 'users', label: t('admin.tabs.users'), icon: Users },
-    { id: 'messages', label: t('admin.tabs.messages'), icon: Inbox },
-    { id: 'tags', label: t('admin.tabs.tags'), icon: LayoutGrid },
+  const menuGroups = [
+    {
+      title: t('admin.menu.overview'),
+      items: [
+        { id: 'overview', label: t('admin.tabs.overview'), icon: LayoutDashboard },
+        { id: 'pending', label: t('admin.tabs.pending'), icon: Inbox },
+      ]
+    },
+    {
+      title: t('admin.menu.content'),
+      items: [
+        { id: 'photos', label: t('admin.tabs.photos'), icon: LayoutGrid },
+        { id: 'videos', label: t('admin.tabs.videos'), icon: Film },
+        { id: 'music', label: t('admin.tabs.music'), icon: Music },
+        { id: 'articles', label: t('admin.tabs.articles'), icon: BookOpen },
+        { id: 'events', label: t('admin.tabs.events'), icon: Calendar },
+        { id: 'pages', label: t('admin.tabs.pages'), icon: LayoutTemplate },
+      ]
+    },
+    {
+      title: t('admin.menu.system'),
+      items: [
+        { id: 'tags', label: t('admin.tabs.tags'), icon: Tag },
+        { id: 'users', label: t('admin.tabs.users'), icon: Users },
+        { id: 'messages', label: t('admin.tabs.messages'), icon: Inbox },
+        { id: 'settings', label: t('admin.tabs.settings'), icon: Settings },
+      ]
+    }
   ];
 
   const renderContent = () => {
@@ -90,10 +99,7 @@ const AdminDashboard = () => {
       case 'messages': return <MessageManager />;
       case 'tags': return <TagManager />;
       case 'settings': return <SettingsManager />;
-      case 'files': return <FileManager />;
       case 'users': return <UserManager />;
-      case 'database': return <DatabaseManager />;
-      case 'audit': return <AuditLogViewer />;
       case 'pages': return <PageContentEditor />;
       case 'photos': return <ResourceManager key="photos" title={t('admin.tabs.photos')} apiEndpoint="photos" type="image" icon={LayoutGrid} />;
       case 'music': return <ResourceManager key="music" title={t('admin.tabs.music')} apiEndpoint="music" type="audio" icon={Music} />;
@@ -170,35 +176,41 @@ const AdminDashboard = () => {
               >
                 <LogOut size={14} /> {t('admin.logout')}
               </button>
-              <p className="text-xs text-gray-600 font-mono mt-2">{new Date().toLocaleDateString()}</p>
+              <p className="text-xs text-gray-600 font-mono mt-2">{new Date().toLocaleDateString('zh-CN')}</p>
           </div>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar Navigation */}
           <div className={`w-full lg:w-72 flex-shrink-0 ${isMobileMenuOpen ? '' : 'hidden'} lg:block`}>
-            <div className="bg-[#0a0a0a] rounded-2xl border border-white/10 p-4 space-y-2 sticky top-24 shadow-xl">
-              <div className="px-4 py-2 mb-2 text-xs font-bold text-gray-500 uppercase tracking-widest">
-                  {t('admin.menu')}
-              </div>
-              {tabs.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    setActiveTab(tab.id);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-bold transition-all group
-                    ${activeTab === tab.id 
-                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/25 translate-x-1' 
-                      : 'text-gray-400 hover:bg-white/5 hover:text-white hover:translate-x-1'}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <tab.icon size={20} className={activeTab === tab.id ? 'text-white' : 'text-gray-500 group-hover:text-white'} />
-                    {tab.label}
+            <div className="bg-[#0a0a0a] rounded-2xl border border-white/10 p-4 space-y-6 sticky top-24 shadow-xl overflow-y-auto max-h-[80vh]">
+              {menuGroups.map((group, index) => (
+                <div key={index}>
+                  <div className="px-4 py-2 mb-2 text-xs font-bold text-gray-500 uppercase tracking-widest">
+                      {group.title}
                   </div>
-                  {activeTab === tab.id && <ChevronRight size={16} />}
-                </button>
+                  <div className="space-y-1">
+                    {group.items.map(tab => (
+                      <button
+                        key={tab.id}
+                        onClick={() => {
+                          setActiveTab(tab.id);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-bold transition-all group
+                          ${activeTab === tab.id 
+                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/25 translate-x-1' 
+                            : 'text-gray-400 hover:bg-white/5 hover:text-white hover:translate-x-1'}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <tab.icon size={20} className={activeTab === tab.id ? 'text-white' : 'text-gray-500 group-hover:text-white'} />
+                          {tab.label}
+                        </div>
+                        {activeTab === tab.id && <ChevronRight size={16} />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ))}
               
               <div className="my-2 border-t border-white/10"></div>
@@ -214,7 +226,7 @@ const AdminDashboard = () => {
               </a>
             </div>
             
-            <div className="mt-6 bg-gradient-to-br from-indigo-900/20 to-purple-900/20 rounded-2xl p-6 border border-white/5 text-center">
+            <div className="mt-6 bg-gradient-to-br from-indigo-900/20 to-purple-900/20 rounded-2xl p-6 border border-white/5 text-center hidden lg:block">
                 <p className="text-xs text-indigo-300 font-bold uppercase tracking-wider mb-2">{t('admin.pro_tip')}</p>
                 <p className="text-sm text-gray-400">{t('admin.pro_tip_desc')}</p>
             </div>

@@ -319,7 +319,8 @@ const BackgroundSystem = ({ forcedTheme = null }) => {
               <EffectComposer disableNormalPass>
                 <Bloom 
                   luminanceThreshold={0.5} 
-                  mipmapBlur 
+                  luminanceSmoothing={0.9}
+                  mipmapBlur={true}
                   intensity={parseFloat(settings.background_bloom || 0.8)} 
                   radius={0.4} 
                 />

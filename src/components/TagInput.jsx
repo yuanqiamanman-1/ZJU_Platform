@@ -3,7 +3,7 @@ import { X, Plus, Tag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import api from '../services/api';
 
-const TagInput = ({ value = '', onChange }) => {
+const TagInput = ({ value = '', onChange, type }) => {
   const { t } = useTranslation();
   const [tags, setTags] = useState([]);
   const [inputValue, setInputValue] = useState('');
@@ -24,7 +24,7 @@ const TagInput = ({ value = '', onChange }) => {
 
   useEffect(() => {
     fetchTags();
-  }, []);
+  }, [type]); // Refetch when type changes
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -39,7 +39,7 @@ const TagInput = ({ value = '', onChange }) => {
 
   async function fetchTags() {
     try {
-      const response = await api.get('/tags');
+      const response = await api.get('/tags', { params: { type } });
       setAllTags(response.data);
     } catch (error) {
       console.error('Failed to fetch tags', error);

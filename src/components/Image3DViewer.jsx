@@ -4,6 +4,7 @@ import { PerspectiveCamera, shaderMaterial, useTexture, Image, Html } from '@rea
 import * as THREE from 'three';
 import { X, Aperture, Zap, Loader as LoaderIcon } from 'lucide-react';
 import { useBackClose } from '../hooks/useBackClose';
+import { useTranslation } from 'react-i18next';
 
 // --- Live Photo Shader ---
 // A shader that transitions from a flat 2D image to a 2.5D parallax scene
@@ -68,6 +69,7 @@ const LivePhotoMaterial = shaderMaterial(
 extend({ LivePhotoMaterial });
 
 const LiveScene = ({ url, isPressed }) => {
+  const { t } = useTranslation();
   const materialRef = useRef();
   const meshRef = useRef();
   const cameraRef = useRef();
@@ -132,7 +134,7 @@ const LiveScene = ({ url, isPressed }) => {
     return (
         <Html center>
             <div className="text-red-500 font-mono bg-black/80 p-2 rounded border border-red-500/50">
-                Failed to load 3D view
+                {t('admin.fields.live_photo.failed_load')}
             </div>
         </Html>
     );
@@ -161,6 +163,7 @@ const LiveScene = ({ url, isPressed }) => {
 const LivePhotoViewer = ({ photo, onClose }) => {
   const [isPressed, setIsPressed] = useState(false);
   const [showHint, setShowHint] = useState(true);
+  const { t } = useTranslation();
 
   useBackClose(true, onClose);
 
@@ -179,7 +182,7 @@ const LivePhotoViewer = ({ photo, onClose }) => {
       <div className={`absolute top-0 left-0 w-full p-6 flex justify-between items-start z-20 transition-opacity duration-300 ${isPressed ? 'opacity-0' : 'opacity-100'}`}>
         <div className="pointer-events-none">
           <h2 className="text-white font-medium text-lg drop-shadow-md">{photo.title}</h2>
-          <p className="text-white/60 text-xs">{photo.date || "Just now"}</p>
+          <p className="text-white/60 text-xs">{photo.date || t('admin.fields.live_photo.just_now')}</p>
         </div>
         
         <button 
@@ -202,7 +205,7 @@ const LivePhotoViewer = ({ photo, onClose }) => {
           `}>
              <div className={`w-1.5 h-1.5 rounded-full ${isPressed ? 'bg-yellow-400 animate-pulse' : 'hidden'}`} />
           </div>
-          <span className="text-xs font-bold tracking-wider">LIVE</span>
+          <span className="text-xs font-bold tracking-wider">{t('admin.live_photo.live_badge')}</span>
         </div>
       </div>
 
@@ -212,7 +215,7 @@ const LivePhotoViewer = ({ photo, onClose }) => {
         transition-all duration-500 transform
         ${showHint && !isPressed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
       `}>
-        PRESS AND HOLD
+        {t('admin.live_photo.press_hold')}
       </div>
 
       {/* 3D Scene */}

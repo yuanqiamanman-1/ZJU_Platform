@@ -28,6 +28,63 @@ const getTags = async (req, res) => {
     try {
         await ensureTagsTable();
         const db = await getDb();
+        const { type } = req.query;
+        
+        let targetTable = null;
+        if (type) {
+            const normalizedType = type.toLowerCase().trim();
+            // Handle plural/singular mapping
+            if (resources.includes(normalizedType)) {
+                targetTable = normalizedType;
+            } else if (resources.includes(normalizedType + 's')) {
+                targetTable = normalizedType + 's';
+            } else if (normalizedType.endsWith('s') && resources.includes(normalizedType.slice(0, -1))) {
+                targetTable = normalizedType.slice(0, -1);
+            } else if (normalizedType === 'gallery') {
+                 targetTable = 'photos';
+            }
+
+            // If a type was requested but not found, return empty to prevent leak
+            if (!targetTable) {
+                return res.json([]);
+            }
+        }
+
+        if (targetTable) {
+             const items = await db.all(`SELECT tags FROM ${targetTable}`);
+             const tagCounts = {};
+             
+             for (const item of items) {
+                if (item.tags) {
+                    item.tags.split(',').forEach(t => {
+                        const tag = t.trim();
+                        if (tag) {
+                            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                        }
+                    });
+                }
+             }
+             
+             const result = [];
+             const names = Object.keys(tagCounts);
+             
+             if (names.length > 0) {
+                 const placeholders = names.map(() => '?').join(',');
+                 const definedTags = await db.all(`SELECT id, name FROM tags WHERE name IN (${placeholders})`, names);
+                 const definedTagMap = new Map(definedTags.map(t => [t.name, t.id]));
+                 
+                 for (const [name, count] of Object.entries(tagCounts)) {
+                     result.push({
+                         id: definedTagMap.get(name) || `temp-${name}-${Date.now()}`,
+                         name,
+                         count
+                     });
+                 }
+             }
+             
+             result.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+             return res.json(result);
+        }
         
         // Sync counts (optional, but good for "powerful" management)
         // For now, just return the tags.

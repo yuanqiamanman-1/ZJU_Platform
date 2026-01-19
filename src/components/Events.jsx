@@ -14,6 +14,8 @@ import toast from 'react-hot-toast';
 import Countdown from './Countdown';
 import SmartImage from './SmartImage';
 import { useBackClose } from '../hooks/useBackClose';
+import { useCachedResource } from '../hooks/useCachedResource';
+import TagFilter from './TagFilter';
 
 import { useSearchParams } from 'react-router-dom';
 
@@ -22,19 +24,37 @@ const Events = () => {
   const { settings } = useSettings();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [sort, setSort] = useState('newest');
   const [lifecycle, setLifecycle] = useState('all');
+  const [selectedTags, setSelectedTags] = useState([]);
 
   useBackClose(selectedEvent !== null, () => setSelectedEvent(null));
   useBackClose(isUploadOpen, () => setIsUploadOpen(false));
+
+  const limit = settings.pagination_enabled === 'true' ? 6 : 1000;
+
+  const { 
+    data: events, 
+    pagination, 
+    loading, 
+    error, 
+    setData: setEvents, 
+    refresh 
+  } = useCachedResource('/events', {
+    page: currentPage,
+    limit,
+    sort,
+    status: 'all',
+    lifecycle: lifecycle === 'all' ? undefined : lifecycle,
+    tags: selectedTags.join(',')
+  }, {
+    dependencies: [settings.pagination_enabled, lifecycle, selectedTags.join(',')]
+  });
+
+  const totalPages = pagination?.totalPages || 1;
   
   // Deep linking
   useEffect(() => {
@@ -47,75 +67,6 @@ const Events = () => {
            .catch(err => console.error("Failed to fetch deep linked event", err));
     }
   }, [searchParams]);
-
-  // Registration State
-  const [isRegistered, setIsRegistered] = useState(false);
-  const [registering, setRegistering] = useState(false);
-
-  useEffect(() => {
-    setLoading(true);
-    setError(false);
-    const limit = settings.pagination_enabled === 'true' ? 6 : 1000;
-    
-    const params = {
-      page: currentPage,
-      limit,
-      sort,
-      status: 'all', // Ensure we fetch all events regardless of moderation status
-      lifecycle: lifecycle === 'all' ? undefined : lifecycle
-    };
-
-    api.get('/events', { params })
-      .then(res => {
-        if (res.data && Array.isArray(res.data.data)) {
-            setEvents(res.data.data);
-            setTotalPages(res.data.pagination ? res.data.pagination.totalPages : 1);
-        } else {
-            setEvents([]);
-        }
-        setLoading(false);
-        setError(false);
-      })
-      .catch(err => {
-        console.error("Failed to fetch events:", err);
-        setEvents([]); // Ensure events is an array on error
-        setLoading(false);
-        setError(true);
-      });
-  }, [currentPage, sort, lifecycle, settings.pagination_enabled, refreshKey]);
-
-  const refresh = () => {
-    setLoading(true);
-    setError(false);
-    setRefreshKey((k) => k + 1);
-  };
-
-  useEffect(() => {
-    if (selectedEvent && user) {
-        api.get(`/events/${selectedEvent.id}/registration`)
-           .then(res => setIsRegistered(res.data.registered))
-           .catch(err => console.error(err));
-    } else {
-        setIsRegistered(false);
-    }
-  }, [selectedEvent, user]);
-
-  const handleRegister = async () => {
-      if (!user) {
-          toast.error(t('events.login_to_register'));
-          return;
-      }
-      setRegistering(true);
-      try {
-          const res = await api.post(`/events/${selectedEvent.id}/register`);
-          setIsRegistered(res.data.registered);
-          toast.success(res.data.message);
-      } catch (err) {
-          toast.error("Registration failed");
-      } finally {
-          setRegistering(false);
-      }
-  };
 
   const addToGoogleCalendar = () => {
       if (!selectedEvent) return;
@@ -163,8 +114,8 @@ END:VCALENDAR`;
   const handleCopyLocation = () => {
     if (selectedEvent && selectedEvent.location) {
         navigator.clipboard.writeText(selectedEvent.location)
-            .then(() => toast.success(t('common.copied_to_clipboard') || 'Address copied!'))
-            .catch(() => toast.error('Failed to copy address'));
+            .then(() => toast.success(t('common.copied_to_clipboard')))
+            .catch(() => toast.error(t('common.copy_failed')));
     }
   };
 
@@ -192,8 +143,8 @@ END:VCALENDAR`;
       if (!selectedEvent) return;
       const info = `${selectedEvent.title}\n${selectedEvent.date}\n${selectedEvent.location}\n\n${selectedEvent.description}`;
       navigator.clipboard.writeText(info)
-        .then(() => toast.success(t('common.copied_to_clipboard') || 'Event details copied!'))
-        .catch(() => toast.error('Failed to copy info'));
+        .then(() => toast.success(t('common.copied_to_clipboard')))
+        .catch(() => toast.error(t('common.copy_failed')));
   };
 
   const addEvent = (newItem) => {
@@ -250,10 +201,10 @@ END:VCALENDAR`;
   };
 
   const lifecycleOptions = [
-      { value: 'all', label: t('common.all') || 'All Events' },
-      { value: 'upcoming', label: t('events.status.upcoming') || 'Upcoming' },
-      { value: 'ongoing', label: t('events.status.ongoing') || 'Ongoing' },
-      { value: 'past', label: t('events.status.past') || 'Past' }
+      { value: 'all', label: t('common.all') },
+      { value: 'upcoming', label: t('events.status.upcoming') },
+      { value: 'ongoing', label: t('events.status.ongoing') },
+      { value: 'past', label: t('events.status.past') }
   ];
 
   return (
@@ -279,10 +230,11 @@ END:VCALENDAR`;
              </button>
         </div>
 
-        {/* Toolbar */}
-        <div className="flex flex-col gap-4 p-4 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
-          {/* Filters & Sort */}
-          <div className="grid grid-cols-2 gap-3">
+        {/* Filter Section */}
+        <div className="w-full max-w-4xl mx-auto mb-8 flex flex-col gap-4">
+          <TagFilter selectedTags={selectedTags} onChange={setSelectedTags} type="events" />
+          
+          <div className="grid grid-cols-2 gap-4">
             {/* Lifecycle Filter */}
             <div className="w-full">
               <Dropdown
@@ -290,7 +242,7 @@ END:VCALENDAR`;
                 onChange={setLifecycle}
                 options={lifecycleOptions}
                 icon={Filter}
-                buttonClassName="bg-black/20 border-white/10 hover:bg-black/30 w-full py-3 rounded-xl"
+                buttonClassName="bg-white/5 border border-white/10 hover:bg-white/10 w-full py-3 rounded-xl text-white backdrop-blur-sm transition-all shadow-lg"
               />
             </div>
 
@@ -300,7 +252,7 @@ END:VCALENDAR`;
                 sort={sort} 
                 onSortChange={setSort} 
                 className="w-full" 
-                buttonClassName="bg-black/20 border-white/10 hover:bg-black/30 w-full py-3 rounded-xl" 
+                buttonClassName="bg-white/5 border border-white/10 hover:bg-white/10 w-full py-3 rounded-xl text-white backdrop-blur-sm transition-all shadow-lg" 
               />
             </div>
           </div>
@@ -426,7 +378,7 @@ END:VCALENDAR`;
               <div className="bg-white/5 rounded-full p-6 inline-block mb-4">
                   <Calendar size={48} className="text-gray-600" />
               </div>
-              <p className="text-gray-500 text-lg">No events found matching your criteria.</p>
+              <p className="text-gray-500 text-lg">{t('events.no_events')}</p>
           </div>
       )}
 
@@ -537,7 +489,7 @@ END:VCALENDAR`;
                                 <div className="flex items-start gap-3">
                                     <MapPin size={20} className="text-indigo-400 shrink-0 mt-1" />
                                     <div>
-                                        <h4 className="font-bold text-white text-sm uppercase tracking-wider mb-1">Location</h4>
+                                        <h4 className="font-bold text-white text-sm uppercase tracking-wider mb-1">{t('events.location_label')}</h4>
                                         <p className="text-gray-300">{selectedEvent.location}</p>
                                     </div>
                                 </div>
@@ -546,51 +498,32 @@ END:VCALENDAR`;
                              <div className="flex items-start gap-3">
                                 <Calendar size={20} className="text-indigo-400 shrink-0 mt-1" />
                                 <div>
-                                    <h4 className="font-bold text-white text-sm uppercase tracking-wider mb-1">Date</h4>
+                                    <h4 className="font-bold text-white text-sm uppercase tracking-wider mb-1">{t('events.date_label')}</h4>
                                     <p className="text-gray-300">{selectedEvent.date}</p>
                                 </div>
                              </div>
                          </div>
                      </div>
 
-                     {/* Sidebar - Registration */}
+                     {/* Sidebar - Link */}
                      <div className="lg:w-1/3 space-y-6">
                         <div className="bg-white/5 rounded-2xl p-6 border border-white/5 sticky top-8">
-                            <h3 className="text-xl font-bold text-white mb-6">Registration</h3>
+                            <h3 className="text-xl font-bold text-white mb-6">{t('events.event_link')}</h3>
                             
-                            <button
-                                onClick={handleRegister}
-                                disabled={registering}
-                                className={`w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 ${
-                                    isRegistered 
-                                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50' 
-                                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20'
-                                }`}
-                            >
-                                {registering ? (
-                                    <span className="animate-pulse">Processing...</span>
-                                ) : isRegistered ? (
-                                    <>
-                                        <CheckCircle size={20} />
-                                        Signed Up
-                                    </>
-                                ) : (
-                                    <>
-                                        Sign Up Now
-                                    </>
-                                )}
-                            </button>
-                            
-                            {isRegistered && (
-                                <p className="text-emerald-400/80 text-sm text-center mt-4">
-                                    You are successfully registered for this event.
-                                </p>
-                            )}
-
-                            {!isRegistered && (
-                                <p className="text-gray-500 text-sm text-center mt-4">
-                                    Limited spots available.
-                                </p>
+                            {selectedEvent.link ? (
+                                <a
+                                    href={selectedEvent.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20"
+                                >
+                                    {t('events.visit_link')}
+                                    <ExternalLink size={20} />
+                                </a>
+                            ) : (
+                                <div className="text-gray-500 text-center py-4">
+                                    {t('events.no_link_available')}
+                                </div>
                             )}
                         </div>
                      </div>

@@ -14,6 +14,7 @@ import api from '../services/api';
 import SortSelector from './SortSelector';
 import { useBackClose } from '../hooks/useBackClose';
 import { useCachedResource } from '../hooks/useCachedResource';
+import TagFilter from './TagFilter';
 
 const Articles = () => {
   const { t } = useTranslation();
@@ -22,6 +23,7 @@ const Articles = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [copiedId, setCopiedId] = useState(null);
   const [sort, setSort] = useState('newest');
+  const [selectedTags, setSelectedTags] = useState([]);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
@@ -40,9 +42,10 @@ const Articles = () => {
   } = useCachedResource('/articles', {
     page: currentPage,
     limit,
-    sort
+    sort,
+    tags: selectedTags.join(',')
   }, {
-    dependencies: [settings.pagination_enabled]
+    dependencies: [settings.pagination_enabled, selectedTags.join(',')]
   });
 
   const totalPages = pagination?.totalPages || 1;
@@ -109,7 +112,10 @@ const Articles = () => {
         </motion.div>
 
         {/* Filters */}
-        <div className="flex flex-wrap justify-center items-center gap-4 mb-12">
+        <div className="flex flex-col items-center gap-6 mb-12">
+          <div className="w-full max-w-4xl mx-auto px-4">
+             <TagFilter selectedTags={selectedTags} onChange={setSelectedTags} type="articles" />
+          </div>
           <SortSelector sort={sort} onSortChange={setSort} />
         </div>
 
@@ -117,12 +123,12 @@ const Articles = () => {
           {error && (
             <div className="text-center py-20 text-gray-500">
                 <AlertCircle size={48} className="text-red-400 mb-4 opacity-50 mx-auto" />
-                <p className="text-gray-300 mb-6">{t('common.error_fetching_data') || 'Failed to load articles'}</p>
+                <p className="text-gray-300 mb-6">{t('common.error_fetching_data')}</p>
                 <button 
                   onClick={refresh}
                   className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all border border-white/10"
                 >
-                  {t('common.retry') || 'Retry'}
+                  {t('common.retry')}
                 </button>
             </div>
           )}

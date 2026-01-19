@@ -17,7 +17,6 @@ import ScrollProgress from './components/ScrollProgress';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import SearchPalette from './components/SearchPalette';
   import MobileNavbar from './components/MobileNavbar';
-import PrivacyModal from './components/PrivacyModal';
 import Footer from './components/Footer';
 
 // Lazy load page components
@@ -59,6 +58,11 @@ const AppContent = () => {
     }
   }, [settings?.site_title]);
 
+  // Scroll to top on route change
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   return (
     <>
       {!isAdminRoute && (
@@ -66,7 +70,6 @@ const AppContent = () => {
             <Navbar />
         </ErrorBoundary>
       )}
-      <PrivacyModal />
       {!isAdminRoute && (
         <ErrorBoundary variant="inline" silent>
             <BackgroundSystem />

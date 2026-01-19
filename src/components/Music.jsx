@@ -11,6 +11,7 @@ import api from '../services/api';
 import SortSelector from './SortSelector';
 import { useSearchParams } from 'react-router-dom';
 import SmartImage from './SmartImage';
+import TagFilter from './TagFilter';
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60);
@@ -28,6 +29,7 @@ const Music = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [sort, setSort] = useState('newest');
+  const [selectedTags, setSelectedTags] = useState([]); // Added selectedTags state
   const [error, setError] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   

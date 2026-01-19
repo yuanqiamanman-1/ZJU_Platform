@@ -184,7 +184,7 @@ const ResourceManager = ({ title, apiEndpoint, type, icon: Icon }) => {
                 <th className="p-4">{t('admin.fields.title')}</th>
                 {type === 'image' && <th className="p-4">{t('admin.fields.preview')}</th>}
                 {type === 'audio' && <th className="p-4">{t('admin.fields.artist')}</th>}
-                <th className="p-4">{t('admin.fields.category')}</th>
+                <th className="p-4">{t('admin.fields.tags')}</th>
                 <th className="p-4 text-right">{t('admin.actions')}</th>
               </tr>
             </thead>
@@ -213,9 +213,13 @@ const ResourceManager = ({ title, apiEndpoint, type, icon: Icon }) => {
                     )}
                     {type === 'audio' && <td className="p-4 text-gray-400">{item.artist}</td>}
                     <td className="p-4">
-                      <span className="px-2 py-1 bg-white/5 rounded text-xs text-gray-400 border border-white/5">
-                        {item.category}
-                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {item.tags && item.tags.split(',').filter(Boolean).map((tag, idx) => (
+                          <span key={idx} className="px-2 py-1 bg-white/5 rounded text-xs text-gray-400 border border-white/5">
+                            {tag.trim()}
+                          </span>
+                        ))}
+                      </div>
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2">

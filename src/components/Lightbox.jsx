@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Box, Download, Info, Camera, Aperture, Clock, Gauge } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import FavoriteButton from './FavoriteButton';
 import { useBackClose } from '../hooks/useBackClose';
 
 const Lightbox = ({ photo, onClose, onNext, onPrev, onView3D, onLikeToggle }) => {
+  const { t } = useTranslation();
   const [showInfo, setShowInfo] = useState(false);
   const { user } = useAuth();
   const [isApp, setIsApp] = useState(false);
@@ -56,15 +57,15 @@ const Lightbox = ({ photo, onClose, onNext, onPrev, onView3D, onLikeToggle }) =>
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
-          link.download = photo.title || 'download';
+          link.download = photo.title || t('common.download');
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
           window.URL.revokeObjectURL(url);
-          toast.success('Download started');
+          toast.success(t('lightbox.download_started'));
       } catch (error) {
           console.error(error);
-          toast.error('Download failed');
+          toast.error(t('lightbox.download_failed'));
       }
   };
 
@@ -91,7 +92,7 @@ const Lightbox = ({ photo, onClose, onNext, onPrev, onView3D, onLikeToggle }) =>
             <button 
               onClick={onView3D}
               className="p-3 text-white/70 hover:text-cyan-400 hover:bg-white/10 rounded-full transition-all"
-              title="3D View"
+              title={t('lightbox.view_3d')}
             >
               <Box size={20} />
             </button>
@@ -107,14 +108,14 @@ const Lightbox = ({ photo, onClose, onNext, onPrev, onView3D, onLikeToggle }) =>
             <button 
               onClick={handleDownload}
               className="hidden md:block p-3 text-white/70 hover:text-green-400 hover:bg-white/10 rounded-full transition-all"
-              title="Download"
+              title={t('common.download')}
             >
               <Download size={20} />
             </button>
             <button 
               onClick={() => setShowInfo(!showInfo)}
               className={`p-3 rounded-full transition-all ${showInfo ? 'text-white bg-white/20' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
-              title="Info"
+              title={t('lightbox.info')}
             >
               <Info size={20} />
             </button>
@@ -176,7 +177,7 @@ const Lightbox = ({ photo, onClose, onNext, onPrev, onView3D, onLikeToggle }) =>
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex justify-between items-center mb-8">
-                    <h3 className="text-xl font-bold text-white">Info</h3>
+                    <h3 className="text-xl font-bold text-white">{t('lightbox.info')}</h3>
                     <button onClick={() => setShowInfo(false)} className="text-gray-400 hover:text-white">
                         <X size={20} />
                     </button>
@@ -184,17 +185,17 @@ const Lightbox = ({ photo, onClose, onNext, onPrev, onView3D, onLikeToggle }) =>
 
                 <div className="space-y-6">
                     <div>
-                        <h4 className="text-sm font-bold text-gray-500 uppercase mb-2">Title</h4>
+                        <h4 className="text-sm font-bold text-gray-500 uppercase mb-2">{t('common.title')}</h4>
                         <p className="text-white text-lg font-serif">{photo.title}</p>
                     </div>
                     
                     <div>
-                        <h4 className="text-sm font-bold text-gray-500 uppercase mb-2">Category</h4>
+                        <h4 className="text-sm font-bold text-gray-500 uppercase mb-2">{t('common.category')}</h4>
                         <span className="px-3 py-1 bg-white/10 rounded-full text-sm text-white">{photo.category}</span>
                     </div>
 
                     <div className="border-t border-white/10 pt-6">
-                        <h4 className="text-sm font-bold text-gray-500 uppercase mb-4">EXIF Data</h4>
+                        <h4 className="text-sm font-bold text-gray-500 uppercase mb-4">{t('lightbox.exif')}</h4>
                         <div className="space-y-4">
                             <div className="flex items-center gap-3 text-gray-300">
                                 <Camera size={18} className="text-indigo-400" />
@@ -220,13 +221,13 @@ const Lightbox = ({ photo, onClose, onNext, onPrev, onView3D, onLikeToggle }) =>
                     </div>
 
                     <div className="border-t border-white/10 pt-6">
-                        <h4 className="text-sm font-bold text-gray-500 uppercase mb-2">Stats</h4>
+                        <h4 className="text-sm font-bold text-gray-500 uppercase mb-2">{t('lightbox.stats')}</h4>
                         <div className="flex justify-between text-gray-300 text-sm">
-                            <span>Likes</span>
+                            <span>{t('lightbox.likes')}</span>
                             <span className="text-white font-bold">{photo.likes || 0}</span>
                         </div>
                         <div className="flex justify-between text-gray-300 text-sm mt-2">
-                            <span>Views</span>
+                            <span>{t('lightbox.views')}</span>
                             <span className="text-white font-bold">{Math.floor(Math.random() * 1000) + 100}</span>
                         </div>
                     </div>

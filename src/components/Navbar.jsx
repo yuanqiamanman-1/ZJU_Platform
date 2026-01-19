@@ -30,7 +30,7 @@ const Navbar = () => {
   const [time, setTime] = useState(new Date());
   const [weather, setWeather] = useState(null);
   const [isWeatherModalOpen, setIsWeatherModalOpen] = useState(false);
-  const [city, setCity] = useState(localStorage.getItem('weather_city') || 'Hangzhou');
+  const [city, setCity] = useState(localStorage.getItem('weather_city') || '杭州');
   const [coords, setCoords] = useState(JSON.parse(localStorage.getItem('weather_coords')) || { lat: 30.27, lon: 120.15 });
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -185,7 +185,7 @@ const Navbar = () => {
         <img src="/newlogo.png" alt="拓途浙享" className="h-10 w-auto object-contain" />
         <div className="flex flex-col items-start leading-none">
           <span className="text-xl font-bold tracking-[0.2em] text-white">拓途浙享</span>
-          <span className="text-[10px] tracking-[0.3em] text-gray-400 mt-1">TUOTU ZHEXIANG</span>
+          <span className="text-[10px] tracking-[0.3em] text-gray-400 mt-1">数字艺术与科技</span>
         </div>
       </Link>
       
@@ -219,7 +219,7 @@ const Navbar = () => {
         >
             <div className="flex items-center gap-1">
                 <Clock size={12} />
-                <span>{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                <span>{time.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
             </div>
             <div className="w-px h-3 bg-white/20" />
             <div className="flex items-center gap-1">

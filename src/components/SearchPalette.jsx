@@ -188,19 +188,19 @@ const SearchPalette = () => {
                         ))}
                     </div>
                 ) : query.length >= 2 ? (
-                    <div className="p-8 text-center text-gray-500">No results found for &quot;{query}&quot;</div>
+                    <div className="p-8 text-center text-gray-500">{t('search.no_results', { query })}</div>
                 ) : (
                     <div className="p-12 text-center text-gray-500">
                         <Command className="mx-auto mb-4 opacity-20" size={48} />
-                        <p>Type to search photos, music, videos, and more...</p>
+                        <p>{t('search.empty_hint')}</p>
                     </div>
                 )}
             </div>
             
             {/* Footer Hint */}
             <div className="bg-black/20 px-4 py-2 border-t border-white/5 text-xs text-gray-500 flex justify-between">
-                <span>Pro tip: Use arrow keys to navigate</span>
-                <span>Lumos Search</span>
+                <span>{t('search.footer_hint')}</span>
+                <span>{t('search.brand_search')}</span>
             </div>
             </motion.div>
         </div>

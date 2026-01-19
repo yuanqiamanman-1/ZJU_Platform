@@ -1,6 +1,29 @@
 const { getDb } = require('../config/db');
 const { deleteFileFromUrl } = require('../utils/fileUtils');
 
+// Helper to ensure tags exist in the tags table
+const processTags = async (tagsString) => {
+  if (!tagsString) return;
+  try {
+    const db = await getDb();
+    // Ensure table exists just in case
+    await db.exec(`
+        CREATE TABLE IF NOT EXISTS tags (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE,
+            count INTEGER DEFAULT 0
+        )
+    `);
+    
+    const tags = tagsString.split(',').map(t => t.trim()).filter(Boolean);
+    for (const tag of tags) {
+      await db.run('INSERT OR IGNORE INTO tags (name, count) VALUES (?, 0)', [tag]);
+    }
+  } catch (e) {
+    console.error('Error processing tags:', e);
+  }
+};
+
 // Helper Factories
 const createHandler = (table, fields) => async (req, res) => {
   try {
@@ -16,6 +39,12 @@ const createHandler = (table, fields) => async (req, res) => {
     const values = [...fields.map(field => req.body[field]), status, uploader_id];
     
     const result = await db.run(sql, values);
+    
+    // Process tags to ensure they exist in the centralized tags table
+    if (req.body.tags) {
+        await processTags(req.body.tags);
+    }
+
     res.json({ id: result.lastID, ...req.body, status, likes: 0 });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -42,6 +71,12 @@ const updateHandler = (table, fields) => async (req, res) => {
     const sql = `UPDATE ${table} SET ${setClause} WHERE id = ?`;
     const values = [...fields.map(field => req.body[field]), id];
     await db.run(sql, values);
+    
+    // Process tags to ensure they exist in the centralized tags table
+    if (req.body.tags) {
+        await processTags(req.body.tags);
+    }
+
     res.json({ id, ...req.body });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -224,13 +259,19 @@ const getAllHandler = (table, defaultLimit = 12) => async (req, res) => {
             countParams.push(tag);
         }
         
-        // Tags Search (comma separated in DB, but simple LIKE here for single tag search)
+        // Tags Search (comma separated for multiple tags OR logic)
         const tagsQuery = req.query.tags;
         if (tagsQuery && tagsQuery.trim() !== '') {
-             whereClauses.push('tags LIKE ?');
-             const tagTerm = `%${tagsQuery}%`;
-             params.push(tagTerm);
-             countParams.push(tagTerm);
+             const tagsList = tagsQuery.split(',').map(t => t.trim()).filter(Boolean);
+             if (tagsList.length > 0) {
+                 const tagConditions = tagsList.map(() => 'tags LIKE ?').join(' OR ');
+                 whereClauses.push(`(${tagConditions})`);
+                 tagsList.forEach(tag => {
+                     const term = `%${tag}%`;
+                     params.push(term);
+                     countParams.push(term);
+                 });
+             }
         }
 
         // Lifecycle filter for events

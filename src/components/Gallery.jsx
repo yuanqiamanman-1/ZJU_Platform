@@ -12,6 +12,7 @@ import api from '../services/api';
 import SortSelector from './SortSelector';
 import { useSearchParams } from 'react-router-dom';
 import TagInput from './TagInput';
+import TagFilter from './TagFilter';
 
 import { useBackClose } from '../hooks/useBackClose';
 import { useCachedResource } from '../hooks/useCachedResource';
@@ -19,6 +20,7 @@ import { useCachedResource } from '../hooks/useCachedResource';
 const Gallery = () => {
   const [searchParams] = useSearchParams();
   const [sort, setSort] = useState('newest');
+  const [selectedTags, setSelectedTags] = useState([]);
   const { t } = useTranslation();
   const { settings } = useSettings();
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,18 +37,23 @@ const Gallery = () => {
   } = useCachedResource('/photos', {
     page: currentPage,
     limit,
-    sort
+    sort,
+    tags: selectedTags.join(',')
   }, {
-    dependencies: [settings.pagination_enabled]
+    dependencies: [settings.pagination_enabled, selectedTags.join(',')]
   });
 
   const totalPages = pagination?.totalPages || 1;
   const [refreshKey, setRefreshKey] = useState(0); // Kept for manual retry UI compatibility
 
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(null);
+  const [tempPhoto, setTempPhoto] = useState(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
-  useBackClose(selectedPhotoIndex !== null, () => setSelectedPhotoIndex(null));
+  useBackClose(selectedPhotoIndex !== null || tempPhoto !== null, () => {
+      setSelectedPhotoIndex(null);
+      setTempPhoto(null);
+  });
   useBackClose(isUploadOpen, () => setIsUploadOpen(false));
 
   // Deep linking: Check for ID in URL
@@ -57,13 +64,17 @@ const Gallery = () => {
         api.get(`/photos/${id}`)
            .then(res => {
                if (res.data) {
-                   // Just open it in Lightbox if we can find it in current list, or logic needs adjustment.
-                   // For now removing the 3D logic.
+                   const foundIndex = photos.findIndex(p => String(p.id) === String(res.data.id));
+                   if (foundIndex !== -1) {
+                       setSelectedPhotoIndex(foundIndex);
+                   } else {
+                       setTempPhoto(res.data);
+                   }
                }
            })
            .catch(err => console.error("Failed to fetch deep linked photo", err));
     }
-  }, [searchParams]);
+  }, [searchParams, photos]);
 
   const addPhoto = (newItem) => {
     api.post('/photos', newItem)
@@ -111,7 +122,10 @@ const Gallery = () => {
         <p className="text-gray-400 max-w-xl mx-auto mb-6 md:mb-8 text-sm md:text-base">{t('gallery.subtitle')}</p>
         
         {/* Filter Buttons */}
-        <div className="flex flex-wrap justify-center items-center gap-4 relative z-50">
+        <div className="flex flex-col items-center gap-6 relative z-50">
+          <div className="w-full max-w-4xl mx-auto px-4">
+             <TagFilter selectedTags={selectedTags} onChange={setSelectedTags} type="photos" />
+          </div>
           <SortSelector sort={sort} onSortChange={setSort} />
         </div>
       </motion.div>
@@ -125,12 +139,12 @@ const Gallery = () => {
       ) : error ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
               <AlertCircle size={48} className="text-red-400 mb-4 opacity-50 mx-auto" />
-              <p className="text-gray-300 mb-6">{t('common.error_fetching_data') || 'Failed to load photos'}</p>
+              <p className="text-gray-300 mb-6">{t('common.error_fetching_data')}</p>
               <button 
                   onClick={refresh}
                   className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all border border-white/10"
               >
-                  {t('common.retry') || 'Retry'}
+                  {t('common.retry')}
               </button>
           </div>
       ) : (
@@ -171,16 +185,20 @@ const Gallery = () => {
       )}
 
       <AnimatePresence>
-        {selectedPhotoIndex !== null && (
+        {(selectedPhotoIndex !== null || tempPhoto) && (
           <Lightbox 
-            photo={photos[selectedPhotoIndex]} 
-            onClose={() => setSelectedPhotoIndex(null)}
-            onNext={handleNext}
-            onPrev={handlePrev}
+            photo={selectedPhotoIndex !== null ? photos[selectedPhotoIndex] : tempPhoto} 
+            onClose={() => { setSelectedPhotoIndex(null); setTempPhoto(null); }}
+            onNext={selectedPhotoIndex !== null ? handleNext : undefined}
+            onPrev={selectedPhotoIndex !== null ? handlePrev : undefined}
             onLikeToggle={(favorited, likes) => {
-                setPhotos(prev => prev.map(p => 
-                    p.id === photos[selectedPhotoIndex].id ? { ...p, likes: likes !== undefined ? likes : p.likes, favorited } : p
-                ));
+                if (selectedPhotoIndex !== null) {
+                    setPhotos(prev => prev.map(p => 
+                        p.id === photos[selectedPhotoIndex].id ? { ...p, likes: likes !== undefined ? likes : p.likes, favorited } : p
+                    ));
+                } else if (tempPhoto) {
+                    setTempPhoto(prev => ({ ...prev, likes: likes !== undefined ? likes : prev.likes, favorited }));
+                }
             }}
           />
         )}
