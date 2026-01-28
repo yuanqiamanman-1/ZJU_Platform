@@ -25,14 +25,14 @@ pnpm-debug.log*
 Thumbs.db
 
 # Uploads & generated assets
-server/uploads/
+# server/uploads/
 
 # Local database file
-server/database.sqlite
-*.sqlite
-*.sqlite-wal
-*.sqlite-shm
-*.db
+# server/database.sqlite
+# *.sqlite
+# *.sqlite-wal
+# *.sqlite-shm
+# *.db
 
 # Editor/IDE
 .vscode/
