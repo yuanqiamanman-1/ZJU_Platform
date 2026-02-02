@@ -75,7 +75,11 @@ const adminLogin = async (req, res) => {
   try {
     const { password } = req.body;
 
-    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123'; // Default fallback, but should be set in env
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!adminPassword) {
+      console.error('Admin login attempted but ADMIN_PASSWORD not set');
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
     
     if (password !== adminPassword) {
       return res.status(401).json({ error: 'Invalid password' });

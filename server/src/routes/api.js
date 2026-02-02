@@ -82,9 +82,9 @@ router.get('/settings', settingsController.getSettings);
 router.post('/settings', settingsController.updateSetting);
 
 // File System Routes
-router.get('/fs/list', fsController.listFiles);
-router.get('/fs/content', fsController.getFileContent);
-router.post('/fs/content', fsController.saveFileContent);
+router.get('/fs/list', authenticateToken, isAdmin, fsController.listFiles);
+router.get('/fs/content', authenticateToken, isAdmin, fsController.getFileContent);
+router.post('/fs/content', authenticateToken, isAdmin, fsController.saveFileContent);
 
 // Resource Routes (Generic)
 const resources = ['photos', 'music', 'videos', 'articles', 'events'];

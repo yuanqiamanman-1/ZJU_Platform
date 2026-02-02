@@ -21,16 +21,22 @@ const storage = multer.diskStorage({
 const upload = multer({ 
   storage: storage,
   limits: {
-    fileSize: 1024 * 1024 * 1024, // 1GB limit
+    fileSize: 500 * 1024 * 1024, // 500MB limit (Reduced from 1GB for safety)
   },
   fileFilter: (req, file, cb) => {
-    // Accept images, videos, audio
-    if (file.mimetype.startsWith('image/') || 
-        file.mimetype.startsWith('video/') || 
-        file.mimetype.startsWith('audio/')) {
-      cb(null, true);
+    // Allowed extensions
+    const filetypes = /jpeg|jpg|png|gif|webp|mp4|webm|mov|mp3|wav|ogg/;
+    // Check extension
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    // Check mime
+    const mimetype = file.mimetype.startsWith('image/') || 
+                     file.mimetype.startsWith('video/') || 
+                     file.mimetype.startsWith('audio/');
+
+    if (mimetype && extname) {
+      return cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only images, videos, and audio are allowed.'));
+      cb(new Error('Invalid file type. Only images, videos, and audio files are allowed.'));
     }
   }
 });
