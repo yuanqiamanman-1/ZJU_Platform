@@ -66,6 +66,11 @@ app.use('/api', apiRoutes);
 // Catch-all for SPA (must be after API routes)
 if (fs.existsSync(distPath)) {
   app.get('*', (req, res) => {
+    // Disable caching for index.html to ensure PWA updates are detected
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
     res.sendFile(path.join(distPath, 'index.html'));
   });
 }
