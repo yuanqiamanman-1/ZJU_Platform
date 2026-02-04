@@ -1,6 +1,6 @@
 # Node dependencies
-# node_modules/ <-- Un-ignored for WeChat dependencies
-# server/node_modules/ <-- Un-ignored for WeChat dependencies
+node_modules/
+server/node_modules/
 
 # Build outputs
 .vite/
