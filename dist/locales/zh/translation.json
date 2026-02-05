@@ -1,4 +1,8 @@
 {
+  "error": {
+    "something_went_wrong": "出错了",
+    "boundary_desc": "应用程序遇到错误，但已尝试包含它。"
+  },
   "notifications": {
     "title": "通知中心",
     "mark_all_read": "全部已读",
@@ -308,7 +312,10 @@
     "copy_failed": "复制失败",
     "retry": "重试",
     "size": "尺寸",
-    "featured": "精选"
+    "featured": "精选",
+    "try_again": "重试",
+    "force_reload": "强制刷新",
+    "searching": "搜索中..."
   },
   "upload": {
     "title_required": "标题不能为空",
@@ -451,10 +458,6 @@
     "limited_spots": "名额有限，先到先得。"
   },
   "admin": {
-    "resource_manager_ui": {
-      "loading": "加载中...",
-      "pagination_info": "第 {{page}} 页，共 {{total}} 页"
-    },
     "dashboard": "管理控制台",
     "subtitle": "管理网站内容和数据库",
     "add_new": "新增",
@@ -469,7 +472,6 @@
     "save": "保存更改",
     "delete_confirm": "确定要删除此项目吗？",
     "delete_user_confirm": "确定要删除此用户吗？此操作无法撤销。",
-    "loading_settings": "正在加载设置...",
     "enter_invite_code": "输入邀请码",
     "id": "ID",
     "actions": "操作",
@@ -595,22 +597,6 @@
       "live_badge": "LIVE",
       "press_hold": "按住查看",
       "just_now": "刚刚"
-    },
-    "pending_review_ui": {
-      "title": "待审核内容",
-      "load_fail": "加载待审核内容失败",
-      "approved_success": "已批准发布",
-      "rejected_success": "已拒绝发布",
-      "action_fail": "操作失败",
-      "loading": "加载中...",
-      "refresh": "刷新",
-      "all_caught_up": "全部处理完毕！",
-      "no_pending": "目前没有待审核的内容。",
-      "no_img": "无预览图",
-      "user_label": "用户",
-      "approve": "批准",
-      "reject": "拒绝",
-      "admin_rejected": "管理员拒绝"
     },
     "overview": "概览",
     "file_manager": "文件管理",
@@ -797,7 +783,13 @@
       "uptime": "运行时间",
       "welcome_back": "欢迎回来，管理员",
       "control_text": "您可以完全控制平台内容和用户。",
-      "check_pending": "查看待审核项目"
+      "check_pending": "查看待审核项目",
+      "active": "活跃",
+      "pending": "待审核",
+      "deleted": "已删除",
+      "uptime_days": "天",
+      "uptime_hours": "小时",
+      "uptime_minutes": "分"
     },
     "user_manager_ui": {
       "role_user": "用户",
@@ -817,7 +809,6 @@
       "approved_success": "批准成功",
       "rejected_success": "拒绝成功",
       "action_fail": "操作失败",
-      "load_fail": "加载待审核项目失败",
       "admin_rejected": "管理员已拒绝"
     },
     "resource_manager_ui": {
@@ -861,7 +852,8 @@
     "all_natures": "所有性质",
     "all_organizers": "所有主办方",
     "all_locations": "所有地点",
-    "all_target_audiences": "所有目标人群"
+    "all_target_audiences": "所有目标人群",
+    "clear": "清空筛选"
   },
   "event_fields": {
     "basic_info": "基本信息",
