@@ -142,31 +142,26 @@ async function parseWithLLM(data) {
         const response = await axios.post(`${process.env.LLM_BASE_URL}/chat/completions`, {
             model: process.env.LLM_MODEL,
             messages: [
-                { role: 'system', content: 'You are a helpful assistant that extracts event information from text into JSON. Output raw JSON only.' },
-                { role: 'user', content: prompt }
+                { role: 'system', content: prompt },
+                { role: 'user', content: `文章标题: ${data.title}\n\n文章内容:\n${data.content.substring(0, 15000)}` } // Truncate to avoid context limit
             ],
-            temperature: 0.1
+            stream: false, // Use non-streaming for simplicity in backend
+            // enable_thinking: true // DISABLED: ModelScope requires streaming for thinking mode
         }, {
             headers: {
                 'Authorization': `Bearer ${process.env.LLM_API_KEY}`,
                 'Content-Type': 'application/json'
-            }
+            },
+            timeout: 60000 // 60s timeout
         });
 
-        const result = response.data.choices[0].message.content;
-        console.log('\n✅ LLM Result received');
+        // Handle ModelScope specific response structure if needed, or standard OpenAI format
+        const content = response.data.choices[0].message.content;
         
-        try {
-            const jsonStr = result.replace(/```json/g, '').replace(/```/g, '').trim();
-            const json = JSON.parse(jsonStr);
-            // Add cover image from scraping stage if LLM didn't extract it (it can't)
-            json.cover = data.coverImage; 
-            return json;
-        } catch (e) {
-            console.warn('⚠️  Could not parse LLM response as JSON:', e.message);
-            return null;
-        }
-
+        // Remove markdown code blocks if present
+        const jsonStr = content.replace(/```json\n?|\n?```/g, '').trim();
+        
+        return JSON.parse(jsonStr);
     } catch (error) {
         console.error('❌ LLM Error:', error.response?.data || error.message);
         throw new Error('LLM parsing failed');
