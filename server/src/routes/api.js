@@ -20,6 +20,7 @@ const notificationController = require('../controllers/notificationController');
 const commentController = require('../controllers/commentController');
 
 const { authenticateToken, isAdmin, optionalAuth } = require('../middleware/auth');
+const { validate, registerValidation, loginValidation, changePasswordValidation } = require('../middleware/validate');
 const authController = require('../controllers/authController');
 
 // Rate Limiter
@@ -40,11 +41,11 @@ const authLimiter = rateLimit({
 router.use(limiter);
 
 // Auth Routes
-router.post('/auth/register', authLimiter, authController.register);
-router.post('/auth/login', authLimiter, authController.login);
+router.post('/auth/register', authLimiter, validate(registerValidation), authController.register);
+router.post('/auth/login', authLimiter, validate(loginValidation), authController.login);
 router.post('/auth/admin-login', authLimiter, authController.adminLogin);
 router.get('/auth/me', authenticateToken, authController.me);
-router.post('/auth/change-password', authenticateToken, authController.changePassword);
+router.post('/auth/change-password', authenticateToken, validate(changePasswordValidation), authController.changePassword);
 router.put('/auth/profile', authenticateToken, (req, res) => {
     // Alias to userController.updateUser but forcing the ID to be the logged-in user
     req.params.id = req.user.id;

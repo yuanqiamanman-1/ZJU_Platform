@@ -6,6 +6,7 @@ const fs = require('fs');
 const compression = require('compression');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const hpp = require('hpp');
 
 const { getDb } = require('./src/config/db');
 const apiRoutes = require('./src/routes/api');
@@ -52,6 +53,9 @@ app.use(helmet({
 
 // Trust proxy for correct protocol/secure cookies behind Nginx/ALB
 app.set('trust proxy', 1);
+
+// Prevent HTTP Parameter Pollution
+app.use(hpp());
 
 // Rate Limiting
 const limiter = rateLimit({
