@@ -1,16 +1,34 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
+// Simple In-Memory Cache
+const CACHE_TTL = 1000 * 60 * 60 * 24; // 24 hours
+const wechatCache = new Map();
+
 // Configuration
 // In a real CommonJS app, process.env is already populated by dotenv in index.js
 const LLM_API_KEY = process.env.LLM_API_KEY;
 const LLM_BASE_URL = process.env.LLM_BASE_URL || 'https://api.deepseek.com/v1'; 
 const LLM_MODEL = process.env.LLM_MODEL || 'deepseek-chat';
 
+function cleanWeChatUrl(url) {
+    try {
+        const u = new URL(url);
+        // Remove tracking params that don't affect content
+        const paramsToRemove = ['chksm', 'scene', 'subscene', 'ascene', 'fasttmpl_type', 'fasttmpl_fullversion', 'clicktime', 'enterid', 'utm_source', 'utm_medium', 'utm_campaign'];
+        paramsToRemove.forEach(p => u.searchParams.delete(p));
+        u.hash = ''; // Remove anchor
+        return u.toString();
+    } catch (e) {
+        return url;
+    }
+}
+
 async function scrapeWeChat(url) {
     console.log(`\n🔍 Fetching URL: ${url}...`);
     
     // SSRF Protection
+
     try {
         const parsedUrl = new URL(url);
         const hostname = parsedUrl.hostname;
@@ -211,5 +229,8 @@ async function parseWithLLM(data) {
 
 module.exports = {
     scrapeWeChat,
-    parseWithLLM
+    parseWithLLM,
+    cleanWeChatUrl,
+    wechatCache,
+    CACHE_TTL
 };

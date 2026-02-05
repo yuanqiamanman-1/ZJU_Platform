@@ -122,7 +122,7 @@ if (fs.existsSync(distPath)) {
   app.use(express.static(distPath));
 }
 
-const { scrapeWeChat, parseWithLLM } = require('./src/utils/wechat');
+const { scrapeWeChat, parseWithLLM, cleanWeChatUrl, wechatCache, CACHE_TTL } = require('./src/utils/wechat');
 
 // WeChat Parsing Endpoint
 app.post('/api/resources/parse-wechat', authenticateToken, isAdmin, async (req, res, next) => {
@@ -133,10 +133,24 @@ app.post('/api/resources/parse-wechat', authenticateToken, isAdmin, async (req, 
     }
 
     try {
-        // 1. Scrape
-        const scrapedData = await scrapeWeChat(url);
+        // 1. Clean URL
+        const cleanedUrl = cleanWeChatUrl(url);
         
-        // 2. Parse with LLM
+        // 2. Check Cache
+        if (wechatCache.has(cleanedUrl)) {
+            const { data, timestamp } = wechatCache.get(cleanedUrl);
+            if (Date.now() - timestamp < CACHE_TTL) {
+                console.log(`🚀 Cache Hit for: ${cleanedUrl}`);
+                return res.json(data);
+            } else {
+                wechatCache.delete(cleanedUrl); // Expired
+            }
+        }
+
+        // 3. Scrape
+        const scrapedData = await scrapeWeChat(cleanedUrl);
+        
+        // 4. Parse with LLM
         const parsedData = await parseWithLLM(scrapedData);
         
         if (!parsedData) {
@@ -146,6 +160,12 @@ app.post('/api/resources/parse-wechat', authenticateToken, isAdmin, async (req, 
         // Merge original content into the response for the editor
         // We use the cleaned text from scraping as a starting point for the content field
         parsedData.content = scrapedData.content;
+
+        // 5. Cache Result
+        wechatCache.set(cleanedUrl, {
+            data: parsedData,
+            timestamp: Date.now()
+        });
 
         res.json(parsedData);
 

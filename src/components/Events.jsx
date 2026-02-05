@@ -190,6 +190,24 @@ const EventCard = memo(({ event, index, onClick, onToggleFavorite }) => {
             </p>
         )}
 
+        {/* Benefits Badges */}
+        {(event.score || event.volunteer_time) && (
+            <div className="flex flex-wrap gap-2 mb-4">
+                {event.score && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-300 border border-purple-500/20 text-xs font-bold uppercase tracking-wider">
+                        <Award size={12} />
+                        {event.score}
+                    </span>
+                )}
+                {event.volunteer_time && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-xs font-bold uppercase tracking-wider">
+                        <Clock size={12} />
+                        {event.volunteer_time}
+                    </span>
+                )}
+            </div>
+        )}
+
         {/* Footer: Tags & Actions */}
         <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/5">
             <div className="flex flex-wrap gap-2 overflow-hidden h-[32px]">

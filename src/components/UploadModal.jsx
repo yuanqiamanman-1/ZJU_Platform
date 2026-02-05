@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, Image, Film, Music, FileText, Plus, Calendar, Tag, Link, ChevronDown, Check, Sparkles } from 'lucide-react';
+import { X, Upload, Image, Film, Music, FileText, Plus, Calendar, Tag, Link, ChevronDown, Check, Sparkles, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api, { uploadFile } from '../services/api';
@@ -95,6 +95,23 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
     } finally {
         setIsParsing(false);
     }
+  };
+
+  const handleClearParsedData = () => {
+      setWechatUrl('');
+      setTitle('');
+      setDescription('');
+      setContent('');
+      setEventDate('');
+      setEventEndDate('');
+      setEventLocation('');
+      setEventOrganizer('');
+      setEventTarget('');
+      setEventVolunteerTime('');
+      setEventScore('');
+      setDateReasoning('');
+      setTags('');
+      toast.success(t('upload.cleared'));
   };
 
   // Reset form when modal opens with new data or closes
@@ -412,6 +429,17 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                                 </>
                             )}
                         </button>
+                        
+                        {(wechatUrl || title) && (
+                            <button 
+                                type="button"
+                                onClick={handleClearParsedData}
+                                className="px-3 py-2.5 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-xl transition-all border border-white/5"
+                                title={t('common.clear')}
+                            >
+                                <RotateCcw size={18} />
+                            </button>
+                        )}
                     </div>
                 </div>
 

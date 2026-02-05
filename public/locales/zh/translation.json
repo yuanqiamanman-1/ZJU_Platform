@@ -347,6 +347,7 @@
     "wechat_import": "从微信公众号导入",
     "wechat_placeholder": "粘贴微信公众号文章链接...",
     "parsing": "解析中...",
+    "cleared": "已清空解析数据",
     "smart_parse": "智能识别",
     "tags": "标签",
     "tags_placeholder": "输入标签，按回车添加...",
