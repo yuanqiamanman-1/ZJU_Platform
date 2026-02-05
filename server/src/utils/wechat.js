@@ -145,7 +145,8 @@ async function parseWithLLM(data) {
                 { role: 'system', content: prompt },
                 { role: 'user', content: `文章标题: ${data.title}\n\n文章内容:\n${data.content.substring(0, 15000)}` } // Truncate to avoid context limit
             ],
-            stream: false // Use non-streaming for simplicity in backend
+            stream: false, // Use non-streaming for simplicity in backend
+            enable_thinking: false // Explicitly disable thinking for non-streaming calls
         }, {
             headers: {
                 'Authorization': `Bearer ${process.env.LLM_API_KEY}`,
