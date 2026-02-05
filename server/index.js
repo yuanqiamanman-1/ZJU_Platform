@@ -14,7 +14,17 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Security & Optimization Middleware
-app.use(compression());
+app.use(compression({
+  level: 6, // 压缩级别，平衡压缩率和性能
+  threshold: 1024, // 只有超过 1KB 的响应才压缩
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    // 默认压缩过滤器
+    return compression.filter(req, res);
+  }
+}));
 
 // Enhanced Security Headers
 app.use(helmet({
