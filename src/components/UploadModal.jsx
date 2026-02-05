@@ -72,6 +72,13 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
             if (data.content) setContent(data.content); // Store full content for parsing/editing
             if (data.description) setDescription(data.description); // Summary for description
             
+            // New fields mapping
+            if (data.organizer) setEventOrganizer(data.organizer);
+            if (data.target_audience) setEventTarget(data.target_audience);
+            if (data.volunteer_time) setEventVolunteerTime(data.volunteer_time);
+            if (data.score) setEventScore(data.score);
+            if (data.date_reasoning) setDateReasoning(data.date_reasoning);
+
             // Auto-generate tags if available
             if (data.tags && data.tags.length > 0) {
                 // Merge with existing tags
