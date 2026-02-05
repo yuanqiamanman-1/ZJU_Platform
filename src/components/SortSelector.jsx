@@ -21,7 +21,7 @@ const SortSelector = ({ sort, onSortChange, className, buttonClassName, extraOpt
         onChange={onSortChange}
         options={options}
         icon={ArrowUpDown}
-        buttonClassName={buttonClassName || "bg-[#0a0a0a]/60 border border-white/10 hover:bg-[#0a0a0a]/80 rounded-full px-6 py-2.5 backdrop-blur-3xl transition-all text-sm font-medium shadow-lg text-white"}
+        buttonClassName={buttonClassName || "bg-[#0a0a0a]/60 border border-white/10 hover:bg-[#0a0a0a]/80 hover:border-indigo-500/30 rounded-full px-6 py-2.5 backdrop-blur-3xl transition-all text-sm font-medium shadow-lg text-white hover:shadow-[0_0_15px_rgba(99,102,241,0.2)]"}
       />
     </div>
   );

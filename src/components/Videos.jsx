@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Film, X, Upload, AlertCircle } from 'lucide-react';
+import { Play, Film, X, Upload, AlertCircle, ArrowRight, Tag } from 'lucide-react';
 import UploadModal from './UploadModal';
 import FavoriteButton from './FavoriteButton';
 import SmartImage from './SmartImage';
@@ -24,7 +24,7 @@ const VideoCard = memo(({ video, index, onClick, onToggleFavorite }) => {
       transition={{ delay: index * 0.1 }}
       viewport={{ once: true }}
       onClick={() => onClick(video)}
-      className="group relative aspect-video rounded-3xl overflow-hidden bg-[#1a1a1a]/60 backdrop-blur-xl border border-white/10 cursor-pointer hover:shadow-2xl hover:shadow-pink-500/20 transition-all duration-300 hover:-translate-y-1"
+      className="group relative aspect-video rounded-3xl overflow-hidden bg-[#1a1a1a]/60 backdrop-blur-xl border border-white/10 cursor-pointer hover:shadow-[0_0_30px_rgba(236,72,153,0.3)] hover:border-pink-500/30 transition-all duration-300 hover:-translate-y-1"
     >
       <SmartImage 
         src={getThumbnailUrl(video.thumbnail)} 
@@ -35,31 +35,53 @@ const VideoCard = memo(({ video, index, onClick, onToggleFavorite }) => {
         iconSize={48}
       />
       
+      {/* New Badge */}
+      {video.date && (new Date() - new Date(video.date)) < 7 * 24 * 60 * 60 * 1000 && (
+          <div className="absolute top-4 left-4 px-2 py-0.5 rounded-md bg-pink-500 text-white text-[10px] font-bold uppercase tracking-wider shadow-lg z-20">
+              New
+          </div>
+      )}
+      
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-300" />
       
       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 shadow-[0_0_30px_rgba(255,255,255,0.2)] group-hover:scale-110 transition-transform duration-300">
-          <Play size={40} fill="white" className="text-white ml-2" />
+        <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 shadow-[0_0_30px_rgba(255,255,255,0.2)] group-hover:scale-110 transition-transform duration-300 relative">
+          <div className="absolute inset-0 rounded-full border-2 border-white/50 animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]" />
+          <Play size={40} fill="white" className="text-white ml-2 relative z-10" />
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 w-full p-6 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-        <div className="flex justify-between items-end">
-          <div>
-            <h3 className="text-xl font-bold text-white">{video.title}</h3>
+      <div className="absolute bottom-0 left-0 w-full p-4 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-between items-end">
+             <h3 className="text-lg md:text-xl font-bold text-white line-clamp-1 flex-1 mr-4">{video.title}</h3>
+             
+             <div className="flex items-center gap-2">
+                <FavoriteButton 
+                  itemId={video.id}
+                  itemType="video"
+                  size={18}
+                  showCount={false}
+                  favorited={video.favorited}
+                  initialFavorited={video.favorited}
+                  className="p-2 bg-black/50 hover:bg-pink-500/20 rounded-full backdrop-blur-md transition-colors group/btn border border-white/10 text-white"
+                  onToggle={(favorited, likes) => onToggleFavorite(video.id, favorited, likes)}
+                />
+                <div className="p-2 rounded-full bg-white/20 backdrop-blur-md border border-white/10 group-hover:bg-pink-500 group-hover:text-white transition-all duration-300">
+                    <ArrowRight size={18} className="-rotate-45 group-hover:rotate-0 transition-transform duration-300" />
+                </div>
+             </div>
           </div>
           
-          <FavoriteButton 
-            itemId={video.id}
-            itemType="video"
-            size={18}
-            showCount={true}
-            count={video.likes || 0}
-            favorited={video.favorited}
-            initialFavorited={video.favorited}
-            className="p-2 bg-black/50 hover:bg-pink-500/20 rounded-full backdrop-blur-md transition-colors group/btn border border-white/10"
-            onToggle={(favorited, likes) => onToggleFavorite(video.id, favorited, likes)}
-          />
+          {video.tags && (
+            <div className="flex flex-wrap gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
+                {video.tags.split(',').slice(0, 3).map((tag, i) => (
+                    <span key={i} className="px-2 py-0.5 rounded-lg bg-black/40 text-white/80 text-[10px] backdrop-blur-sm border border-white/10 flex items-center gap-1">
+                        <Tag size={10} /> #{tag.trim()}
+                    </span>
+                ))}
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
@@ -144,8 +166,14 @@ const Videos = () => {
   }, [setVideos, setSelectedVideo]);
 
   return (
-    <section className="pt-24 pb-40 md:py-24 px-4 md:px-8 min-h-screen flex items-center justify-center relative z-10">
-      <div className="max-w-7xl w-full mx-auto relative">
+    <section className="pt-24 pb-40 md:py-24 px-4 md:px-8 min-h-screen flex items-center justify-center relative z-10 overflow-hidden">
+      {/* Ambient Background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+          <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-pink-500/10 blur-[130px]" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-rose-500/10 blur-[120px]" />
+      </div>
+
+      <div className="max-w-7xl w-full mx-auto relative z-10">
         <div className="absolute right-0 top-0 flex items-center gap-4 z-20">
              <button
               onClick={() => setIsUploadOpen(true)}

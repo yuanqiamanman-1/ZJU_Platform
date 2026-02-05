@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, MapPin, ArrowRight, X, Filter, Upload, Clock, CheckCircle, ExternalLink, Download, Globe, FileText, AlertCircle, Share2, Copy, Award, Users, Building2, Tag, Search } from 'lucide-react';
+import { Calendar, MapPin, ArrowRight, X, Filter, Upload, Clock, CheckCircle, ExternalLink, Download, Globe, FileText, AlertCircle, Share2, Copy, Award, Users, Building2, Tag, Search, Plus } from 'lucide-react';
 import UploadModal from './UploadModal';
 import FavoriteButton from './FavoriteButton';
 import { useTranslation } from 'react-i18next';
@@ -18,27 +18,35 @@ import { useBackClose } from '../hooks/useBackClose';
 import { useCachedResource } from '../hooks/useCachedResource';
 import TagFilter from './TagFilter';
 import AdvancedFilter from './AdvancedFilter';
+import DOMPurify from 'dompurify';
 
 import { useSearchParams } from 'react-router-dom';
 import { getThumbnailUrl } from '../utils/imageUtils';
 
-const getEventLifecycle = (date, t) => {
+const getEventLifecycle = (date, endDate, t) => {
   if (!date) return t('events.status.unknown');
   try {
-      const d = new Date();
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      const today = `${year}-${month}-${day}`;
+      const now = new Date();
+      const startDate = new Date(date);
       
-      // Extract date part if ISO string
-      let eventDateStr = date;
-      if (date.includes('T')) {
-          eventDateStr = date.split('T')[0];
+      // If valid end date exists, use range comparison
+      if (endDate) {
+          const end = new Date(endDate);
+          // Adjust end date to include the full day
+          end.setHours(23, 59, 59, 999);
+          
+          if (now < startDate) return t('events.status.upcoming');
+          if (now >= startDate && now <= end) return t('events.status.ongoing');
+          return t('events.status.past');
       }
+
+      // Fallback: If only start date
+      if (now < startDate) return t('events.status.upcoming');
       
-      if (eventDateStr > today) return t('events.status.upcoming');
-      if (eventDateStr === today) return t('events.status.ongoing');
+      // If start date is today, consider it ongoing for the day
+      const isSameDay = now.toDateString() === startDate.toDateString();
+      if (isSameDay) return t('events.status.ongoing');
+      
       return t('events.status.past');
   } catch (e) {
       return t('events.status.unknown');
@@ -76,15 +84,13 @@ const formatTime = (dateStr) => {
 const formatDateTime = (dateStr, timeStr) => {
     if (!dateStr) return '';
     
-    // Check if dateStr contains time info (e.g. YYYY-MM-DDTHH:mm)
-    // Also handle cases where time might be appended differently or standard ISO
+    // Check if dateStr contains time info
     if (dateStr.includes('T') || (dateStr.includes(':') && dateStr.length > 10)) {
         const d = new Date(dateStr);
         if (!isNaN(d.getTime())) {
             const month = d.getMonth() + 1;
             const day = d.getDate();
-            // REMOVE TIME FROM HERE - Time is handled separately or via formatTime
-            return `${month}月${day}日`; 
+            return `${month}.${day}`; 
         }
     }
     
@@ -97,16 +103,16 @@ const formatDateTime = (dateStr, timeStr) => {
     
     // Legacy time argument support (deprecated but kept for safety)
     if (timeStr && timeStr.trim()) {
-         return `${month}月${day}日 ${timeStr}`;
+         return `${month}.${day} ${timeStr}`;
     }
     
-    return `${month}月${day}日`;
+    return `${month}.${day}`;
 };
 
 const EventCard = memo(({ event, index, onClick, onToggleFavorite }) => {
   const { t } = useTranslation();
 
-  const status = getEventLifecycle(event.date, t);
+  const status = getEventLifecycle(event.date, event.end_date, t);
   const isUpcoming = status === t('events.status.upcoming');
   const dateObj = new Date(event.date);
   const day = dateObj.getDate();
@@ -116,20 +122,24 @@ const EventCard = memo(({ event, index, onClick, onToggleFavorite }) => {
     <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5, delay: index * 0.1 }}
-    className="group relative bg-[#1a1a1a]/60 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden hover:shadow-2xl hover:shadow-indigo-500/20 transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-row md:flex-col h-full"
+    whileHover={{ y: -8, scale: 1.02 }}
+    transition={{ type: "spring", stiffness: 300, damping: 20, delay: index * 0.05 }}
+    className="group relative bg-[#1a1a1a]/60 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-lg hover:shadow-[0_20px_50px_-12px_rgba(79,70,229,0.3)] hover:border-indigo-500/30 cursor-pointer flex flex-row md:flex-col h-full ring-1 ring-white/5 hover:ring-indigo-500/50"
     onClick={() => onClick(event)}
   >
+    {/* Glass Shine Effect */}
+    <div className="absolute inset-0 z-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
 {/* Image Section */}
-<div className="w-1/3 md:w-full aspect-square md:aspect-auto md:h-64 overflow-hidden relative shrink-0">
+<div className="w-1/3 md:w-full aspect-square md:aspect-auto md:h-64 overflow-hidden relative shrink-0 z-10">
     <SmartImage 
       src={getThumbnailUrl(event.image)} 
       alt={event.title} 
       loading="lazy"
       className="absolute inset-0 w-full h-full"
-      imageClassName="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+      imageClassName="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 group-hover:brightness-110 will-change-transform" 
     />
-    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent opacity-90" />
+    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent opacity-90 group-hover:opacity-60 transition-opacity duration-500" />
     
     {/* Status Badge - Adjusted for mobile */}
     <div className={`absolute top-2 right-2 md:top-4 md:right-4 px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider shadow-lg backdrop-blur-xl flex items-center gap-1.5 z-40 border border-white/10 ${getStatusColor(status, t)} bg-opacity-80`}>
@@ -137,22 +147,6 @@ const EventCard = memo(({ event, index, onClick, onToggleFavorite }) => {
         {status === t('events.status.ongoing') && <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-white animate-pulse" />}
         {status}
     </div>
-
-
-    {/* Share Button - Hidden on mobile list */
-    /* Moved to footer as requested */}
-    {/* <div className="hidden md:flex absolute bottom-4 right-4 gap-2 z-30">
-        <FavoriteButton 
-            itemId={event.id}
-            itemType="event"
-            size={18}
-            showCount={false}
-            favorited={event.favorited}
-            initialFavorited={event.favorited}
-            className="p-2 bg-black/40 hover:bg-indigo-600 rounded-full text-white backdrop-blur-md transition-all"
-            onToggle={(favorited, likes) => onToggleFavorite(event.id, favorited, likes)}
-        />
-    </div> */}
 
     {/* Countdown Overlay (Upcoming only) */}
     {isUpcoming && (
@@ -167,94 +161,61 @@ const EventCard = memo(({ event, index, onClick, onToggleFavorite }) => {
 {/* Content Section */}
     <div className="p-4 md:p-6 relative flex-1 flex flex-col min-w-0 h-full">
         {/* Title */}
-        <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-white mb-3 line-clamp-2 group-hover:text-indigo-400 transition-colors leading-tight tracking-tight">
+        <h3 className="text-xl md:text-2xl font-bold text-white mb-2 line-clamp-2 group-hover:text-indigo-400 transition-colors leading-tight tracking-tight">
             {event.title}
         </h3>
 
-        {/* Metadata Row: Date & Location */}
-        <div className="flex flex-nowrap items-center gap-3 mb-4 text-xs md:text-sm text-gray-400 font-medium overflow-hidden">
-             {/* Date - Smart Display */}
-             <div className="flex items-center gap-2 shrink-0 bg-white/5 px-2.5 py-1 rounded-lg border border-white/5">
-                <Calendar size={14} className={`shrink-0 ${event.end_date && !isSameDay(event.date, event.end_date) ? 'text-rose-400' : 'text-indigo-400'}`} />
-                <div className="flex flex-col leading-none">
-                    {event.end_date ? (
-                        isSameDay(event.date, event.end_date) ? (
-                            // Same Day: Show Date + Time Range
-                            <span className="font-medium text-gray-200">
-                                {formatDateTime(event.date)}
-                                {event.date.includes('T') && event.end_date.includes('T') ? 
-                                    <span className="text-gray-400 ml-1.5 text-[10px] uppercase">
-                                        {formatTime(event.date)} - {formatTime(event.end_date)}
-                                    </span>
-                                : ''}
-                            </span>
-                        ) : (
-                            // Different Day: Prioritize Deadline
-                            <div className="flex items-baseline gap-1.5">
-                                <span className="font-bold text-rose-300">
-                                    截止 {formatDateTime(event.end_date)}
-                                </span>
-                                <span className="text-[10px] text-gray-500">
-                                    从 {formatDateTime(event.date)}
-                                </span>
-                            </div>
-                        )
-                    ) : (
-                        <span className="font-medium text-gray-200">
-                            {formatDateTime(event.date)} {formatTime(event.date) && <span className="ml-1 text-gray-400">{formatTime(event.date)}</span>}
-                        </span>
-                    )}
-                </div>
+        {/* Date & Location - Clean Text Row */}
+        <div className="flex items-center gap-3 text-base text-gray-400 mb-4">
+            <div className="flex items-center gap-1.5 shrink-0">
+                <Calendar size={16} className="text-indigo-400" />
+                <span className="text-gray-200 font-medium whitespace-nowrap">
+                    {formatDateTime(event.date)}
+                    {event.end_date && !isSameDay(event.date, event.end_date) && `-${formatDateTime(event.end_date)}`}
+                </span>
             </div>
-
-            {/* Location */}
-            <div className="flex items-center gap-1.5 min-w-0 bg-white/5 px-2.5 py-1 rounded-lg border border-white/5">
-                 <MapPin size={14} className="text-indigo-400 shrink-0" />
-                 <span className="truncate max-w-[100px] md:max-w-[160px]">{event.location || 'Online'}</span>
+            
+            <span className="text-white/20">•</span>
+            
+            <div className="flex items-center gap-1.5 min-w-0">
+                <MapPin size={16} className="text-indigo-400 shrink-0" />
+                <span className="truncate">{event.location || 'Online'}</span>
             </div>
         </div>
 
-        {/* Description */}
-        <p className="text-gray-400 text-xs md:text-base line-clamp-2 mb-4 leading-relaxed break-words flex-grow">
-            {event.description}
-        </p>
-
-        {/* Secondary Info: Organizer & Target Audience (Below Description) */}
-        {(event.organizer || event.target_audience) && (
-            <div className="flex flex-wrap items-center gap-3 mb-4 pt-3 border-t border-white/5">
-                {event.organizer && (
-                     <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                        <Building2 size={14} className="text-indigo-400 shrink-0" />
-                        <span className="truncate max-w-[150px]">{event.organizer}</span>
-                    </div>
-                )}
-                {event.target_audience && (
-                    <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                        <Users size={14} className="text-indigo-400 shrink-0" />
-                        <span className="truncate max-w-[150px]">{event.target_audience}</span>
-                    </div>
-                )}
-            </div>
+        {/* Description - Max 3 lines */}
+        {event.description && (
+            <p className="text-base text-gray-400 mb-4 line-clamp-3 leading-relaxed">
+                {event.description}
+            </p>
         )}
-        
+
         {/* Footer: Tags & Actions */}
-        <div className="flex flex-wrap gap-2 mt-auto items-center">
-            {event.tags && event.tags.split(',').slice(0, 3).map((tag, i) => (
-                <span key={i} className="px-2 py-1 rounded-lg bg-indigo-500/10 text-indigo-300 text-[10px] md:text-xs font-medium border border-indigo-500/20 flex items-center gap-1 group-hover:bg-indigo-500/20 transition-colors shrink-0">
-                    <Tag size={12} className="hidden md:block" /> #{tag.trim()}
-                </span>
-            ))}
+        <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/5">
+            <div className="flex flex-wrap gap-2 overflow-hidden h-[32px]">
+                {event.tags && event.tags.split(',').slice(0, 3).map((tag, i) => (
+                    <span key={i} className="px-2.5 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-300 text-xs md:text-sm font-medium border border-indigo-500/20 flex items-center gap-1 group-hover:bg-indigo-500/20 transition-colors shrink-0 max-w-[120px]">
+                        <Tag size={14} className="hidden md:block shrink-0" /> 
+                        <span className="truncate">{tag.trim()}</span>
+                    </span>
+                ))}
+            </div>
             
-            <FavoriteButton 
-                itemId={event.id}
-                itemType="event"
-                size={18}
-                showCount={false}
-                favorited={event.favorited}
-                initialFavorited={event.favorited}
-                className="ml-auto p-2 rounded-full hover:bg-white/10 transition-colors"
-                onToggle={(favorited, likes) => onToggleFavorite(event.id, favorited, likes)}
-            />
+            <div className="flex items-center gap-3 ml-auto">
+                <FavoriteButton 
+                    itemId={event.id}
+                    itemType="event"
+                    size={18}
+                    showCount={false}
+                    favorited={event.favorited}
+                    initialFavorited={event.favorited}
+                    className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                    onToggle={(favorited, likes) => onToggleFavorite(event.id, favorited, likes)}
+                />
+                <div className="p-2 rounded-full bg-white/5 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300">
+                    <ArrowRight size={18} className="-rotate-45 group-hover:rotate-0 transition-transform duration-300" />
+                </div>
+            </div>
         </div>
     </div>
   </motion.div>
@@ -477,7 +438,13 @@ END:VCALENDAR`;
   ];
 
   return (
-    <section className="pt-24 pb-40 md:py-20 px-4 md:px-8 min-h-screen">
+    <section className="pt-24 pb-40 md:py-20 px-4 md:px-8 min-h-screen relative overflow-hidden">
+      {/* Ambient Background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+          <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-500/10 blur-[120px]" />
+          <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/10 blur-[120px]" />
+      </div>
+
       <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -550,7 +517,10 @@ END:VCALENDAR`;
         ) : loading && events.length === 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-14 lg:gap-16 max-w-7xl mx-auto">
            {[1,2,3,4,5,6].map(i => (
-               <div key={i} className="bg-[#1a1a1a]/40 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden h-full flex flex-row md:flex-col animate-pulse">
+               <div key={i} className="bg-[#1a1a1a]/40 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden h-full flex flex-row md:flex-col relative group">
+                   {/* Shimmer Effect */}
+                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-skeleton" />
+                   
                    {/* Image Skeleton */}
                    <div className="w-1/3 md:w-full aspect-square md:h-64 bg-white/5" />
                    {/* Content Skeleton */}
@@ -581,15 +551,27 @@ END:VCALENDAR`;
       )}
       
       {!loading && events.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 px-4">
-              <div className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-3xl p-8 mb-6 border border-white/5 backdrop-blur-xl shadow-xl">
-                  <Calendar size={64} className="text-indigo-400 opacity-80" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2">{t('events.no_events')}</h3>
-              <p className="text-gray-400 text-center max-w-md">
-                  目前没有找到相关活动。尝试调整筛选条件或稍后再来看看。
-              </p>
-          </div>
+        <div className="flex flex-col items-center justify-center py-32 px-4 text-center">
+            <div className="bg-white/5 rounded-full p-8 mb-6 border border-white/5 backdrop-blur-xl shadow-2xl relative group">
+                <div className="absolute inset-0 bg-indigo-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <Calendar size={64} className="text-white/40 relative z-10" />
+            </div>
+            <h3 className="text-3xl font-bold text-white mb-3 tracking-tight">{t('events.no_events')}</h3>
+            <p className="text-gray-400 mb-8 max-w-md text-lg">
+                {(selectedTags.length > 0 || debouncedSearch || Object.values(filters).some(v => v))
+                  ? (t('advanced_filter.clear') || "Clear filters") + " " + (t('common.or') || "or") + " " + (t('common.search') || "search")
+                  : "暂时没有即将开始的活动，稍后再来看看吧"}
+            </p>
+            <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsUploadOpen(true)}
+                className="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full font-bold transition-all shadow-lg shadow-indigo-500/25 flex items-center gap-3 border border-indigo-400/20"
+            >
+                <Plus size={20} />
+                {t('common.create_event')}
+            </motion.button>
+        </div>
       )}
 
       <Pagination 
@@ -610,11 +592,11 @@ END:VCALENDAR`;
             onClick={() => setSelectedEvent(null)}
           >
             <motion.div 
-              initial={{ scale: 0.95, y: 20, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.95, y: 20, opacity: 0 }}
-              transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
-              className="bg-[#0a0a0a] w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 shadow-2xl custom-scrollbar relative"
+              initial={{ scale: 0.9, opacity: 0, y: 50 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="bg-[#0a0a0a] w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 shadow-2xl custom-scrollbar relative"
               onClick={e => e.stopPropagation()}
             >
               {/* Modal Header Image */}
@@ -645,21 +627,16 @@ END:VCALENDAR`;
                                             isSameDay(selectedEvent.date, selectedEvent.end_date) ? (
                                                 <span className="text-indigo-300 font-bold">
                                                     {formatDateTime(selectedEvent.date)}
-                                                    {selectedEvent.date.includes('T') && selectedEvent.end_date.includes('T') && 
-                                                        <span className="ml-2 text-white/80 text-lg">
-                                                            {formatTime(selectedEvent.date)} - {formatTime(selectedEvent.end_date)}
-                                                        </span>
-                                                    }
                                                 </span>
                                             ) : (
                                                 <>
-                                                    <span className="text-rose-300 font-bold">截止 {formatDateTime(selectedEvent.end_date)} {formatTime(selectedEvent.end_date)}</span>
-                                                    <span className="text-white/20 text-base mx-2">|</span>
-                                                    <span className="text-white/60 text-base">{formatDateTime(selectedEvent.date)} 开始</span>
+                                                    <span className="text-indigo-300 font-bold">{formatDateTime(selectedEvent.date)}</span>
+                                                    <span className="text-white/40 text-base mx-1">-</span>
+                                                    <span className="text-rose-300 font-bold">{formatDateTime(selectedEvent.end_date)}</span>
                                                 </>
                                             )
                                         ) : (
-                                            <span className="text-indigo-300 font-bold">{formatDateTime(selectedEvent.date)} {formatTime(selectedEvent.date)}</span>
+                                            <span className="text-indigo-300 font-bold">{formatDateTime(selectedEvent.date)}</span>
                                         )}
                                     </span>
                                     <span className="text-white/40">|</span>
@@ -673,8 +650,8 @@ END:VCALENDAR`;
                        <div className="max-w-[85%]">
                            <h2 className="text-4xl md:text-6xl font-black text-white leading-[0.95] tracking-tight font-serif drop-shadow-2xl inline decoration-clone">
                                {selectedEvent.title}
-                               <span className={`inline-flex items-center justify-center align-middle ml-4 px-3 py-1.5 rounded-lg text-sm font-bold uppercase tracking-wider border backdrop-blur-md font-sans shadow-lg translate-y-[-0.2em] ${getStatusColor(getEventLifecycle(selectedEvent.date, t), t).replace('rounded-full', 'rounded-lg').replace('px-4', 'px-3').replace('py-1.5', 'py-1.5')}`}>
-                                   {getEventLifecycle(selectedEvent.date, t)}
+                               <span className={`inline-flex items-center justify-center align-middle ml-4 px-3 py-1.5 rounded-lg text-sm font-bold uppercase tracking-wider border backdrop-blur-md font-sans shadow-lg translate-y-[-0.2em] ${getStatusColor(getEventLifecycle(selectedEvent.date, selectedEvent.end_date, t), t).replace('rounded-full', 'rounded-lg').replace('px-4', 'px-3').replace('py-1.5', 'py-1.5')}`}>
+                                   {getEventLifecycle(selectedEvent.date, selectedEvent.end_date, t)}
                                </span>
                            </h2>
                        </div>
@@ -712,7 +689,7 @@ END:VCALENDAR`;
                              {/* Render HTML content safely */}
                              <div 
                                 className="prose prose-invert prose-lg max-w-none text-gray-300 leading-relaxed"
-                                dangerouslySetInnerHTML={{ __html: selectedEvent.content || `<p>${selectedEvent.description}</p>` }} 
+                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedEvent.content || `<p>${selectedEvent.description}</p>`) }} 
                              />
                          </div>
                      </div>
@@ -748,14 +725,14 @@ END:VCALENDAR`;
 
                             {/* Key Attributes Grid - Now just Tags */}
                             {selectedEvent.tags && (
-                                <div className="bg-white/[0.03] rounded-xl p-3 border border-white/5 backdrop-blur-sm">
-                                    <div className="flex items-center gap-2 text-indigo-400 mb-2">
-                                        <Tag size={16} />
-                                        <span className="text-xs font-bold uppercase tracking-wider">{t('upload.tags')}</span>
+                                <div className="bg-white/[0.03] rounded-xl p-4 border border-white/5 backdrop-blur-sm">
+                                    <div className="flex items-center gap-2 text-indigo-400 mb-3">
+                                        <Tag size={18} />
+                                        <span className="text-sm font-bold uppercase tracking-wider">{t('upload.tags')}</span>
                                     </div>
-                                    <div className="flex flex-wrap gap-1.5">
+                                    <div className="flex flex-wrap gap-2">
                                         {selectedEvent.tags.split(',').map((tag, i) => (
-                                            <span key={i} className="px-2.5 py-1 rounded-lg bg-white/5 text-gray-300 text-xs font-medium border border-white/5 hover:bg-white/10 transition-colors">
+                                            <span key={i} className="px-3 py-1.5 rounded-lg bg-white/5 text-gray-300 text-sm font-medium border border-white/5 hover:bg-white/10 transition-colors">
                                                 {tag.trim()}
                                             </span>
                                         ))}
@@ -766,71 +743,74 @@ END:VCALENDAR`;
                             <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
                             {/* Detailed Info List */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 <div className="flex gap-3 items-center group">
-                                    <div className="p-2 bg-orange-500/5 border border-orange-500/10 rounded-lg text-orange-400 shrink-0 group-hover:bg-orange-500/10 transition-colors">
-                                        <Calendar size={18} />
+                                    <div className="p-2.5 bg-orange-500/5 border border-orange-500/10 rounded-xl text-orange-400 shrink-0 group-hover:bg-orange-500/10 transition-colors">
+                                        <Calendar size={20} />
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-gray-400 text-xs uppercase tracking-wider mb-0.5">{t('events.date_label')}</h4>
-                                        <p className="text-gray-200 text-sm leading-snug">{formatDateTime(selectedEvent.date, selectedEvent.time)}{selectedEvent.end_date ? ` - ${formatDateTime(selectedEvent.end_date)}` : ''}</p>
+                                        <h4 className="font-bold text-gray-400 text-sm uppercase tracking-wider mb-1">{t('events.date_label')}</h4>
+                                        <span className="text-gray-200 text-base leading-snug whitespace-nowrap">
+                                            {formatDateTime(selectedEvent.date)}
+                                            {selectedEvent.end_date && !isSameDay(selectedEvent.date, selectedEvent.end_date) && `-${formatDateTime(selectedEvent.end_date)}`}
+                                        </span>
                                     </div>
                                 </div>
 
                                 <div className="flex gap-3 items-center group">
-                                    <div className="p-2 bg-indigo-500/5 border border-indigo-500/10 rounded-lg text-indigo-400 shrink-0 group-hover:bg-indigo-500/10 transition-colors">
-                                        <MapPin size={18} />
+                                    <div className="p-2.5 bg-indigo-500/5 border border-indigo-500/10 rounded-xl text-indigo-400 shrink-0 group-hover:bg-indigo-500/10 transition-colors">
+                                        <MapPin size={20} />
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-gray-400 text-xs uppercase tracking-wider mb-0.5">{t('events.location_label')}</h4>
-                                        <p className="text-gray-200 text-sm leading-snug">{selectedEvent.location || '线上'}</p>
+                                        <h4 className="font-bold text-gray-400 text-sm uppercase tracking-wider mb-1">{t('events.location_label')}</h4>
+                                        <p className="text-gray-200 text-base leading-snug">{selectedEvent.location || '线上'}</p>
                                     </div>
                                 </div>
 
                                 {selectedEvent.organizer && (
                                     <div className="flex gap-3 items-center group">
-                                        <div className="p-2 bg-green-500/5 border border-green-500/10 rounded-lg text-green-400 shrink-0 group-hover:bg-green-500/10 transition-colors">
-                                            <Building2 size={18} />
+                                        <div className="p-2.5 bg-green-500/5 border border-green-500/10 rounded-xl text-green-400 shrink-0 group-hover:bg-green-500/10 transition-colors">
+                                            <Building2 size={20} />
                                         </div>
                                         <div>
-                                            <h4 className="font-bold text-gray-400 text-xs uppercase tracking-wider mb-0.5">主办方</h4>
-                                            <p className="text-gray-200 text-sm leading-snug">{selectedEvent.organizer}</p>
+                                            <h4 className="font-bold text-gray-400 text-sm uppercase tracking-wider mb-1">主办方</h4>
+                                            <p className="text-gray-200 text-base leading-snug">{selectedEvent.organizer}</p>
                                         </div>
                                     </div>
                                 )}
 
                                 {selectedEvent.target_audience && (
                                     <div className="flex gap-3 items-center group">
-                                        <div className="p-2 bg-blue-500/5 border border-blue-500/10 rounded-lg text-blue-400 shrink-0 group-hover:bg-blue-500/10 transition-colors">
-                                            <Users size={18} />
+                                        <div className="p-2.5 bg-blue-500/5 border border-blue-500/10 rounded-xl text-blue-400 shrink-0 group-hover:bg-blue-500/10 transition-colors">
+                                            <Users size={20} />
                                         </div>
                                         <div>
-                                            <h4 className="font-bold text-gray-400 text-xs uppercase tracking-wider mb-0.5">面向对象</h4>
-                                            <p className="text-gray-200 text-sm leading-snug">{selectedEvent.target_audience}</p>
+                                            <h4 className="font-bold text-gray-400 text-sm uppercase tracking-wider mb-1">面向对象</h4>
+                                            <p className="text-gray-200 text-base leading-snug">{selectedEvent.target_audience}</p>
                                         </div>
                                     </div>
                                 )}
 
                                 {selectedEvent.volunteer_time && (
                                     <div className="flex gap-3 items-center group">
-                                        <div className="p-2 bg-emerald-500/5 border border-emerald-500/10 rounded-lg text-emerald-400 shrink-0 group-hover:bg-emerald-500/10 transition-colors">
-                                            <Clock size={18} />
+                                        <div className="p-2.5 bg-emerald-500/5 border border-emerald-500/10 rounded-xl text-emerald-400 shrink-0 group-hover:bg-emerald-500/10 transition-colors">
+                                            <Clock size={20} />
                                         </div>
                                         <div>
-                                            <h4 className="font-bold text-gray-400 text-xs uppercase tracking-wider mb-0.5">志愿时长</h4>
-                                            <p className="text-gray-200 text-sm leading-snug">{selectedEvent.volunteer_time}</p>
+                                            <h4 className="font-bold text-gray-400 text-sm uppercase tracking-wider mb-1">志愿时长</h4>
+                                            <p className="text-gray-200 text-base leading-snug">{selectedEvent.volunteer_time}</p>
                                         </div>
                                     </div>
                                 )}
 
                                 {selectedEvent.score && (
                                     <div className="flex gap-3 items-center group">
-                                        <div className="p-2 bg-purple-500/5 border border-purple-500/10 rounded-lg text-purple-400 shrink-0 group-hover:bg-purple-500/10 transition-colors">
-                                            <Award size={18} />
+                                        <div className="p-2.5 bg-purple-500/5 border border-purple-500/10 rounded-xl text-purple-400 shrink-0 group-hover:bg-purple-500/10 transition-colors">
+                                            <Award size={20} />
                                         </div>
                                         <div>
-                                            <h4 className="font-bold text-gray-400 text-xs uppercase tracking-wider mb-0.5">加分</h4>
-                                            <p className="text-gray-200 text-sm leading-snug">{selectedEvent.score}</p>
+                                            <h4 className="font-bold text-gray-400 text-sm uppercase tracking-wider mb-1">加分</h4>
+                                            <p className="text-gray-200 text-base leading-snug">{selectedEvent.score}</p>
                                         </div>
                                     </div>
                                 )}

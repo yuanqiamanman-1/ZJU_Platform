@@ -16,6 +16,7 @@ import SortSelector from './SortSelector';
 import { useBackClose } from '../hooks/useBackClose';
 import { useCachedResource } from '../hooks/useCachedResource';
 import TagFilter from './TagFilter';
+import DOMPurify from 'dompurify';
 
 const calculateReadingTime = (text, t) => {
     const wordsPerMinute = 200;
@@ -29,16 +30,17 @@ const ArticleCard = memo(({ article, index, onClick, onToggleFavorite }) => {
   
   return (
     <motion.div
+      layout
       initial={{ opacity: 0, x: -20 }}
       whileInView={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.1 }}
       viewport={{ once: true }}
       onClick={() => onClick(article)}
-      className="group relative bg-[#1a1a1a]/60 backdrop-blur-xl hover:bg-[#1a1a1a]/80 border border-white/10 rounded-3xl p-6 transition-all duration-300 hover:border-white/20 cursor-pointer overflow-hidden hover:shadow-2xl hover:shadow-orange-500/20 hover:-translate-y-1"
+      className="group relative bg-[#1a1a1a]/60 backdrop-blur-xl hover:bg-[#1a1a1a]/80 border border-white/10 rounded-3xl p-6 transition-all duration-300 hover:border-orange-500/30 cursor-pointer overflow-hidden hover:shadow-[0_20px_40px_-15px_rgba(249,115,22,0.15)] hover:-translate-y-1"
     >
       {/* Shine Effect */}
       <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden rounded-3xl">
-          <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full shine-effect" />
+          <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full shine-effect" />
       </div>
 
       <div className="flex flex-col md:flex-row gap-6">
@@ -55,19 +57,6 @@ const ArticleCard = memo(({ article, index, onClick, onToggleFavorite }) => {
             />
           </div>
         )}
-
-        <div className="absolute top-4 right-4 flex gap-2 md:hidden">
-          <FavoriteButton 
-            itemId={article.id}
-            itemType="article"
-            size={16}
-            showCount={true}
-            count={article.likes || 0}
-            initialFavorited={article.favorited}
-            className="p-2 bg-black/50 hover:bg-orange-500 rounded-full backdrop-blur-md transition-all group/btn border border-white/10"
-            onToggle={(favorited, likes) => onToggleFavorite(article.id, favorited, likes)}
-          />
-        </div>
 
         <div className="flex-1 flex flex-col justify-center space-y-3">
           <div className="flex items-center gap-3 text-xs font-mono text-gray-400">
@@ -87,24 +76,28 @@ const ArticleCard = memo(({ article, index, onClick, onToggleFavorite }) => {
           <p className="text-gray-400 line-clamp-2">
             {article.excerpt}
           </p>
-        </div>
-
-        <div className="hidden md:flex flex-col items-center justify-between pl-4 border-l border-white/5 py-2">
-           <div className="flex flex-col gap-3 items-center">
-               <FavoriteButton 
-                itemId={article.id}
-                itemType="article"
-                size={16}
-                showCount={true}
-                count={article.likes || 0}
-                initialFavorited={article.favorited}
-                className="p-2 bg-white/5 hover:bg-orange-500 rounded-full backdrop-blur-md transition-all border border-white/10"
-                onToggle={(favorited, likes) => onToggleFavorite(article.id, favorited, likes)}
-              />
-           </div>
-           <div className="p-3 rounded-full bg-white/5 group-hover:bg-orange-500 group-hover:text-black transition-all duration-300">
-              <ArrowRight size={20} className="-rotate-45 group-hover:rotate-0 transition-transform duration-300" />
-           </div>
+          
+          {/* Footer Actions */}
+          <div className="pt-2 flex items-center justify-between mt-auto">
+             <div className="flex gap-2">
+                {/* Optional: Add tags here if available in future */}
+             </div>
+             <div className="flex items-center gap-3 ml-auto">
+                 <FavoriteButton 
+                    itemId={article.id}
+                    itemType="article"
+                    size={18}
+                    showCount={true}
+                    count={article.likes || 0}
+                    initialFavorited={article.favorited}
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-orange-500"
+                    onToggle={(favorited, likes) => onToggleFavorite(article.id, favorited, likes)}
+                  />
+                  <div className="p-2 rounded-full bg-white/5 group-hover:bg-orange-500 group-hover:text-black transition-all duration-300">
+                      <ArrowRight size={18} className="-rotate-45 group-hover:rotate-0 transition-transform duration-300" />
+                  </div>
+             </div>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -189,8 +182,14 @@ const Articles = () => {
 
 
   return (
-    <section className="pt-24 pb-40 md:py-24 px-4 md:px-8 min-h-screen flex items-center justify-center relative z-10">
-      <div className="max-w-5xl w-full mx-auto relative">
+    <section className="pt-24 pb-40 md:py-24 px-4 md:px-8 min-h-screen flex items-center justify-center relative z-10 overflow-hidden">
+      {/* Ambient Background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+          <div className="absolute top-[-20%] left-[20%] w-[60%] h-[60%] rounded-full bg-orange-500/10 blur-[130px]" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-red-500/10 blur-[120px]" />
+      </div>
+
+      <div className="max-w-5xl w-full mx-auto relative z-10">
         <div className="absolute right-0 top-0 flex items-center gap-4 z-20">
              <button
               onClick={() => setIsUploadOpen(true)}
@@ -351,7 +350,7 @@ const Articles = () => {
                     
                     <div 
                       className="prose prose-invert prose-lg max-w-none text-gray-300 leading-relaxed"
-                      dangerouslySetInnerHTML={{ __html: selectedArticle.content }}
+                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedArticle.content) }}
                     />
 
 

@@ -6,7 +6,7 @@ import api from '../services/api';
 import SmartImage from './SmartImage';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import Dropdown from './Dropdown';
 import FavoriteButton from './FavoriteButton';
@@ -200,13 +200,20 @@ const PublicProfile = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pt-20 pb-20 px-3 md:px-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-[#0a0a0a] pt-20 pb-20 px-3 md:px-8 relative overflow-hidden">
+      {/* Ambient Background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+          <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-indigo-500/10 blur-[130px]" />
+          <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-purple-500/10 blur-[130px]" />
+      </div>
+
+      <div className="max-w-7xl mx-auto relative z-10">
         {/* Profile Header */}
-        <div className="glass-panel rounded-[2rem] p-5 md:p-12 mb-6 md:mb-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 blur-3xl -z-10" />
+        <div className="glass-panel rounded-[2rem] p-5 md:p-12 mb-6 md:mb-8 relative overflow-hidden shadow-2xl border border-white/10 group">
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 opacity-50 blur-3xl -z-10 group-hover:scale-105 transition-transform duration-1000" />
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 -z-10" />
           
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8">
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 relative z-10">
             {/* Avatar */}
             <div className="relative group shrink-0">
               <div className="w-24 h-24 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white/10 shadow-2xl">
@@ -402,17 +409,17 @@ const PublicProfile = () => {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                             {favorites.map(item => (
-                                <div key={item.id} className="flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
-                                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-lg bg-black/50 overflow-hidden flex-shrink-0">
+                                <div key={item.id} className="group flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 hover:shadow-lg hover:shadow-black/20 backdrop-blur-md transition-all duration-300">
+                                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-black/50 overflow-hidden flex-shrink-0 shadow-lg">
                                         <img 
                                           src={item.cover || item.thumbnail || item.url || item.image} 
                                           alt={item.title}
-                                          className="w-full h-full object-cover"
+                                          className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110"
                                         />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <h4 className="font-bold text-white truncate">{item.title}</h4>
-                                        <p className="text-xs text-gray-500 truncate">{item.artist || item.category}</p>
+                                        <h4 className="font-bold text-white truncate text-base md:text-lg group-hover:text-indigo-400 transition-colors">{item.title}</h4>
+                                        <p className="text-xs text-gray-500 truncate">{item.artist || item.category || t(`common.${item.type || favoriteType}`)}</p>
                                     </div>
                                     <FavoriteButton 
                                         itemId={item.id}
@@ -420,7 +427,7 @@ const PublicProfile = () => {
                                         initialFavorited={true}
                                         size={18}
                                         showCount={false}
-                                        className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                                        className="p-2.5 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white border border-transparent hover:border-white/10"
                                         onToggle={(favorited) => {
                                             if (!favorited) {
                                                 setFavorites(prev => prev.filter(f => f.id !== item.id));

@@ -11,7 +11,7 @@ const categories = [
     icon: Calendar,
     image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop&q=80',
     color: 'from-red-500/80 to-orange-600/80',
-    delay: 0.1
+    delay: 0.05
   },
   {
     id: 'gallery',
@@ -19,7 +19,7 @@ const categories = [
     icon: Camera,
     image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&auto=format&fit=crop&q=80',
     color: 'from-purple-500/80 to-indigo-600/80',
-    delay: 0.2
+    delay: 0.1
   },
   {
     id: 'music',
@@ -27,7 +27,7 @@ const categories = [
     icon: Music,
     image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=80',
     color: 'from-cyan-500/80 to-blue-600/80',
-    delay: 0.3
+    delay: 0.15
   },
   {
     id: 'videos',
@@ -35,7 +35,7 @@ const categories = [
     icon: Film,
     image: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&auto=format&fit=crop&q=80',
     color: 'from-pink-500/80 to-rose-600/80',
-    delay: 0.4
+    delay: 0.2
   },
   {
     id: 'articles',
@@ -43,7 +43,7 @@ const categories = [
     icon: BookOpen,
     image: 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800&auto=format&fit=crop&q=80',
     color: 'from-emerald-500/80 to-teal-600/80',
-    delay: 0.5
+    delay: 0.25
   }
 ];
 
@@ -64,8 +64,10 @@ const CategoryCard = ({ item }) => {
           }
         }
       }}
-      whileHover={{ y: -10 }}
-      className="relative group h-[400px] w-full overflow-hidden rounded-3xl cursor-pointer"
+      whileHover={{ y: -15, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      className="relative group h-[400px] w-full overflow-hidden rounded-[2rem] cursor-pointer border border-white/10 shadow-2xl bg-black/40 backdrop-blur-sm hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] hover:border-white/20"
     >
       <Link to={item.path} className="block w-full h-full">
         {/* Background Image */}
@@ -73,26 +75,30 @@ const CategoryCard = ({ item }) => {
           <img 
             src={item.image} 
             alt={t(`nav.${item.id}`)}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale-[0.5] group-hover:grayscale-0"
           />
         </div>
         
         {/* Gradient Overlay */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-60 group-hover:opacity-80 transition-opacity duration-500`} />
+        <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-40 group-hover:opacity-60 transition-opacity duration-500 mix-blend-overlay`} />
+        <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-xl`} />
         
         {/* Dark Gradient for Text Legibility */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90" />
+
+        {/* Glass Reflection Effect */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
         {/* Content */}
         <div className="absolute inset-0 p-8 flex flex-col justify-end">
           <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
             {/* Icon */}
-            <div className="mb-4 inline-block p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-lg group-hover:bg-white/20 transition-colors">
-              <item.icon size={32} strokeWidth={1.5} />
+            <div className="mb-4 inline-block p-4 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 text-white shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] group-hover:bg-white/10 group-hover:scale-110 transition-all duration-300">
+              <item.icon size={32} strokeWidth={1.5} className="drop-shadow-lg" />
             </div>
 
             {/* Title */}
-            <h3 className="text-3xl font-bold font-serif text-white mb-2 tracking-tight">
+            <h3 className="text-3xl font-bold font-serif text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 mb-2 tracking-tight group-hover:to-white transition-all">
               {t(`nav.${item.id}`)}
             </h3>
 

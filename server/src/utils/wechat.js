@@ -9,6 +9,27 @@ const LLM_MODEL = process.env.LLM_MODEL || 'deepseek-chat';
 
 async function scrapeWeChat(url) {
     console.log(`\n🔍 Fetching URL: ${url}...`);
+    
+    // SSRF Protection
+    try {
+        const parsedUrl = new URL(url);
+        const hostname = parsedUrl.hostname;
+        
+        // Block private IP ranges and localhost
+        const isPrivate = /^(localhost|127\.|192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|::1)/.test(hostname);
+        if (isPrivate) {
+             throw new Error('Invalid URL: Internal addresses are not allowed');
+        }
+        
+        // Only allow http/https
+        if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+            throw new Error('Invalid URL: Only HTTP/HTTPS allowed');
+        }
+    } catch (e) {
+        console.error('SSRF Protection blocked:', e.message);
+        throw new Error('Invalid URL');
+    }
+
     try {
         const response = await axios.get(url, {
             headers: {
@@ -93,17 +114,15 @@ async function parseWithLLM(data) {
     请提取以下字段并严格按照 JSON 格式返回 (纯 JSON 字符串，不要包含 markdown \`\`\`json 标记):
     {
         "title": "活动名称 (优先提取具体活动名，若无则使用文章标题)",
-        "description": "活动详情摘要 (字数严格控制在50-100字以内，作为对活动的精炼概括，涵盖最核心的亮点和内容。)",
-        "date_reasoning": "【关键步骤】请在此字段详细描述你对活动时间的推断逻辑。例如：'文中未明确写日期，但提到了寒假，结合校历寒假从1月26日开始，推断活动开始日期为2026-01-26'。",
+        "description": "活动详情摘要 (字数严格控制在50-80字以内，作为对活动的精炼概括，涵盖最核心的亮点和内容。)",
+        "date_reasoning": "【关键步骤】请在此字段详细描述你对活动日期的推断逻辑。例如：'文中未明确写日期，但提到了寒假，结合校历寒假从1月26日开始，推断活动开始日期为2026-01-26'。",
         "date": "活动开始日期 (格式 YYYY-MM-DD)",
-        "end_date": "活动结束日期 (格式 YYYY-MM-DD，如果是单日活动则填 null)",
-        "time": "活动时间 (必须使用24小时制 HH:MM-HH:MM，或 HH:MM 开始。例如 '14:00-16:00' 而不是 '2:00 PM')",
+        "end_date": "活动结束日期 (格式 YYYY-MM-DD。注意：如果是单日活动，结束日期必须与开始日期相同，不能为 null)",
         "location": "活动地点 (尽可能详细，包含楼号/室号)",
         "organizer": "主办方 (优先提取文中提及的具体主办/承办单位，若无则填文章作者)",
         "target_audience": "面向群体 (如：全校师生、特定学院、本科生、研究生等)",
         "volunteer_time": "志愿时长 (提取具体时长，如 '2.5小时'，无则 null)",
         "score": "综测/素质分 (提取具体分值，如 '0.5分'，无则 null)",
-        "type": "活动类型 (从以下选择: 讲座/会议, 比赛/竞赛, 志愿公益, 文体艺术, 休闲娱乐, 学术科研, 招聘宣讲, 其他)",
         "tags": ["标签1", "标签2"] (【严格限制】只能从以下列表中选择最匹配的1-2个标签，严禁使用其他词汇，严禁“文化”、“寒假”等通用词：讲座、志愿活动、竞赛、沙龙、展览、演出、会议、文体活动、招聘、宣讲、学术报告、社会实践、班团活动)
     }
     
@@ -114,8 +133,9 @@ async function parseWithLLM(data) {
        - "本周五" -> 结合【当前日期】计算具体日期。
        - "下个月初" -> 推断为下个月的1号。
        - "2025-2026秋冬学期" -> 结合校历推断大致范围。
-    3. **逻辑优先**：在填写 date 字段前，必须先在 \`date_reasoning\` 字段中详细描述你的推理过程。
-    4. **缺失处理**：如果经过深思熟虑仍无法推断，请填 null。
+    3. **日期优先**：我们只需要日期 (YYYY-MM-DD)，不需要具体时间 (HH:MM)。
+    4. **单日活动**：Start Date 和 End Date 必须一致。
+    5. **缺失处理**：如果经过深思熟虑仍无法推断，请填 null。
     `;
 
     try {

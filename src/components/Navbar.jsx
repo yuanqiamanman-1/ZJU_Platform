@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Cloud, Clock, CloudRain, Sun, CloudLightning, CloudSnow, CloudFog, MapPin, Search, LogOut, User, LogIn, X, Palette, MousePointer2 } from 'lucide-react';
+import { Cloud, Clock, CloudRain, Sun, CloudLightning, CloudSnow, CloudFog, Search, LogOut, Palette, MousePointer2, X, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -75,26 +75,35 @@ const Navbar = () => {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.8 }}
-      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3 glass-panel border-b border-white/5"
+      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3 bg-black/20 backdrop-blur-xl border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)]"
     >
       <Link to="/" className="flex items-center gap-3 text-white group z-50">
-        <img src="/newlogo.png" alt="拓途浙享" className="h-9 w-auto object-contain" />
+        <div className="relative">
+          <div className="absolute inset-0 bg-indigo-500/50 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-full" />
+          <img src="/newlogo.png" alt="拓途浙享" className="relative h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105" />
+        </div>
         <div className="flex flex-col items-start leading-none">
-          <span className="text-lg font-bold tracking-tighter text-white">拓途浙享</span>
-          <span className="text-[10px] font-medium tracking-widest text-gray-500 mt-0.5">数字艺术与科技</span>
+          <span className="text-lg font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70 group-hover:to-indigo-300 transition-all duration-300">拓途浙享</span>
+          <span className="text-[10px] font-medium tracking-widest text-gray-400 mt-0.5 group-hover:text-indigo-400 transition-colors">数字艺术与科技</span>
         </div>
       </Link>
       
       {/* Desktop Menu */}
-      <div className="hidden md:flex items-center gap-6">
+      <div className="hidden md:flex items-center gap-1 bg-white/5 px-2 py-1 rounded-full border border-white/5 backdrop-blur-md">
         {navLinks.map((item) => (
           <Link 
             key={item.key} 
             to={item.path} 
-            className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group py-1"
+            className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-all relative group rounded-full hover:bg-white/10"
           >
-            {t(`nav.${item.key}`)}
-            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full" />
+            <span className="relative z-10">{t(`nav.${item.key}`)}</span>
+            {location.pathname === item.path && (
+              <motion.div
+                layoutId="navbar-indicator"
+                className="absolute inset-0 bg-white/10 rounded-full border border-white/10"
+                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+              />
+            )}
           </Link>
         ))}
         
@@ -111,31 +120,23 @@ const Navbar = () => {
         {/* Weather & Clock Widget */}
         <button 
             onClick={() => setIsWeatherModalOpen(true)}
-            className="flex items-center gap-3 text-xs text-gray-400 border border-white/5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 hover:text-white transition-all cursor-pointer active:scale-95"
+            className="flex items-center gap-3 text-xs text-gray-400 border border-white/5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 hover:text-white hover:border-indigo-500/30 hover:shadow-[0_0_15px_rgba(99,102,241,0.2)] transition-all cursor-pointer active:scale-95 group"
         >
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 group-hover:text-indigo-300 transition-colors">
                 <Clock size={12} />
                 <span>{time.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
             </div>
-            <div className="w-px h-3 bg-white/10" />
-            <div className="flex items-center gap-1">
+            <div className="w-px h-3 bg-white/10 group-hover:bg-indigo-500/30 transition-colors" />
+            <div className="flex items-center gap-1 group-hover:text-indigo-300 transition-colors">
                 {weather ? getWeatherIcon(weather.weathercode) : <Cloud size={12} />}
                 <span>{weather ? `${Math.round(weather.temperature)}°C` : '...'}</span>
             </div>
-            <div className="w-px h-3 bg-white/10" />
-            <span className="truncate max-w-[60px]">{city}</span>
+            <div className="w-px h-3 bg-white/10 group-hover:bg-indigo-500/30 transition-colors" />
+            <span className="truncate max-w-[60px] group-hover:text-white transition-colors">{city}</span>
         </button>
 
         <button
-          onClick={toggleCursor}
-          className={`btn-icon ${cursorEnabled ? 'text-white bg-white/10' : ''}`}
-          title={cursorEnabled ? t('nav.cursor_disable') : t('nav.cursor_enable')}
-        >
-          <MousePointer2 size={18} />
-        </button>
-
-        <button
-            onClick={() => setIsThemeOpen(true)}
+          onClick={() => setIsThemeOpen(true)}
             className={`btn-icon ${isThemeOpen ? 'text-white bg-white/10' : ''}`}
             title={t('nav.theme_settings')}
         >

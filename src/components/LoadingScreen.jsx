@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 const LoadingScreen = () => {
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-3xl">
       <div className="relative w-24 h-24">
         {/* Outer rotating ring */}
         <motion.div

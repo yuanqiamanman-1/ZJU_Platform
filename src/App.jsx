@@ -38,7 +38,7 @@ const PageTransition = ({ children }) => (
     initial={{ opacity: 0, filter: 'blur(5px)' }}
     animate={{ opacity: 1, filter: 'blur(0px)' }}
     exit={{ opacity: 0, filter: 'blur(5px)' }}
-    transition={{ duration: 0.2, ease: "easeOut" }}
+    transition={{ duration: 0.15, ease: "easeOut" }}
     className="w-full"
   >
     {children}
@@ -126,27 +126,35 @@ const AppContent = () => {
 const App = () => {
   return (
     <HelmetProvider>
-      <ErrorBoundary>
       <AuthProvider>
         <SettingsProvider>
           <MusicProvider>
             <Router>
-              <AppContent />
               <Toaster 
-                position="bottom-right"
+                position="top-center"
                 toastOptions={{
+                  className: '',
                   style: {
-                    background: '#333',
+                    background: 'rgba(10, 10, 10, 0.8)',
                     color: '#fff',
-                    border: '1px solid rgba(255,255,255,0.1)',
+                    backdropFilter: 'blur(16px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '16px',
+                    fontSize: '14px',
+                  },
+                  success: {
+                    iconTheme: {
+                      primary: '#6366f1',
+                      secondary: '#fff',
+                    },
                   },
                 }}
               />
+              <AppContent />
             </Router>
           </MusicProvider>
         </SettingsProvider>
       </AuthProvider>
-      </ErrorBoundary>
     </HelmetProvider>
   );
 };

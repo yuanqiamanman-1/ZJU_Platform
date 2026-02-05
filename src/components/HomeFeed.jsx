@@ -12,6 +12,7 @@ import { getHighResUrl } from '../utils/imageUtils';
 import ErrorBoundary from './ErrorBoundary';
 import { Link, useNavigate } from 'react-router-dom';
 import FullFeaturedMusicPlayer from './FullFeaturedMusicPlayer';
+import DOMPurify from 'dompurify';
 
 import DashboardEvent from './dashboard/DashboardEvent';
 import DashboardPhotoStack from './dashboard/DashboardPhotoStack';
@@ -196,20 +197,13 @@ const HomeFeed = () => {
                    </div>
                 </div>
                 <div className="p-8 md:p-12">
-                   <div className="prose prose-invert prose-lg max-w-none text-gray-300" dangerouslySetInnerHTML={{ __html: activeEvent.content || activeEvent.description }} />
+                   <div className="prose prose-invert prose-lg max-w-none text-gray-300" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(activeEvent.content || activeEvent.description) }} />
                    
-                   {activeEvent.link && (
-                       <div className="mt-8 pt-8 border-t border-white/10">
-                           <a 
-                               href={activeEvent.link} 
-                               target="_blank" 
-                               rel="noopener noreferrer"
-                               className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-600/20"
-                           >
-                               {t('common.view_details')} <ArrowRight size={18} />
-                           </a>
-                       </div>
-                   )}
+                   <div className="mt-8 pt-8 border-t border-white/10 flex flex-wrap gap-4">
+                     <Link to={`/events?id=${activeEvent.id}`} className="px-6 py-3 bg-white text-black rounded-full font-bold hover:bg-gray-200 transition-colors flex items-center gap-2">
+                        {t('common.view_details')} <ArrowRight size={18}/>
+                     </Link>
+                   </div>
                 </div>
              </motion.div>
            </motion.div>

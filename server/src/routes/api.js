@@ -29,12 +29,20 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+// Stricter rate limit for auth routes
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 20, // Limit each IP to 20 login/register attempts per 15 min
+    message: { error: 'Too many login attempts, please try again later.' }
+});
+
 router.use(limiter);
 
 // Auth Routes
-router.post('/auth/register', authController.register);
-router.post('/auth/login', authController.login);
-router.post('/auth/admin-login', authController.adminLogin);
+router.post('/auth/register', authLimiter, authController.register);
+router.post('/auth/login', authLimiter, authController.login);
+router.post('/auth/admin-login', authLimiter, authController.adminLogin);
 router.get('/auth/me', authenticateToken, authController.me);
 router.post('/auth/change-password', authenticateToken, authController.changePassword);
 router.put('/auth/profile', authenticateToken, (req, res) => {
@@ -69,9 +77,9 @@ router.get('/favorites/check', authenticateToken, favoriteController.checkFavori
 
 // System Routes
 router.get('/search', systemController.searchContent);
-router.get('/stats', systemController.getStats);
+router.get('/stats', authenticateToken, isAdmin, systemController.getStats);
 router.post('/upload', authenticateToken, upload.fields([{ name: 'file', maxCount: 1 }, { name: 'cover', maxCount: 1 }]), systemController.handleUpload);
-router.get('/db/backup', systemController.downloadDbBackup);
+router.get('/db/backup', authenticateToken, isAdmin, systemController.downloadDbBackup);
 router.get('/featured', systemController.getFeaturedContent);
 router.post('/events/crawl', systemController.crawlEvents);
 router.get('/audit-logs', systemController.getAuditLogs);

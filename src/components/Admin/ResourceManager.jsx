@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { 
   Search, Plus, Trash2, Edit2, Check, X, 
   ChevronLeft, ChevronRight, Upload, Filter, AlertTriangle

@@ -19,13 +19,23 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           <button
             key={page}
             onClick={() => onPageChange(page)}
-            className={`min-w-[40px] h-10 rounded-lg transition-all border font-bold ${
+            className={`min-w-[40px] h-10 rounded-full transition-all border font-bold relative overflow-hidden group ${
               currentPage === page
-                ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white border-transparent shadow-[0_0_10px_rgba(6,182,212,0.4)]'
-                : 'bg-[#0a0a0a]/60 backdrop-blur-3xl hover:bg-[#0a0a0a]/80 text-white border-white/10'
+                ? 'text-white border-transparent shadow-[0_0_15px_rgba(6,182,212,0.5)] scale-110'
+                : 'bg-[#0a0a0a]/60 backdrop-blur-3xl hover:bg-[#0a0a0a]/80 text-gray-400 hover:text-white border-white/10 hover:border-white/30'
             }`}
           >
-            {page}
+            {currentPage === page && (
+                <motion.div 
+                    layoutId="activePage"
+                    className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+            )}
+            <span className="relative z-10">{page}</span>
+            {currentPage !== page && (
+                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            )}
           </button>
         ))}
       </div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '../context/SettingsContext';
-import { Send, CheckCircle, AlertCircle, Mail, MapPin, Phone, Github, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { Send, CheckCircle, AlertCircle, Mail, MapPin, Phone } from 'lucide-react';
 import api from '../services/api';
 
 const About = () => {
@@ -160,14 +160,6 @@ const About = () => {
               </div>
             </div>
 
-            <div className="flex gap-4">
-               {[Github, Twitter, Instagram, Linkedin].map((Icon, i) => (
-                 <a key={i} href="#" className="p-3 bg-white/5 border border-white/10 rounded-full hover:bg-white hover:text-black transition-all">
-                   <Icon size={20} />
-                 </a>
-               ))}
-            </div>
-
           </motion.div>
 
           {/* Right: Contact Form */}
@@ -183,14 +175,24 @@ const About = () => {
             <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
               <div>
                 <label className="block text-sm font-bold text-gray-400 mb-2 uppercase tracking-wider">{t('contact.name')}</label>
-                <input 
-                  type="text" 
-                  name="name"
-                  value={formState.name}
-                  onChange={handleChange}
-                  className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder-gray-600"
-                  placeholder={t('contact.name')}
-                />
+                <div className="relative group">
+                  <input 
+                    type="text" 
+                    name="name"
+                    value={formState.name}
+                    onChange={handleChange}
+                    placeholder={t('contact.name')}
+                    className={`w-full bg-white/5 border ${status === 'error' && !formState.name ? 'border-red-500/50' : 'border-white/10'} rounded-xl px-6 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 focus:bg-white/10 transition-all`}
+                  />
+                  {status === 'error' && !formState.name && (
+                      <motion.div 
+                        initial={{ x: -10 }} animate={{ x: [0, -10, 10, -10, 0] }} transition={{ duration: 0.4 }}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-red-500"
+                      >
+                          <AlertCircle size={18} />
+                      </motion.div>
+                  )}
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-400 mb-2 uppercase tracking-wider">{t('contact.email')}</label>

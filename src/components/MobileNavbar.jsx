@@ -50,7 +50,7 @@ const MobileNavbar = () => {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-[90] glass-panel-heavy border-t border-white/5 pb-[env(safe-area-inset-bottom)] md:hidden app-select-none">
+      <nav className="fixed bottom-0 left-0 right-0 z-[100] bg-black/80 backdrop-blur-xl border-t border-white/10 pb-[env(safe-area-inset-bottom)] md:hidden app-select-none shadow-[0_-10px_40px_-10px_rgba(0,0,0,0.5)]">
         <div className="flex justify-around items-center h-16 px-2">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
@@ -119,8 +119,8 @@ const MobileNavbar = () => {
                         setShowMenu(false);
                     }
                 }}
-                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="fixed inset-0 z-[100] bg-[#0a0a0a]/80 backdrop-blur-3xl md:hidden flex flex-col touch-none"
+                transition={{ type: "spring", damping: 30, stiffness: 400 }}
+                className="fixed inset-0 z-[100] bg-[#0a0a0a]/80 backdrop-blur-xl md:hidden flex flex-col touch-none"
             >
                 {/* Drag Handle */}
                 <div className="w-full flex justify-center pt-3 pb-1" onClick={() => setShowMenu(false)}>

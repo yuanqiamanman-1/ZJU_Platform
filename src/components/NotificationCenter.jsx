@@ -121,14 +121,19 @@ const NotificationCenter = () => {
   if (!user) return null;
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative z-50" ref={dropdownRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-full hover:bg-white/10 transition-colors text-white"
+        className="relative p-2 text-gray-300 hover:text-white transition-colors hover:bg-white/10 rounded-full"
       >
-        <Bell size={20} />
+        <motion.div
+            animate={unreadCount > 0 ? { rotate: [0, -15, 15, -15, 15, 0] } : {}}
+            transition={{ repeat: Infinity, repeatDelay: 5, duration: 1 }}
+        >
+            <Bell size={20} />
+        </motion.div>
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-black animate-pulse" />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-black" />
         )}
       </button>
 
@@ -139,37 +144,37 @@ const NotificationCenter = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-2 w-80 md:w-96 glass-panel rounded-2xl overflow-hidden shadow-2xl z-50 border border-white/10"
+            className="absolute right-0 mt-2 w-80 md:w-96 bg-[#0a0a0a]/90 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden origin-top-right"
           >
-            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
-              <h3 className="font-bold text-white text-lg">{t('notifications.title')}</h3>
-              <div className="flex gap-2">
-                {unreadCount > 0 && (
-                  <button 
-                    onClick={handleMarkAllRead}
-                    className="p-1.5 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg transition-all flex items-center gap-1 text-xs font-medium"
-                    title={t('notifications.mark_all_read')}
-                  >
-                    <CheckCheck size={16} />
-                  </button>
-                )}
-                {notifications.length > 0 && (
-                  <button 
-                    onClick={handleClearAll}
-                    className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all flex items-center gap-1 text-xs font-medium"
-                    title={t('notifications.clear_all')}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                )}
-              </div>
+            <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5">
+              <h3 className="font-bold text-white">{t('notifications.title')}</h3>
+              {notifications.length > 0 && (
+                  <div className="flex gap-2">
+                    <button 
+                        onClick={handleMarkAllRead}
+                        className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                        title={t('notifications.mark_all_read')}
+                    >
+                        <CheckCheck size={16} />
+                    </button>
+                    <button 
+                        onClick={handleClearAll}
+                        className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                        title={t('notifications.clear_all')}
+                    >
+                        <Trash2 size={16} />
+                    </button>
+                  </div>
+              )}
             </div>
 
-            <div className="max-h-[60vh] overflow-y-auto custom-scrollbar">
+            <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
               {notifications.length === 0 ? (
-                <div className="p-12 text-center text-gray-500 flex flex-col items-center">
-                  <Bell size={48} className="mb-4 opacity-20" />
-                  <p className="text-sm">{t('notifications.no_notifications')}</p>
+                <div className="p-8 text-center text-gray-500 flex flex-col items-center">
+                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-3">
+                        <Bell size={24} className="opacity-50" />
+                    </div>
+                    <p>{t('notifications.empty')}</p>
                 </div>
               ) : (
                 <div className="divide-y divide-white/5">

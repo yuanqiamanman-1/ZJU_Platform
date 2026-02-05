@@ -56,14 +56,23 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 // CORS: allow specific frontend origin if provided
-const allowedOrigin = process.env.FRONTEND_URL;
-if (allowedOrigin) {
-  app.use(cors({ origin: allowedOrigin, credentials: true }));
-} else {
-  app.use(cors());
-}
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:5173';
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigin.indexOf(origin) !== -1 || origin === allowedOrigin) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
+  credentials: true
+}));
+
+// Reduced default limit to 10mb for security
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Static files
 const uploadDir = path.join(__dirname, 'uploads');

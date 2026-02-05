@@ -130,7 +130,7 @@ const SearchPalette = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsOpen(false)}
-            className="absolute inset-0 bg-black/40 backdrop-blur-3xl"
+            className="absolute inset-0 bg-black/60 backdrop-blur-md"
             />
 
             {/* Modal */}
@@ -166,7 +166,7 @@ const SearchPalette = () => {
             {/* Results List */}
             <div className="flex-1 overflow-y-auto custom-scrollbar p-2 pb-[env(safe-area-inset-bottom)]">
                 {loading ? (
-                    <div className="p-8 text-center text-gray-500">Searching...</div>
+                    <div className="p-8 text-center text-gray-500">{t('common.searching')}</div>
                 ) : results.length > 0 ? (
                     <div className="space-y-1">
                         {results.map((item, index) => (
@@ -190,9 +190,13 @@ const SearchPalette = () => {
                                 </div>
                                 <div className="flex-1 text-left">
                                     <h4 className={`text-sm font-medium ${index === selectedIndex ? 'text-white' : 'text-gray-300'}`}>
-                                        {item.title}
+                                        {item.title.split(new RegExp(`(${query})`, 'gi')).map((part, i) => 
+                                            part.toLowerCase() === query.toLowerCase() 
+                                                ? <span key={i} className="text-indigo-400 bg-indigo-500/10 px-0.5 rounded">{part}</span> 
+                                                : part
+                                        )}
                                     </h4>
-                                    <span className="text-xs text-gray-500 capitalize">{item.type}</span>
+                                    <span className="text-xs text-gray-500 capitalize">{t(`common.${item.type}`, item.type)}</span>
                                 </div>
                                 {index === selectedIndex && (
                                     <ArrowRight size={16} className="text-gray-400" />
@@ -203,9 +207,12 @@ const SearchPalette = () => {
                 ) : query.length >= 2 ? (
                     <div className="p-8 text-center text-gray-500">{t('search.no_results', { query })}</div>
                 ) : (
-                    <div className="p-12 text-center text-gray-500">
-                        <Command className="mx-auto mb-4 opacity-20" size={48} />
-                        <p>{t('search.empty_hint')}</p>
+                    <div className="p-12 text-center text-gray-500 flex flex-col items-center">
+                        <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                            <Command className="text-white/20" size={40} />
+                        </div>
+                        <p className="text-lg font-medium text-white/40">{t('search.empty_hint')}</p>
+                        <p className="text-xs text-white/20 mt-2">Type at least 2 characters to search</p>
                     </div>
                 )}
             </div>

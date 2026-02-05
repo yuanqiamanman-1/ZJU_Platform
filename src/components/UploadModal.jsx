@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Upload, Image, Film, Music, FileText, Plus, Calendar, Tag, Link, ChevronDown, Check, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import api, { uploadFile } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import TagInput from './TagInput';
@@ -32,7 +32,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
   const [featured, setFeatured] = useState(initialData?.featured || false);
   const [size, setSize] = useState(initialData?.size || '');
   const [dragTarget, setDragTarget] = useState(null);
-  
+
   // Photo specific
   
   // Event specific
@@ -58,73 +58,34 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
     setIsParsing(true);
     try {
         const { data } = await api.post('/resources/parse-wechat', { url: wechatUrl });
-        console.log('WeChat Parsed Data:', data);
+        // console.log('WeChat Parsed Data:', data);
         
         if (data) {
             if (data.title) setTitle(data.title);
             
-            // Smart Time Merging
+            // Smart Time Merging - DISABLED as per user request for Date Only
             let startDate = data.date;
             let endDate = data.end_date;
-            
-            if (data.time && startDate) {
-                 const timeParts = data.time.match(/(\d{1,2}:\d{2})/g);
-                 if (timeParts) {
-                     if (timeParts.length >= 1 && !startDate.includes('T')) {
-                         let t1 = timeParts[0];
-                         if (t1.indexOf(':') === 1) t1 = '0' + t1;
-                         startDate = `${startDate}T${t1}`;
-                     }
-                     if (timeParts.length >= 2) {
-                         let t2 = timeParts[1];
-                         if (t2.indexOf(':') === 1) t2 = '0' + t2;
-                         
-                         if (endDate && !endDate.includes('T')) {
-                             endDate = `${endDate}T${t2}`;
-                         } else if (!endDate) {
-                             endDate = `${data.date}T${t2}`;
-                         }
-                     }
-                 }
-            }
-
-            // Fallback for datetime-local: ensure T00:00 if no time extracted
-            if (startDate && !startDate.includes('T')) {
-                startDate = `${startDate}T00:00`;
-            }
-            if (endDate && !endDate.includes('T')) {
-                endDate = `${endDate}T00:00`;
-            }
 
             if (startDate) setEventDate(startDate);
             if (endDate) setEventEndDate(endDate);
-            
             if (data.location) setEventLocation(data.location);
-            if (data.organizer) setEventOrganizer(data.organizer);
-            if (data.description) setDescription(data.description);
-            // if (data.content) setContent(data.content); // User requested to ignore original content to avoid mismatch
-            if (data.target_audience) setEventTarget(data.target_audience);
-            if (data.volunteer_time) setEventVolunteerTime(data.volunteer_time);
-            if (data.score) setEventScore(data.score);
-            if (data.tags) {
-                const tagsVal = Array.isArray(data.tags) ? data.tags.join(', ') : data.tags;
-                setTags(tagsVal);
+            if (data.content) setContent(data.content); // Store full content for parsing/editing
+            if (data.description) setDescription(data.description); // Summary for description
+            
+            // Auto-generate tags if available
+            if (data.tags && data.tags.length > 0) {
+                // Merge with existing tags
+                const currentTags = tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+                const newTags = [...new Set([...currentTags, ...data.tags])];
+                setTags(newTags.join(','));
             }
-            if (data.date_reasoning) setDateReasoning(data.date_reasoning);
-            
-            // Auto-fill link with WeChat URL
-            setEventLink(wechatUrl);
-            
-            if (data.coverImage) {
-                setCoverPreview(data.coverImage);
-                setCoverFile(null); // Clear any manually selected file
-            }
-            
-            toast.success('解析成功！已自动填充相关信息');
+
+            toast.success(t('upload.parse_success') || 'Parsed successfully');
         }
     } catch (error) {
-        console.error('WeChat parse error:', error);
-        toast.error('解析失败，请检查链接或稍后重试');
+        console.error('WeChat Parse Error:', error);
+        toast.error(t('upload.parse_failed') || 'Failed to parse WeChat article');
     } finally {
         setIsParsing(false);
     }
@@ -209,6 +170,11 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
     }
     if (!isEditing && type !== 'event' && type !== 'article' && !file) {
         toast.error(t('upload.file_required'));
+        return;
+    }
+
+    if (type === 'event' && !eventEndDate) {
+        toast.error('截止日期为必填项');
         return;
     }
 
@@ -364,7 +330,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
   const inputClasses = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder:text-gray-500 focus:outline-none focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-200 text-base";
   const labelClasses = "block text-sm font-medium text-gray-400 mb-1.5 uppercase tracking-wide";
   const cardClasses = "bg-white/[0.02] border border-white/5 rounded-2xl p-6 space-y-5";
-  const uploadBoxClasses = (isActive) => `relative border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center group transition-all duration-300 bg-white/[0.02] ${isActive ? 'border-indigo-500 bg-indigo-500/10 scale-[1.01]' : 'border-white/10 hover:border-white/30 hover:bg-white/[0.04]'}`;
+  const uploadBoxClasses = (isActive) => `relative border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center group transition-all duration-300 bg-white/[0.02] ${isActive ? 'border-indigo-500 bg-indigo-500/10 scale-[1.01] shadow-[0_0_30px_rgba(99,102,241,0.2)] animate-pulse' : 'border-white/10 hover:border-white/30 hover:bg-white/[0.04]'}`;
 
   return createPortal(
     <AnimatePresence>
@@ -523,27 +489,28 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                            <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2 pb-3 border-b border-white/5">
                                <Calendar size={14} className="text-indigo-400" /> {t('event_fields.basic_info')}
                            </h4>
-                           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                <div className="col-span-1">
-                                    <label className={labelClasses}>开始时间</label>
+                                    <label className={labelClasses}>开始日期</label>
                                     <input
-                                        type="datetime-local"
+                                        type="date"
                                         required
-                                        value={eventDate.length === 10 ? `${eventDate}T00:00` : eventDate}
+                                        value={eventDate ? eventDate.split('T')[0] : ''}
                                         onChange={e => setEventDate(e.target.value)}
                                         className={inputClasses}
                                     />
                                </div>
                                <div className="col-span-1">
-                                    <label className={labelClasses}>截止时间 (可选)</label>
+                                    <label className={labelClasses}>截止日期</label>
                                     <input
-                                        type="datetime-local"
-                                        value={eventEndDate ? (eventEndDate.length === 10 ? `${eventEndDate}T00:00` : eventEndDate) : ''}
+                                        type="date"
+                                        required
+                                        value={eventEndDate ? eventEndDate.split('T')[0] : ''}
                                         onChange={e => setEventEndDate(e.target.value)}
                                         className={inputClasses}
                                     />
                                </div>
-                               <div className="col-span-1 md:col-span-3">
+                               <div className="col-span-1 md:col-span-2">
                                     <label className={labelClasses}>{t('common.location')}</label>
                                     <input
                                         type="text"
@@ -787,7 +754,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                                 <label className={labelClasses}>{t('common.date')}</label>
                                 <input
                                     type="date"
-                                    value={eventDate}
+                                    value={eventDate ? eventDate.split('T')[0] : ''}
                                     onChange={e => setEventDate(e.target.value)}
                                     className={inputClasses}
                                 />

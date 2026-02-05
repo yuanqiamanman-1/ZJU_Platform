@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Lightbox from './Lightbox';
 import Pagination from './Pagination';
-import { Play, Box, Upload, AlertCircle } from 'lucide-react';
+import { Play, Box, Upload, AlertCircle, Maximize2, Tag } from 'lucide-react';
 import FavoriteButton from './FavoriteButton';
 import { useTranslation } from 'react-i18next';
 import UploadModal from './UploadModal';
@@ -18,7 +18,7 @@ import { useBackClose } from '../hooks/useBackClose';
 import { useCachedResource } from '../hooks/useCachedResource';
 import { getThumbnailUrl } from '../utils/imageUtils';
 
-const PhotoCard = memo(({ photo, index, onClick }) => {
+const PhotoCard = memo(({ photo, index, onClick, onToggleFavorite }) => {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -37,17 +37,40 @@ const PhotoCard = memo(({ photo, index, onClick }) => {
       />
       
       {/* Hover Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-6">
-        <h3 className="text-lg font-bold text-white translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-75 drop-shadow-md line-clamp-2">{photo.title}</h3>
-        {photo.tags && (
-          <div className="flex flex-wrap gap-1.5 mt-2 translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-100">
-            {photo.tags.split(',').slice(0, 3).map((tag, i) => (
-              <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-white/20 text-white/90 backdrop-blur-sm border border-white/10">
-                {tag.trim()}
-              </span>
-            ))}
-          </div>
-        )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-4">
+        <div className="flex flex-col gap-2 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+            <div className="flex justify-between items-end gap-2">
+                <h3 className="text-lg font-bold text-white drop-shadow-md line-clamp-2 flex-1">{photo.title}</h3>
+                
+                <div className="flex items-center gap-2">
+                     <div onClick={(e) => e.stopPropagation()}>
+                        <FavoriteButton 
+                            itemId={photo.id}
+                            itemType="photo"
+                            size={18}
+                            showCount={false}
+                            favorited={photo.favorited}
+                            initialFavorited={photo.favorited}
+                            className="p-2 bg-white/10 hover:bg-pink-500/20 rounded-full backdrop-blur-md transition-colors text-white border border-white/10"
+                            onToggle={(favorited, likes) => onToggleFavorite(photo.id, favorited, likes)}
+                        />
+                     </div>
+                     <div className="p-2 rounded-full bg-white/20 backdrop-blur-md border border-white/10 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300">
+                        <Maximize2 size={18} />
+                    </div>
+                </div>
+            </div>
+
+            {photo.tags && (
+            <div className="flex flex-wrap gap-1.5 delay-100">
+                {photo.tags.split(',').slice(0, 3).map((tag, i) => (
+                <span key={i} className="text-[10px] px-2 py-0.5 rounded-lg bg-white/20 text-white/90 backdrop-blur-sm border border-white/10 flex items-center gap-1">
+                    <Tag size={10} /> {tag.trim()}
+                </span>
+                ))}
+            </div>
+            )}
+        </div>
       </div>
     </motion.div>
   );
@@ -151,7 +174,13 @@ const Gallery = () => {
   }, [setPhotos]);
 
   return (
-    <section className="pt-24 pb-40 md:py-20 px-4 md:px-8 min-h-screen">
+    <section className="pt-24 pb-40 md:py-20 px-4 md:px-8 min-h-screen relative overflow-hidden">
+      {/* Ambient Background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+          <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-blue-500/10 blur-[130px]" />
+          <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-cyan-500/10 blur-[120px]" />
+      </div>
+
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -199,30 +228,22 @@ const Gallery = () => {
         ) : (
           <div className="columns-2 md:columns-3 lg:columns-4 gap-4 md:gap-6 max-w-7xl mx-auto pb-20 md:pb-0">
               {photos.map((photo, index) => (
-                <motion.div
+                <PhotoCard
                   key={photo.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3 }}
-                className="break-inside-avoid relative group overflow-hidden rounded-2xl cursor-pointer card-standard hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-500 w-full inline-block touch-manipulation mb-4 md:mb-6"
-                onClick={() => setSelectedPhotoIndex(index)}
-              >
-                <SmartImage 
-                  src={photo.url} 
-                  alt={photo.title} 
-                  type="image"
-                  className="w-full h-auto"
-                  imageClassName="h-auto object-cover transform transition-transform duration-700 group-hover:scale-110"
+                  photo={photo}
+                  index={index}
+                  onClick={setSelectedPhotoIndex}
+                  onToggleFavorite={handleToggleFavorite}
                 />
-                
-                {/* Hover Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-6">
-                  <h3 className="text-lg font-bold text-white translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-75 drop-shadow-md line-clamp-2">{photo.title}</h3>
-                </div>
-              </motion.div>
-            ))}
+              ))}
           </div>
+        )}
+        
+        {!loading && !error && photos.length > 0 && settings.pagination_enabled !== 'true' && (
+             <div className="text-center py-10">
+                 <div className="inline-block h-1 w-20 bg-gradient-to-r from-transparent via-white/20 to-transparent mb-4" />
+                 <p className="text-gray-500 text-sm font-medium tracking-widest uppercase">{t('gallery.end_of_list', 'End of Gallery')}</p>
+             </div>
         )}
 
       {settings.pagination_enabled === 'true' && (

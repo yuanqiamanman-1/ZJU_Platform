@@ -6,7 +6,9 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 
-const StatCard = ({ title, value, icon: Icon, color, onClick, breakdown }) => (
+const StatCard = ({ title, value, icon: Icon, color, onClick, breakdown }) => {
+  const { t } = useTranslation();
+  return (
   <button 
     onClick={onClick}
     className="bg-[#111] p-6 rounded-2xl border border-white/10 text-left hover:border-indigo-500/50 hover:bg-[#161616] transition-all group relative overflow-hidden w-full"
@@ -23,23 +25,23 @@ const StatCard = ({ title, value, icon: Icon, color, onClick, breakdown }) => (
       {breakdown && (
         <div className="flex flex-wrap gap-2 text-xs">
           <span className="text-green-400 bg-green-400/10 px-1.5 py-0.5 rounded">
-            {breakdown.active} Active
+            {breakdown.active} {t('admin.overview_ui.active')}
           </span>
           {breakdown.pending > 0 && (
             <span className="text-yellow-400 bg-yellow-400/10 px-1.5 py-0.5 rounded">
-               {breakdown.pending} Pending
+               {breakdown.pending} {t('admin.overview_ui.pending')}
             </span>
           )}
           {breakdown.deleted > 0 && (
             <span className="text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded">
-               {breakdown.deleted} Deleted
+               {breakdown.deleted} {t('admin.overview_ui.deleted')}
             </span>
           )}
         </div>
       )}
     </div>
   </button>
-);
+)};
 
 const Overview = ({ onChangeTab }) => {
   const { t } = useTranslation();
@@ -68,7 +70,7 @@ const Overview = ({ onChangeTab }) => {
     const d = Math.floor(seconds / (3600 * 24));
     const h = Math.floor(seconds % (3600 * 24) / 3600);
     const m = Math.floor(seconds % 3600 / 60);
-    return `${d}d ${h}h ${m}m`;
+    return `${d}${t('admin.overview_ui.uptime_days')} ${h}${t('admin.overview_ui.uptime_hours')} ${m}${t('admin.overview_ui.uptime_minutes')}`;
   };
 
   if (loading) return <div className="p-8 text-center text-gray-500">{t('admin.overview_ui.loading_stats')}</div>;

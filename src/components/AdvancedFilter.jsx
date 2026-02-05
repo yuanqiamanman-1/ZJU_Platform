@@ -83,7 +83,7 @@ const AdvancedFilter = ({ filters, onChange, className = "", variant = 'card', r
     ];
 
     const containerClasses = variant === 'card' 
-        ? "bg-[#0a0a0a]/60 backdrop-blur-3xl border border-white/10 rounded-2xl p-3 md:p-6 shadow-xl"
+        ? "bg-black/20 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 md:p-6 shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:shadow-[0_8px_32px_rgba(99,102,241,0.1)] transition-shadow duration-500"
         : "";
 
     if (loading) return <div className="animate-pulse h-24 bg-white/5 rounded-2xl w-full mb-4"></div>;
@@ -91,9 +91,9 @@ const AdvancedFilter = ({ filters, onChange, className = "", variant = 'card', r
     return (
         <div className={`w-full relative z-20 ${className}`}>
             <div className={containerClasses}>
-                <div className="flex items-center justify-between mb-3 md:mb-4">
+                <div className="flex items-center justify-between mb-4 md:mb-6">
                     <div 
-                        className="flex items-center gap-2 cursor-pointer md:cursor-default"
+                        className="flex items-center gap-3 cursor-pointer md:cursor-default"
                         onClick={() => {
                             if (isMobile) {
                                 setOverflowVisible(false);
@@ -101,31 +101,33 @@ const AdvancedFilter = ({ filters, onChange, className = "", variant = 'card', r
                             }
                         }}
                     >
-                        <div className={`p-1.5 md:p-2 rounded-lg ${variant === 'card' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-white/10 text-white'}`}>
-                            <SlidersHorizontal size={isMobile ? 16 : 18} />
+                        <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 shadow-[0_0_15px_-5px_rgba(99,102,241,0.3)]">
+                            <SlidersHorizontal size={20} />
                         </div>
-                        <span className="font-bold text-white text-base md:text-lg tracking-wide">{t('advanced_filter.title', 'Filter Properties')}</span>
+                        <h3 className="text-lg font-bold text-white tracking-wide">
+                            {t('advanced_filter.title')}
+                        </h3>
                         {isMobile && (
-                            <motion.div 
+                            <motion.div
                                 animate={{ rotate: isCollapsed ? 0 : 180 }}
-                                className="ml-1 text-gray-400"
+                                transition={{ duration: 0.2 }}
+                                className="ml-2 text-gray-500"
                             >
                                 <ChevronDown size={16} />
                             </motion.div>
                         )}
                     </div>
-
-                    {hasActiveFilters && (
-                        <button 
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                clearFilters();
-                            }}
-                            className="text-xs font-medium text-gray-400 hover:text-white flex items-center gap-1 transition-colors px-2.5 py-1 md:px-3 md:py-1.5 rounded-full bg-white/5 hover:bg-white/10"
+                    
+                    {hasActiveFilters && !isCollapsed && (
+                        <motion.button
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            onClick={clearFilters}
+                            className="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all border border-red-500/10"
                         >
                             <X size={12} />
-                            {t('common.clear_all', 'Clear All')}
-                        </button>
+                            {t('advanced_filter.clear')}
+                        </motion.button>
                     )}
                 </div>
                 
@@ -149,7 +151,7 @@ const AdvancedFilter = ({ filters, onChange, className = "", variant = 'card', r
                                         options={[{ value: 'all', label: t(allLabelKey) }, ...fieldOptions]}
                                         icon={icon}
                                         placeholder={t(labelKey)}
-                                        buttonClassName="bg-white/5 border border-white/10 hover:bg-white/10 w-full py-2.5 rounded-xl text-white text-sm backdrop-blur-sm transition-all shadow-lg"
+                                        buttonClassName="bg-white/5 border border-white/10 hover:bg-white/10 hover:border-indigo-500/30 hover:shadow-[0_0_20px_-5px_rgba(99,102,241,0.3)] w-full py-2.5 rounded-xl text-white text-sm backdrop-blur-sm transition-all shadow-lg"
                                     />
                                 ))}
                             </div>

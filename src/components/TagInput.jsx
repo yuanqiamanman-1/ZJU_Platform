@@ -3,6 +3,8 @@ import { X, Plus, Tag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import api from '../services/api';
 
+import { motion, AnimatePresence } from 'framer-motion';
+
 const TagInput = ({ value = '', onChange, type }) => {
   const { t } = useTranslation();
   const [tags, setTags] = useState([]);
@@ -92,23 +94,27 @@ const TagInput = ({ value = '', onChange, type }) => {
   return (
     <div className="relative">
       <div className="flex flex-wrap gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-xl focus-within:border-indigo-500/50 focus-within:bg-white/10 transition-all duration-200 min-h-[44px] items-center">
+        <AnimatePresence>
         {tags.map((tag, index) => (
-          <span 
-            key={index} 
-            className="flex items-center gap-1 bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full text-sm border border-indigo-500/30"
+          <motion.span 
+            key={tag}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            layout
+            className="flex items-center gap-1 bg-indigo-500/10 text-indigo-300 px-3 py-1 rounded-full text-sm border border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.1)] hover:border-indigo-500/50 hover:bg-indigo-500/20 transition-all"
           >
             <Tag size={12} />
             {tag}
             <button 
-              type="button"
               onClick={() => removeTag(tag)}
-              className="hover:text-white transition-colors ml-1"
+              className="hover:text-white ml-1 p-0.5 rounded-full hover:bg-indigo-500/50 transition-colors"
             >
-              <X size={14} />
+              <X size={12} />
             </button>
-          </span>
+          </motion.span>
         ))}
-        
+        </AnimatePresence>
         <input
           ref={inputRef}
           type="text"

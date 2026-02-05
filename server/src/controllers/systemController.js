@@ -93,13 +93,13 @@ const getStats = async (req, res) => {
       },
       system: {
         uptime: process.uptime(),
-        nodeVersion: process.version,
-        platform: process.platform,
+        // Removed sensitive system info
         dbSize
       }
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Stats Error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 

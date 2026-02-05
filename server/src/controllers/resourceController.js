@@ -111,6 +111,14 @@ const deleteHandler = (table) => async (req, res) => {
     // Soft delete: Update deleted_at timestamp
     await db.run(`UPDATE ${table} SET deleted_at = datetime('now') WHERE id = ?`, id);
     
+    // Audit Log for Admins
+    if (req.user.role === 'admin') {
+         await db.run(
+            `INSERT INTO audit_logs (admin_id, resource_type, resource_id, action, reason) VALUES (?, ?, ?, ?, ?)`,
+            [req.user.id, table, id, 'soft_delete', 'Admin soft deleted resource']
+        );
+    }
+
     console.log(`[ResourceController] Item moved to trash`);
     res.json({ message: 'Moved to trash' });
   } catch (error) {
@@ -167,6 +175,14 @@ const permanentDeleteHandler = (table) => async (req, res) => {
     // 5. Delete from table
     await db.run(`DELETE FROM ${table} WHERE id = ?`, id);
     
+    // Audit Log for Admins
+    if (req.user.role === 'admin') {
+         await db.run(
+            `INSERT INTO audit_logs (admin_id, resource_type, resource_id, action, reason) VALUES (?, ?, ?, ?, ?)`,
+            [req.user.id, table, id, 'permanent_delete', 'Admin permanently deleted resource']
+        );
+    }
+    
     console.log(`[ResourceController] DB permanent delete executed with cascading cleanup`);
     res.json({ message: 'Permanently deleted with all associated data' });
   } catch (error) {
@@ -182,6 +198,14 @@ const restoreHandler = (table) => async (req, res) => {
     console.log(`[ResourceController] Restoring item in ${table}, ID: ${id}`);
     
     await db.run(`UPDATE ${table} SET deleted_at = NULL WHERE id = ?`, id);
+    
+    // Audit Log for Admins
+    if (req.user.role === 'admin') {
+         await db.run(
+            `INSERT INTO audit_logs (admin_id, resource_type, resource_id, action, reason) VALUES (?, ?, ?, ?, ?)`,
+            [req.user.id, table, id, 'restore', 'Admin restored resource']
+        );
+    }
     
     console.log(`[ResourceController] Item restored`);
     res.json({ message: 'Restored successfully' });
@@ -225,6 +249,16 @@ const getOneHandler = (table) => async (req, res) => {
       return res.status(404).json({ error: 'Item not found' });
     }
     
+    // Access Control: Only admin or owner can see non-approved/deleted items
+    if (item.status !== 'approved' || item.deleted_at) {
+        const isAdmin = req.user && req.user.role === 'admin';
+        const isOwner = req.user && req.user.id === item.uploader_id;
+        
+        if (!isAdmin && !isOwner) {
+             return res.status(403).json({ error: 'Access denied' });
+        }
+    }
+
     // Convert favorited to boolean
     if (userId) {
         item.favorited = !!item.favorited;
@@ -240,7 +274,8 @@ const getAllHandler = (table, defaultLimit = 12) => async (req, res) => {
     try {
         const db = await getDb();
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || defaultLimit;
+        // Limit max limit to 100 to prevent DoS
+        const limit = Math.min(parseInt(req.query.limit) || defaultLimit, 100);
         const category = req.query.category;
         const tag = req.query.tag; // For articles
         const status = req.query.status || 'approved'; // Default to approved only

@@ -124,23 +124,28 @@ const Comments = ({ resourceId, resourceType }) => {
                 )}
             </div>
 
-            <form onSubmit={handleSubmit} className="mt-auto relative">
-                <input
-                    type="text"
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder={user ? t('comments.placeholder') : t('auth.login_required')}
-                    disabled={!user || submitting}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-4 pr-12 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-                <button 
-                    type="submit"
-                    disabled={!user || submitting || !newComment.trim()}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-indigo-400 hover:text-indigo-300 disabled:text-gray-600 transition-colors"
-                >
-                    <Send size={18} />
-                </button>
-            </form>
+            <div className="mt-auto pt-4 border-t border-white/5">
+                <form onSubmit={handleSubmit} className="relative">
+                    <div className="relative">
+                        <textarea
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value.slice(0, 500))}
+                            placeholder={t('comments.placeholder')}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-12 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 focus:bg-white/10 transition-all resize-none h-20 text-sm custom-scrollbar"
+                        />
+                        <div className="absolute bottom-2 right-2 text-[10px] text-gray-500 font-mono">
+                            {newComment.length}/500
+                        </div>
+                    </div>
+                    <button 
+                        type="submit" 
+                        disabled={!newComment.trim() || submitting}
+                        className="absolute top-2 right-2 p-2 bg-indigo-500 hover:bg-indigo-400 text-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-indigo-500/20 active:scale-95"
+                    >
+                        {submitting ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Send size={16} />}
+                    </button>
+                </form>
+            </div>
         </div>
     );
 };

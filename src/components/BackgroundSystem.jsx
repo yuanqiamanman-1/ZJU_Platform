@@ -303,7 +303,7 @@ const BackgroundSystem = ({ forcedTheme = null }) => {
 
   // Use forcedTheme if provided, otherwise use global setting
   const activeScene = forcedTheme || backgroundScene;
-  const CurrentScene = (scenes[activeScene] || scenes['space']).component;
+  const CurrentScene = (scenes[activeScene] || scenes['cyber']).component;
 
   const [dpr, setDpr] = useState(1.5);
   const [perfSufficient, setPerfSufficient] = useState(true);

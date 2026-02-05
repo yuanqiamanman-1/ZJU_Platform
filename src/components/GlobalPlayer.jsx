@@ -31,18 +31,19 @@ const Visualizer = memo(({ isPlaying }) => {
 // Memoized Player Info Component
 const PlayerInfo = memo(({ currentTrack, isPlaying, onClose }) => {
   return (
-    <div className="flex items-center gap-4 relative z-10 mb-2">
+    <div className="flex items-center gap-4 relative z-10 mb-4 bg-white/5 backdrop-blur-md rounded-2xl p-3 border border-white/5 shadow-lg">
         {/* Drag Handle Indicator */}
         <div className="w-1 h-8 bg-white/10 rounded-full cursor-grab active:cursor-grabbing hover:bg-white/20 transition-colors" />
         
         {/* Cover Art */}
-        <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 relative group shadow-lg">
+        <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 relative group shadow-lg">
+        <div className={`absolute inset-0 bg-gradient-to-tr from-cyan-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity z-10`} />
         <img 
             src={currentTrack.cover} 
             alt={currentTrack.title} 
             className={`w-full h-full object-cover ${isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''}`} 
         />
-        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
             <Music size={16} className="text-white" />
         </div>
         </div>
@@ -51,7 +52,7 @@ const PlayerInfo = memo(({ currentTrack, isPlaying, onClose }) => {
         <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start">
             <div className="truncate pr-2">
-            <h4 className="font-bold text-white text-sm truncate leading-tight">{currentTrack.title}</h4>
+            <h4 className="font-bold text-white text-sm truncate leading-tight mb-0.5">{currentTrack.title}</h4>
             <p className="text-[10px] text-gray-400 truncate uppercase tracking-wider">{currentTrack.artist}</p>
             </div>
             <button onClick={onClose} className="p-1.5 -mr-1 text-gray-400 hover:text-white hover:bg-white/10 rounded-full active:scale-95 transition-all">
@@ -91,18 +92,18 @@ const ProgressBar = memo(({ progress, duration, onSeek }) => {
 // Memoized Controls Component
 const PlayerControls = memo(({ isPlaying, onPlayPause, onNext, onPrev }) => {
   return (
-    <div className="flex items-center justify-center gap-2 relative z-10">
-        <button onClick={onPrev} className="p-2 hover:bg-white/10 rounded-full text-white transition-colors">
-            <SkipBack size={18} />
+    <div className="flex items-center justify-center gap-4 relative z-10 group">
+        <button onClick={onPrev} className="p-2.5 md:p-3 hover:bg-white/10 rounded-full text-white transition-all hover:scale-110 active:scale-95">
+            <SkipBack size={20} className="w-5 h-5 md:w-6 md:h-6" />
         </button>
         <button 
             onClick={onPlayPause} 
-            className="p-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white rounded-full transition-all hover:scale-105 shadow-[0_0_15px_rgba(6,182,212,0.5)]"
+            className="p-3 md:p-4 bg-white text-black rounded-full hover:scale-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]"
         >
-            {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-0.5" />}
+            {isPlaying ? <Pause size={24} className="w-6 h-6 md:w-7 md:h-7 fill-black" /> : <Play size={24} className="w-6 h-6 md:w-7 md:h-7 fill-black ml-1" />}
         </button>
-        <button onClick={onNext} className="p-2 hover:bg-white/10 rounded-full text-white transition-colors">
-            <SkipForward size={18} />
+        <button onClick={onNext} className="p-2.5 md:p-3 hover:bg-white/10 rounded-full text-white transition-all hover:scale-110 active:scale-95">
+            <SkipForward size={20} className="w-5 h-5 md:w-6 md:h-6" />
         </button>
     </div>
   );

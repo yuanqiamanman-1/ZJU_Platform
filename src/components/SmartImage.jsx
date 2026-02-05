@@ -97,21 +97,19 @@ const SmartImage = ({
   
   return (
     <div className={`${className} relative overflow-hidden bg-gradient-to-br ${gradient}`}>
-       <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-500 ${loaded ? 'opacity-0' : 'opacity-100'}`}>
-          <div className="absolute inset-0 bg-black/10" />
-          <Icon size={iconSize} className="text-white/70 relative z-10 animate-pulse" />
+       <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-700 ${loaded ? 'opacity-0' : 'opacity-100'}`}>
+          <div className="bg-white/10 p-2 rounded-full">
+            <Icon size={iconSize} className="text-white/70" />
+          </div>
        </div>
-
-       <img 
-          ref={imgRef}
-          key={`${src}-${retryCount}`}
-          src={src} 
-          alt={alt} 
-          className={`${imageClassName} ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500 relative z-20`}
-          onError={handleError}
-          onLoad={() => setLoaded(true)}
-          loading="lazy"
-          {...props}
+      <img
+        ref={imgRef}
+        src={src}
+        alt={alt}
+        className={`${imageClassName} w-full h-full object-cover transition-all duration-700 ease-in-out ${loaded ? 'opacity-100 blur-0 scale-100' : 'opacity-0 blur-xl scale-105'}`}
+        onLoad={() => setLoaded(true)}
+        onError={handleError}
+        {...props}
       />
     </div>
   );

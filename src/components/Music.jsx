@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Pause, SkipForward, SkipBack, Music as MusicIcon, Volume2, VolumeX, Upload, AlertCircle } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Music as MusicIcon, Volume2, VolumeX, Upload, AlertCircle, Tag } from 'lucide-react';
 import UploadModal from './UploadModal';
 import FavoriteButton from './FavoriteButton';
 import { useTranslation } from 'react-i18next';
@@ -29,19 +29,23 @@ const TrackItem = memo(({ track, activeTrackId, isPlaying, onClick, onToggleFavo
       layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`group flex items-center gap-4 p-3 rounded-xl transition-all cursor-pointer border ${isActive ? 'bg-cyan-500/10 border-cyan-500/50' : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'}`}
+      className={`group flex items-center gap-4 p-3 rounded-xl transition-all cursor-pointer border backdrop-blur-md ${
+        isActive 
+          ? 'bg-cyan-500/10 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.15)]' 
+          : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10 hover:shadow-lg hover:shadow-black/20'
+      }`}
       onClick={() => onClick(track)}
     >
-      <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0">
+      <div className="relative w-14 h-14 md:w-16 md:h-16 rounded-xl overflow-hidden shrink-0 shadow-lg">
         <SmartImage 
            src={getThumbnailUrl(track.cover)} 
            alt={track.title} 
            type="music"
            className="w-full h-full"
-           imageClassName={`w-full h-full object-cover transition-transform duration-500 ${isActive && isPlaying ? 'scale-110' : 'group-hover:scale-110'}`}
+           imageClassName={`w-full h-full object-cover transition-transform duration-700 ${isActive && isPlaying ? 'scale-110' : 'group-hover:scale-110'}`}
            iconSize={24}
         />
-        <div className={`absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+        <div className={`absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
           {isActive && isPlaying ? (
             <div className="flex gap-0.5 items-end h-4">
               <span className="w-1 bg-cyan-400 animate-[music-bar_1s_ease-in-out_infinite]" style={{ animationDelay: '0s' }} />
@@ -49,26 +53,52 @@ const TrackItem = memo(({ track, activeTrackId, isPlaying, onClick, onToggleFavo
               <span className="w-1 bg-cyan-400 animate-[music-bar_1s_ease-in-out_infinite]" style={{ animationDelay: '0.4s' }} />
             </div>
           ) : (
-            <Play size={20} className="text-white fill-white" />
+            <Play size={24} className="text-white fill-white drop-shadow-lg" />
           )}
         </div>
       </div>
       
-      <div className="flex-1 min-w-0">
-        <h4 className={`font-bold truncate ${isActive ? 'text-cyan-400' : 'text-white group-hover:text-cyan-400'} transition-colors`}>{track.title}</h4>
-        <p className="text-xs text-gray-400 truncate">{track.artist}</p>
+      <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
+        <div className="flex items-center gap-2">
+            <h4 className={`font-bold truncate text-base md:text-lg ${isActive ? 'text-cyan-400' : 'text-white group-hover:text-cyan-400'} transition-colors`}>
+                {track.title}
+            </h4>
+        </div>
+        
+        <div className="flex items-center gap-2 text-xs text-gray-400">
+            <span className="truncate max-w-[150px]">{track.artist}</span>
+            
+            {track.tags && (
+                <>
+                    <span className="w-1 h-1 rounded-full bg-gray-600 hidden md:block" />
+                    <div className="hidden md:flex flex-wrap gap-1.5">
+                        {track.tags.split(',').slice(0, 3).map((tag, i) => (
+                            <span key={i} className="px-1.5 py-0.5 rounded-md bg-white/5 border border-white/5 text-[10px] text-gray-400 flex items-center gap-1">
+                                <Tag size={8} /> {tag.trim()}
+                            </span>
+                        ))}
+                    </div>
+                </>
+            )}
+        </div>
       </div>
       
-      <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
-        <span className="text-xs font-mono text-gray-500 hidden sm:block">{formatTime(track.duration)}</span>
+      <div className="flex items-center gap-3 md:gap-5 mr-2" onClick={e => e.stopPropagation()}>
+        <span className="text-xs font-mono text-gray-500 hidden sm:block bg-black/20 px-2 py-1 rounded-md border border-white/5">
+            {formatTime(track.duration)}
+        </span>
         <FavoriteButton 
             itemId={track.id}
             itemType="music"
-            size={16}
+            size={18}
             showCount={false}
             favorited={track.favorited}
             initialFavorited={track.favorited}
-            className={`p-2 rounded-full transition-all ${isActive ? 'bg-cyan-500/20 text-cyan-400' : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/20'}`}
+            className={`p-2.5 rounded-full transition-all border ${
+                isActive 
+                ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' 
+                : 'bg-white/5 text-gray-400 border-white/5 hover:text-white hover:bg-white/20 hover:border-white/10'
+            }`}
             onToggle={(favorited, likes) => onToggleFavorite(track.id, favorited, likes)}
         />
       </div>
@@ -110,6 +140,10 @@ const Music = () => {
   const [volume, setVolume] = useState(0.5);
   const [isMuted, setIsMuted] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sort, selectedTags, settings.pagination_enabled]);
 
   useEffect(() => {
     setLoading(true);
@@ -228,7 +262,7 @@ const Music = () => {
     setPlayerTrackState({});
   }, [currentTrack?.id]);
 
-  const defaultTrack = { title: t('music.select_track'), artist: t('music.to_start'), duration: 0, cover: "https://via.placeholder.com/300", audio: "" };
+  const defaultTrack = { title: t('music.select_track'), artist: t('music.to_start'), duration: 0, cover: "", audio: "" };
   const activeTrackObj = currentTrack || defaultTrack;
   const activeTrackInList = tracks.find(t => t.id === activeTrackObj.id);
   
@@ -255,7 +289,14 @@ const Music = () => {
   }, [setTracks, currentTrack]);
 
   return (
-    <section className="pt-24 pb-40 md:py-20 px-4 md:px-8 min-h-screen">
+    <section className="pt-24 pb-40 md:py-20 px-4 md:px-8 min-h-screen relative overflow-hidden">
+      {/* Ambient Background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-500/10 blur-[120px]" />
+          <div className="absolute top-[40%] right-[-10%] w-[40%] h-[40%] rounded-full bg-cyan-500/10 blur-[100px]" />
+          <div className="absolute bottom-[-10%] left-[20%] w-[60%] h-[40%] rounded-full bg-indigo-500/10 blur-[120px]" />
+      </div>
+
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -321,6 +362,7 @@ const Music = () => {
                 className="relative w-48 h-48 md:w-56 md:h-56 rounded-full border-4 border-white/10 shadow-2xl overflow-hidden animate-[spin_4s_linear_infinite]"
                 style={{ animationPlayState: isPlaying ? 'running' : 'paused' }}
               >
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent pointer-events-none z-10 rounded-full" />
                 <SmartImage 
                   src={activeTrack.cover} 
                   alt={activeTrack.title} 

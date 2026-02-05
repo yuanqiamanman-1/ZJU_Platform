@@ -99,12 +99,12 @@ const AuthModal = ({ isOpen, onClose }) => {
                   type="text" 
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-indigo-500 transition-all focus:bg-black/60"
-                  placeholder={t('auth.enter_username')}
+                  className="w-full bg-black/20 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 focus:bg-white/5 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300"
+                  placeholder={t('auth.username_placeholder')}
                 />
               </div>
             </div>
-            
+
             <div>
               <label className="block text-xs font-bold text-indigo-400 uppercase mb-2 tracking-wider">{t('auth.password')}</label>
               <div className="relative group">
@@ -113,8 +113,8 @@ const AuthModal = ({ isOpen, onClose }) => {
                   type="password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-indigo-500 transition-all focus:bg-black/60"
-                  placeholder={t('auth.enter_password')}
+                  className="w-full bg-black/20 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 focus:bg-white/5 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300"
+                  placeholder={t('auth.password_placeholder')}
                 />
               </div>
             </div>

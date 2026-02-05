@@ -4,7 +4,7 @@ import {
   Tag, Search, Plus, Trash2, Edit2, Check, X, 
   RefreshCw, AlertTriangle 
 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import api from '../../services/api';
 
 const TagManager = () => {

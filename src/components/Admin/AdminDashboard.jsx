@@ -6,7 +6,7 @@ import {
   Settings, Users, Lock, Home, LogOut, ChevronRight, Tag
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import api from '../../services/api';
 
 // Imported Components

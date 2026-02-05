@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { getDb } = require('../config/db');
 
-const SECRET_KEY = 'your-secret-key'; // In production, use environment variable
+const SECRET_KEY = process.env.SECRET_KEY || 'dev-secret-key-change-in-prod';
 
 const register = async (req, res) => {
   try {
@@ -16,14 +16,18 @@ const register = async (req, res) => {
     // Check if user already exists
     const existingUser = await db.get('SELECT id FROM users WHERE username = ?', [username]);
     if (existingUser) {
+        // Security: Use generic message or keep specific if user enumeration is not a concern
+        // For public apps, 'Username already exists' is fine for UX.
         return res.status(400).json({ error: 'Username already exists' });
     }
 
-    if (password.length < 6) {
-        return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    // Password strength validation
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d\W]{8,}$/;
+    if (!passwordRegex.test(password)) {
+        return res.status(400).json({ error: 'Password must be at least 8 chars and include uppercase, lowercase, and number' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12); // Increased salt rounds
     
     // Check if first user, make admin
     const userCount = await db.get('SELECT COUNT(*) as count FROM users');
