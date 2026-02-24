@@ -46,7 +46,7 @@
     "username": "用户名",
     "password": "密码",
     "enter_username": "输入用户名",
-    "password_placeholder": "输入密码",
+    "password_placeholder": "输入密码（至少6位）",
     "username_placeholder": "输入用户名",
     "error_missing_fields": "请填写所有字段",
     "sign_in": "登录",

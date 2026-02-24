@@ -21,10 +21,8 @@ const register = async (req, res, next) => {
         return res.status(400).json({ error: 'Username already exists' });
     }
 
-    // Password strength validation
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d\W]{8,}$/;
-    if (!passwordRegex.test(password)) {
-        return res.status(400).json({ error: 'Password must be at least 8 chars and include uppercase, lowercase, and number' });
+    if (password.length < 6) {
+        return res.status(400).json({ error: 'Password must be at least 6 characters long' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 12); // Increased salt rounds

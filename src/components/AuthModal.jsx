@@ -115,6 +115,7 @@ const AuthModal = ({ isOpen, onClose }) => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-black/20 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 focus:bg-white/5 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300"
                   placeholder={t('auth.password_placeholder')}
+                  minLength={6}
                 />
               </div>
             </div>

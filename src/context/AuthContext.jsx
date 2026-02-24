@@ -12,6 +12,12 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(() => !!localStorage.getItem('token'));
 
+  const getAuthErrorMessage = (err, fallbackKey) => {
+    const data = err?.response?.data;
+    const validationMessage = data?.errors?.[0]?.msg || data?.details?.[0]?.message;
+    return data?.error || validationMessage || t(fallbackKey);
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -39,7 +45,7 @@ export const AuthProvider = ({ children }) => {
       return true;
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.error || t('auth.login_failed'));
+      toast.error(getAuthErrorMessage(err, 'auth.login_failed'));
       return false;
     }
   };
@@ -55,7 +61,7 @@ export const AuthProvider = ({ children }) => {
       return true;
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.error || t('auth.registration_failed'));
+      toast.error(getAuthErrorMessage(err, 'auth.registration_failed'));
       return false;
     }
   };
