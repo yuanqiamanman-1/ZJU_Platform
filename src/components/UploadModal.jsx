@@ -361,10 +361,10 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
   };
 
   // UI Constants
-  const inputClasses = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder:text-gray-500 focus:outline-none focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-200 text-base";
-  const labelClasses = "block text-sm font-medium text-gray-400 mb-1.5 uppercase tracking-wide";
-  const cardClasses = "bg-white/[0.02] border border-white/5 rounded-2xl p-6 space-y-5";
-  const uploadBoxClasses = (isActive) => `relative border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center group transition-all duration-300 bg-white/[0.02] ${isActive ? 'border-indigo-500 bg-indigo-500/10 scale-[1.01] shadow-[0_0_30px_rgba(99,102,241,0.2)] animate-pulse' : 'border-white/10 hover:border-white/30 hover:bg-white/[0.04]'}`;
+  const inputClasses = "w-full bg-white/5 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-200 text-base min-h-[44px]";
+  const labelClasses = "block text-xs sm:text-sm font-medium text-gray-400 mb-1.5 uppercase tracking-wide";
+  const cardClasses = "bg-white/[0.02] border border-white/5 rounded-2xl p-4 sm:p-6 space-y-4 sm:space-y-5";
+  const uploadBoxClasses = (isActive) => `relative border-2 border-dashed rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center group transition-all duration-300 bg-white/[0.02] ${isActive ? 'border-indigo-500 bg-indigo-500/10 scale-[1.01] shadow-[0_0_30px_rgba(99,102,241,0.2)] animate-pulse' : 'border-white/10 hover:border-white/30 hover:bg-white/[0.04]'}`;
 
   return createPortal(
     <AnimatePresence>
@@ -401,7 +401,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-4 sm:p-8 relative z-10">
+            <form onSubmit={handleSubmit} className="p-4 sm:p-8 pb-24 sm:pb-8 relative z-10">
               {type === 'event' ? (
                 <>
                 <div className="mb-6 sm:mb-8 p-4 sm:p-6 bg-gradient-to-r from-green-500/10 to-emerald-500/5 border border-green-500/20 rounded-2xl relative overflow-hidden group">
@@ -655,7 +655,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                 </div>
                 </>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   {/* Main File Upload */}
                   {type !== 'event' && (
                   <div className="space-y-2">
@@ -663,7 +663,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                         {t(`common.${type}`)}
                     </label>
                      <div 
-                        className={uploadBoxClasses(dragTarget === 'main')}
+                        className={`${uploadBoxClasses(dragTarget === 'main')} min-h-[160px] sm:min-h-[200px]`}
                         onDragEnter={(e) => handleDragEnter(e, 'main')}
                         onDragLeave={handleDragLeave}
                         onDragOver={(e) => handleDragOver(e, 'main')}
@@ -678,31 +678,31 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                         
                         {preview ? (
                             type === 'audio' ? (
-                                <div className="text-center relative z-20 pointer-events-none">
-                                    <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-3">
-                                        <Music size={32} className="text-green-400" />
+                                <div className="text-center relative z-20 pointer-events-none px-4">
+                                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                                        <Music size={24} className="text-green-400 sm:w-8 sm:h-8" />
                                     </div>
                                     <p className="text-white font-medium text-sm break-all">{file?.name}</p>
                                     <p className="text-xs text-gray-400 mt-1">{t('upload.click_drag_replace')}</p>
                                 </div>
                             ) : type === 'video' ? (
-                                <div className="relative z-20 pointer-events-none w-full flex justify-center">
-                                    <video src={preview} className="max-h-64 rounded-xl shadow-lg" controls />
+                                <div className="relative z-20 pointer-events-none w-full flex justify-center px-4">
+                                    <video src={preview} className="max-h-48 sm:max-h-64 rounded-xl shadow-lg" controls />
                                 </div>
                             ) : (
-                                <div className="relative z-20 pointer-events-none">
-                                    <img src={preview} alt="Preview" className="max-h-64 rounded-xl object-contain shadow-2xl" />
+                                <div className="relative z-20 pointer-events-none px-4">
+                                    <img src={preview} alt="Preview" className="max-h-48 sm:max-h-64 rounded-xl object-contain shadow-2xl" />
                                 </div>
                             )
                         ) : (
-                        <div className="flex flex-col items-center justify-center text-center pointer-events-none">
-                            <div className={`p-4 rounded-full mb-4 transition-transform duration-300 ${dragTarget === 'main' ? 'bg-indigo-500/20 scale-110 text-indigo-400' : 'bg-white/5 text-gray-400 group-hover:bg-white/10 group-hover:scale-110 group-hover:text-white'}`}>
-                               {dragTarget === 'main' ? <Upload size={32} /> : React.cloneElement(getIcon(), { size: 32, className: '' })}
+                        <div className="flex flex-col items-center justify-center text-center pointer-events-none px-4">
+                            <div className={`p-3 sm:p-4 rounded-full mb-3 sm:mb-4 transition-transform duration-300 ${dragTarget === 'main' ? 'bg-indigo-500/20 scale-110 text-indigo-400' : 'bg-white/5 text-gray-400 group-hover:bg-white/10 group-hover:scale-110 group-hover:text-white'}`}>
+                               {dragTarget === 'main' ? <Upload size={24} className="sm:w-8 sm:h-8" /> : React.cloneElement(getIcon(), { size: 24, className: 'sm:w-8 sm:h-8' })}
                             </div>
-                            <p className="text-white font-medium text-lg">
+                            <p className="text-white font-medium text-base sm:text-lg">
                             {dragTarget === 'main' ? t('upload.drop_file') : `${t('common.upload')} ${t(`common.${type}`)}`}
                             </p>
-                            <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto">
+                            <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2 max-w-xs mx-auto">
                                 {t('upload.drag_drop_browse')}
                             </p>
                         </div>
@@ -716,7 +716,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                      <div className="space-y-2">
                         <label className={labelClasses}>{t('common.cover')}</label>
                         <div 
-                            className={`${uploadBoxClasses(dragTarget === 'cover')} h-40`}
+                            className={`${uploadBoxClasses(dragTarget === 'cover')} h-32 sm:h-40`}
                             onDragEnter={(e) => handleDragEnter(e, 'cover')}
                             onDragLeave={handleDragLeave}
                             onDragOver={(e) => handleDragOver(e, 'cover')}
@@ -729,7 +729,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                                 className="absolute inset-0 opacity-0 cursor-pointer z-10"
                             />
                             {coverPreview ? (
-                                <div className="relative h-full w-full flex justify-center items-center pointer-events-none">
+                                <div className="relative h-full w-full flex justify-center items-center pointer-events-none px-4">
                                     <img src={coverPreview} alt="Cover Preview" className="h-full rounded-lg object-contain" />
                                     <div className={`absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm ${dragTarget === 'cover' ? 'opacity-100' : ''}`}>
                                         <p className="text-xs text-white flex items-center gap-1"><Upload size={14}/> {t('upload.replace')}</p>
@@ -737,7 +737,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center pointer-events-none">
-                                    <Plus size={24} className={`mb-2 transition-colors ${dragTarget === 'cover' ? 'text-indigo-400' : 'text-gray-400'}`} />
+                                    <Plus size={20} className={`mb-2 transition-colors sm:w-6 sm:h-6 ${dragTarget === 'cover' ? 'text-indigo-400' : 'text-gray-400'}`} />
                                     <span className={`text-xs font-medium transition-colors ${dragTarget === 'cover' ? 'text-indigo-300' : 'text-gray-500'}`}>
                                         {dragTarget === 'cover' ? t('upload.drop_image') : `${t('common.upload')} ${t('common.image')}`}
                                     </span>
@@ -763,7 +763,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
 
                     {/* Image Specific Fields: Size */}
                     {type === 'image' && (
-                         <div className="grid grid-cols-2 gap-4">
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="col-span-1">
                                 <label className={labelClasses}>{t('common.size')}</label>
                                 <input
@@ -815,7 +815,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
 
                     {/* Article Specific Fields */}
                     {type === 'article' && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                              <div className="col-span-1">
                                 <label className={labelClasses}>{t('common.date')}</label>
                                 <input
@@ -825,12 +825,12 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                                     className={inputClasses}
                                 />
                             </div>
-                             <div className="col-span-2">
+                             <div className="col-span-1 sm:col-span-2">
                                 <label className={labelClasses}>{t('common.content')}</label>
                                 <textarea
                                     value={content}
                                     onChange={e => setContent(e.target.value)}
-                                    className={`${inputClasses} h-40 font-mono text-sm leading-relaxed`}
+                                    className={`${inputClasses} h-32 sm:h-40 font-mono text-sm leading-relaxed`}
                                     placeholder="# Markdown content supported..."
                                 />
                             </div>
@@ -842,7 +842,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                       <textarea
                         value={description}
                         onChange={e => setDescription(e.target.value)}
-                        className={`${inputClasses} h-24 resize-none`}
+                        className={`${inputClasses} h-20 sm:h-24 resize-none`}
                         placeholder={t('upload.description_placeholder')}
                       />
                     </div>
@@ -850,10 +850,10 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                     {/* Featured Checkbox */}
                     <div className="flex items-center gap-3 pt-2">
                         <div 
-                            className={`w-5 h-5 rounded border flex items-center justify-center cursor-pointer transition-colors ${featured ? 'bg-indigo-500 border-indigo-500' : 'bg-white/5 border-white/20 hover:border-white/40'}`}
+                            className={`w-6 h-6 sm:w-5 sm:h-5 rounded border flex items-center justify-center cursor-pointer transition-colors ${featured ? 'bg-indigo-500 border-indigo-500' : 'bg-white/5 border-white/20 hover:border-white/40'}`}
                             onClick={() => setFeatured(!featured)}
                         >
-                            {featured && <Check size={12} className="text-white" />}
+                            {featured && <Check size={14} className="text-white sm:w-3 sm:h-3" />}
                         </div>
                         <label 
                             className="text-sm font-medium text-gray-300 select-none cursor-pointer hover:text-white transition-colors"
