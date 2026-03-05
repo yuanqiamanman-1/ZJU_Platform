@@ -86,15 +86,17 @@ async function seed() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT,
       date TEXT,
+      end_date TEXT,
       location TEXT,
       tags TEXT,
-      status TEXT,
+      status TEXT DEFAULT 'approved',
       image TEXT,
       description TEXT,
       content TEXT,
       link TEXT,
       featured BOOLEAN DEFAULT 0,
       likes INTEGER DEFAULT 0,
+      uploader_id INTEGER,
       deleted_at DATETIME
     );
 
