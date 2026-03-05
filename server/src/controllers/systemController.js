@@ -43,17 +43,22 @@ const getStats = async (req, res, next) => {
     
     // Helper to get detailed stats for a table
     const getTableStats = async (table) => {
-        const total = await db.get(`SELECT COUNT(*) as count FROM ${table}`);
-        const active = await db.get(`SELECT COUNT(*) as count FROM ${table} WHERE deleted_at IS NULL AND status = 'approved'`);
-        const pending = await db.get(`SELECT COUNT(*) as count FROM ${table} WHERE deleted_at IS NULL AND status = 'pending'`);
-        const deleted = await db.get(`SELECT COUNT(*) as count FROM ${table} WHERE deleted_at IS NOT NULL`);
-        
-        return {
-            total: total.count,
-            active: active.count,
-            pending: pending.count,
-            deleted: deleted.count
-        };
+        try {
+          const total = await db.get(`SELECT COUNT(*) as count FROM ${table}`);
+          const active = await db.get(`SELECT COUNT(*) as count FROM ${table} WHERE deleted_at IS NULL AND status = 'approved'`);
+          const pending = await db.get(`SELECT COUNT(*) as count FROM ${table} WHERE deleted_at IS NULL AND status = 'pending'`);
+          const deleted = await db.get(`SELECT COUNT(*) as count FROM ${table} WHERE deleted_at IS NOT NULL`);
+          
+          return {
+              total: total?.count || 0,
+              active: active?.count || 0,
+              pending: pending?.count || 0,
+              deleted: deleted?.count || 0
+          };
+        } catch (err) {
+          console.error(`[Stats] Error getting stats for ${table}:`, err.message);
+          return { total: 0, active: 0, pending: 0, deleted: 0 };
+        }
     };
 
     const [photos, music, videos, articles, events, users, audit] = await Promise.all([
@@ -62,8 +67,8 @@ const getStats = async (req, res, next) => {
       getTableStats('videos'),
       getTableStats('articles'),
       getTableStats('events'),
-      db.get('SELECT COUNT(*) as count FROM users'),
-      db.get('SELECT COUNT(*) as count FROM audit_logs'),
+      db.get('SELECT COUNT(*) as count FROM users').catch(() => ({ count: 0 })),
+      db.get('SELECT COUNT(*) as count FROM audit_logs').catch(() => ({ count: 0 })),
     ]);
 
     const dbPath = path.join(__dirname, '../../database.sqlite');

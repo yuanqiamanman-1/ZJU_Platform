@@ -37,7 +37,12 @@ const UserManager = () => {
       }
     } catch (error) {
       console.error('Failed to fetch users:', error);
-      toast.error(t('common.error_fetching_data'));
+      const errorMsg = error.response?.status === 403 
+        ? t('admin.user_manager_ui.no_permission', '没有权限访问')
+        : error.response?.status === 401
+        ? t('admin.user_manager_ui.not_logged_in', '请先登录')
+        : t('common.error_fetching_data', '获取数据失败');
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   LayoutGrid, Music, Film, BookOpen, Calendar, 
-  Users, HardDrive, Activity, Clock
+  Users, HardDrive, Activity, Clock, AlertCircle
 } from 'lucide-react';
 import api from '../../services/api';
+import toast from 'react-hot-toast';
 
 const StatCard = ({ title, value, icon: Icon, color, onClick, breakdown }) => {
   const { t } = useTranslation();
@@ -56,9 +57,19 @@ const Overview = ({ onChangeTab }) => {
     const fetchStats = async () => {
       try {
         const response = await api.get('/stats');
-        setStats(response.data);
+        setStats(response.data || {
+          counts: { photos: 0, music: 0, videos: 0, articles: 0, events: 0 },
+          breakdown: {},
+          system: { uptime: 0, nodeVersion: '', platform: '' }
+        });
       } catch (error) {
         console.error('Failed to fetch stats', error);
+        const errorMsg = error.response?.status === 403 
+          ? t('admin.overview_ui.no_permission', '没有权限访问')
+          : error.response?.status === 401
+          ? t('admin.overview_ui.not_logged_in', '请先登录')
+          : t('admin.overview_ui.load_fail', '获取统计数据失败');
+        toast.error(errorMsg);
       } finally {
         setLoading(false);
       }
