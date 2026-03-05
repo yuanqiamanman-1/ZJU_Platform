@@ -18,9 +18,15 @@ const PendingReviewManager = () => {
     setLoading(true);
     try {
       const response = await api.get('/admin/pending');
-      setItems(response.data);
+      setItems(response.data || []);
     } catch (error) {
-      toast.error(t('admin.pending_review_ui.load_fail'));
+      console.error('Failed to fetch pending items:', error);
+      const errorMsg = error.response?.status === 403 
+        ? t('admin.pending_review_ui.no_permission', '没有权限访问')
+        : error.response?.status === 401
+        ? t('admin.pending_review_ui.not_logged_in', '请先登录')
+        : t('admin.pending_review_ui.load_fail', '获取数据失败');
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
