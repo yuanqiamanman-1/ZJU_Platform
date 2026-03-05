@@ -140,23 +140,39 @@ app.use('/api/auth/', authLimiter);
 // ====================
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:5173',
-  process.env.CORS_ORIGIN
+  process.env.CORS_ORIGIN,
+  'http://localhost:5180',
+  'http://localhost:3000',
+  'http://localhost:3001'
 ].filter(Boolean);
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1 || NODE_ENV !== 'production') {
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed === origin) return true;
+      try {
+        const allowedUrl = new URL(allowed);
+        const originUrl = new URL(origin);
+        return allowedUrl.hostname === originUrl.hostname;
+      } catch {
+        return false;
+      }
+    });
+    
+    if (isAllowed || NODE_ENV !== 'production') {
       return callback(null, true);
     }
     
+    console.warn(`[CORS] Blocked origin: ${origin}`);
     callback(new Error('CORS policy violation: Origin not allowed'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With'],
+  exposedHeaders: ['X-Total-Count', 'X-Page', 'X-Per-Page'],
+  maxAge: 86400
 }));
 
 // ====================

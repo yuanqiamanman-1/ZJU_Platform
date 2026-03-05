@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const rateLimit = require('express-rate-limit');
 
 // Middleware
 const { upload } = require('../middleware/upload');
@@ -22,27 +21,13 @@ const { authenticateToken, isAdmin, optionalAuth } = require('../middleware/auth
 const { validate, registerValidation, loginValidation, changePasswordValidation, settingsValidation } = require('../middleware/validate');
 const authController = require('../controllers/authController');
 
-// Rate Limiter
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500, // Limit each IP to 500 requests per windowMs
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// Stricter rate limit for auth routes
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 20, // Limit each IP to 20 login/register attempts per 15 min
-    message: { error: 'Too many login attempts, please try again later.' }
-});
-
-router.use(limiter);
+// Note: Rate limiting is configured globally in server/index.js
+// No need for additional rate limiters here to avoid double-counting
 
 // Auth Routes
-router.post('/auth/register', authLimiter, validate(registerValidation), authController.register);
-router.post('/auth/login', authLimiter, validate(loginValidation), authController.login);
-router.post('/auth/admin-login', authLimiter, authController.adminLogin);
+router.post('/auth/register', validate(registerValidation), authController.register);
+router.post('/auth/login', validate(loginValidation), authController.login);
+router.post('/auth/admin-login', authController.adminLogin);
 router.get('/auth/me', authenticateToken, authController.me);
 router.post('/auth/change-password', authenticateToken, validate(changePasswordValidation), authController.changePassword);
 router.put('/auth/profile', authenticateToken, (req, res) => {

@@ -20,12 +20,11 @@ const helmetConfig = {
       scriptSrc: [
         "'self'",
         "'unsafe-inline'",
-        // Only allow unsafe-eval in development
         ...(process.env.NODE_ENV !== 'production' ? ["'unsafe-eval'"] : [])
       ],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-      imgSrc: ["'self'", "data:", "blob:", "https:", "*"],
+      imgSrc: ["'self'", "data:", "blob:", "https:"],
       connectSrc: ["'self'", "https:", "ws:", "wss:"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'", "https:", "data:", "blob:"],
@@ -35,7 +34,7 @@ const helmetConfig = {
   },
   crossOriginResourcePolicy: { policy: "cross-origin" },
   crossOriginOpenerPolicy: { policy: "same-origin" },
-  crossOriginEmbedderPolicy: false, // Disable for compatibility
+  crossOriginEmbedderPolicy: false,
   dnsPrefetchControl: { allow: false },
   frameguard: { action: 'deny' },
   hidePoweredBy: true,

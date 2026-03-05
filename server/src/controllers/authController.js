@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { getDb } = require('../config/db');
+const { loginAttemptTracker } = require('../middleware/security');
 
 const SECRET_KEY = process.env.SECRET_KEY || 'dev-secret-key-change-in-prod';
 
@@ -36,7 +37,7 @@ const register = async (req, res, next) => {
       [username, hashedPassword, role, new Date().toISOString()]
     );
 
-    const token = jwt.sign({ id: result.lastID, username, role }, SECRET_KEY, { expiresIn: '30d' });
+    const token = jwt.sign({ id: result.lastID, username, role }, SECRET_KEY, { expiresIn: '7d' });
 
     res.json({ token, user: { id: result.lastID, username, role } });
   } catch (error) { next(error); }
@@ -65,7 +66,7 @@ const login = async (req, res, next) => {
         await db.run('UPDATE users SET password = ? WHERE id = ?', [newHash, user.id]);
     }
 
-    const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, SECRET_KEY, { expiresIn: '30d' });
+    const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, SECRET_KEY, { expiresIn: '7d' });
 
     // Log successful login
     await db.run(
@@ -80,6 +81,16 @@ const login = async (req, res, next) => {
 const adminLogin = async (req, res, next) => {
   try {
     const { password } = req.body;
+    const clientIp = req.ip || req.connection.remoteAddress;
+    
+    const lockStatus = loginAttemptTracker.isLocked(clientIp);
+    if (lockStatus.locked) {
+      return res.status(429).json({ 
+        error: 'Account temporarily locked',
+        message: `Too many failed attempts. Try again in ${lockStatus.remainingMinutes} minutes.`,
+        retryAfter: lockStatus.remainingMinutes * 60
+      });
+    }
 
     const adminPassword = process.env.ADMIN_PASSWORD;
     if (!adminPassword) {
@@ -88,16 +99,20 @@ const adminLogin = async (req, res, next) => {
     }
     
     if (password !== adminPassword) {
-      return res.status(401).json({ error: 'Invalid password' });
+      loginAttemptTracker.recordFailed(clientIp);
+      const status = loginAttemptTracker.isLocked(clientIp);
+      return res.status(401).json({ 
+        error: 'Invalid password',
+        attemptsRemaining: status.attemptsRemaining || 0
+      });
     }
 
-    // Issue a token for a generic admin user
-    // We use a fixed ID (e.g., 1) and username 'admin'
-    // This allows access to protected routes without a database user lookup
+    loginAttemptTracker.clear(clientIp);
+
     const token = jwt.sign(
       { id: 1, username: 'admin', role: 'admin' }, 
       SECRET_KEY, 
-      { expiresIn: '30d' }
+      { expiresIn: '7d' }
     );
 
     res.json({ token, user: { id: 1, username: 'admin', role: 'admin' } });
