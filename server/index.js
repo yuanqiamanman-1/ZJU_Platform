@@ -240,7 +240,7 @@ if (fs.existsSync(distPath)) {
 // ====================
 // WeChat Parsing Endpoint
 // ====================
-const { scrapeWeChat, parseWithLLM, cleanWeChatUrl, wechatCache, CACHE_TTL } = require('./src/utils/wechat');
+const { scrapeWeChat, parseWithLLM, cleanWeChatUrl, wechatCache, CACHE_TTL, downloadWeChatImage } = require('./src/utils/wechat');
 
 app.post('/api/resources/parse-wechat', authenticateToken, isAdmin, async (req, res, next) => {
   const { url } = req.body;
@@ -305,9 +305,17 @@ app.post('/api/resources/parse-wechat', authenticateToken, isAdmin, async (req, 
     parsedData.title = parsedData.title || scrapedData.title || 'Untitled';
     parsedData.description = parsedData.description || scrapedData.content?.substring(0, 200) || '';
     
-    // Include cover image from scraped data
-    if (scrapedData.coverImage && !parsedData.coverImage) {
-      parsedData.coverImage = scrapedData.coverImage;
+    // Download cover image to local server (bypass WeChat hotlink protection)
+    if (scrapedData.coverImage) {
+      console.log(`📥 Downloading cover image...`);
+      const localImagePath = await downloadWeChatImage(scrapedData.coverImage);
+      if (localImagePath) {
+        parsedData.coverImage = localImagePath;
+        console.log(`✅ Cover image saved: ${localImagePath}`);
+      } else {
+        // Fallback to original URL (may not work due to hotlink protection)
+        parsedData.coverImage = scrapedData.coverImage;
+      }
     }
 
     // Cache Result
@@ -335,9 +343,9 @@ app.post('/api/resources/parse-wechat', authenticateToken, isAdmin, async (req, 
       errorMessage = '请求过于频繁，请稍后再试';
     }
     
-    res.status(statusCode).json({
-      error: 'Parse failed',
-      message: errorMessage
+    res.status(statusCode).json({ 
+      error: 'WeChat parse failed', 
+      message: errorMessage 
     });
   }
 });
