@@ -97,6 +97,11 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                 setTags(newTags.join(','));
             }
 
+            // Set cover image if available
+            if (data.coverImage) {
+                setCoverPreview(data.coverImage);
+            }
+
             toast.success(t('upload.parse_success'));
         }
     } catch (error) {

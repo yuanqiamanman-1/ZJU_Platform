@@ -304,6 +304,11 @@ app.post('/api/resources/parse-wechat', authenticateToken, isAdmin, async (req, 
     // Ensure required fields have defaults
     parsedData.title = parsedData.title || scrapedData.title || 'Untitled';
     parsedData.description = parsedData.description || scrapedData.content?.substring(0, 200) || '';
+    
+    // Include cover image from scraped data
+    if (scrapedData.coverImage && !parsedData.coverImage) {
+      parsedData.coverImage = scrapedData.coverImage;
+    }
 
     // Cache Result
     wechatCache.set(cleanedUrl, {
