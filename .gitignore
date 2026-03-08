@@ -30,11 +30,10 @@ Thumbs.db
 # uploads/ <-- Un-ignored per user request
 
 # Local database file
-# server/database.sqlite <-- Un-ignored per user request
-# *.sqlite <-- Un-ignored per user request
-# *.sqlite-wal <-- Un-ignored per user request
-# *.sqlite-shm <-- Un-ignored per user request
-# *.db <-- Un-ignored per user request
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
 
 # Crawler
 wechat-batch-crawler/
