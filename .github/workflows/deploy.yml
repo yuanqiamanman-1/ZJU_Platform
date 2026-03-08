@@ -2,15 +2,10 @@ name: Deploy
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    types: [closed]
-    branches: [main]
+    branches: [master]
 
 jobs:
   deploy:
-    # For PRs, only run if it was actually merged (not just closed)
-    if: github.event_name == 'push' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
@@ -22,7 +17,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd /var/www/ZJU_Platform
-            git pull origin main
+            git pull origin master
             npm install --production=false
             npm run build
             pm2 restart all
