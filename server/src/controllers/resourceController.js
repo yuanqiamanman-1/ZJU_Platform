@@ -569,7 +569,7 @@ const fields = {
     music: ['title', 'artist', 'duration', 'cover', 'audio', 'featured', 'tags'],
     videos: ['title', 'tags', 'thumbnail', 'video', 'featured'],
     articles: ['title', 'date', 'excerpt', 'tags', 'content', 'cover', 'featured'],
-    events: ['title', 'date', 'location', 'tags', 'image', 'description', 'content', 'link', 'featured', 'score', 'target_audience', 'organizer', 'volunteer_time', 'category']
+    events: ['title', 'date', 'end_date', 'location', 'tags', 'image', 'description', 'content', 'link', 'featured', 'score', 'target_audience', 'organizer', 'volunteer_time', 'category']
 };
 
 const getRelatedHandler = (table) => async (req, res, next) => {

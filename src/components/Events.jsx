@@ -27,26 +27,29 @@ const getEventLifecycle = (date, endDate, t) => {
   if (!date) return t('events.status.unknown');
   try {
       const now = new Date();
-      const startDate = new Date(date);
-      
-      // If valid end date exists, use range comparison
+      // For YYYY-MM-DD (no time), treat as local midnight by replacing - with /
+      const startDate = new Date(date.includes('T') ? date : date.replace(/-/g, '/'));
+
       if (endDate) {
-          const end = new Date(endDate);
-          // Adjust end date to include the full day
-          end.setHours(23, 59, 59, 999);
-          
+          // For YYYY-MM-DD (no time), treat as end of that day (23:59:59)
+          let end;
+          if (endDate.includes('T')) {
+              end = new Date(endDate);
+          } else {
+              end = new Date(endDate.replace(/-/g, '/'));
+              end.setHours(23, 59, 59, 999);
+          }
+
           if (now < startDate) return t('events.status.upcoming');
           if (now >= startDate && now <= end) return t('events.status.ongoing');
           return t('events.status.past');
       }
 
-      // Fallback: If only start date
+      // Fallback: only start date — treat as ongoing for the full start day
       if (now < startDate) return t('events.status.upcoming');
-      
-      // If start date is today, consider it ongoing for the day
-      const isSameDay = now.toDateString() === startDate.toDateString();
-      if (isSameDay) return t('events.status.ongoing');
-      
+      const startDayEnd = new Date(startDate);
+      startDayEnd.setHours(23, 59, 59, 999);
+      if (now <= startDayEnd) return t('events.status.ongoing');
       return t('events.status.past');
   } catch (e) {
       return t('events.status.unknown');
@@ -64,48 +67,28 @@ const getStatusColor = (status, t) => {
 
 const isSameDay = (d1, d2) => {
     if (!d1 || !d2) return false;
-    // Handle simplified dates (YYYY-MM-DD) and ISO strings
-    const date1 = new Date(d1.includes('T') ? d1 : d1.replace(/-/g, '/'));
-    const date2 = new Date(d2.includes('T') ? d2 : d2.replace(/-/g, '/'));
-    return date1.getFullYear() === date2.getFullYear() &&
-           date1.getMonth() === date2.getMonth() &&
-           date1.getDate() === date2.getDate();
+    // Compare only the date portion (first 10 chars: YYYY-MM-DD) to avoid timezone issues
+    return d1.substring(0, 10) === d2.substring(0, 10);
 };
 
-const formatTime = (dateStr) => {
+const formatDateTime = (dateStr) => {
     if (!dateStr) return '';
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return '';
-    const hours = String(d.getHours()).padStart(2, '0');
-    const minutes = String(d.getMinutes()).padStart(2, '0');
-    return `${hours}:${minutes}`;
-};
+    // Extract date parts from string directly to avoid timezone issues
+    // Supports: YYYY-MM-DD, YYYY-MM-DDTHH:MM, YYYY-MM-DDTHH:MM:SS
+    const datePart = dateStr.substring(0, 10); // YYYY-MM-DD
+    const parts = datePart.split('-');
+    if (parts.length < 3) return dateStr;
+    const month = parseInt(parts[1], 10);
+    const day = parseInt(parts[2], 10);
+    if (isNaN(month) || isNaN(day)) return dateStr;
 
-const formatDateTime = (dateStr, timeStr) => {
-    if (!dateStr) return '';
-    
-    // Check if dateStr contains time info
-    if (dateStr.includes('T') || (dateStr.includes(':') && dateStr.length > 10)) {
-        const d = new Date(dateStr);
-        if (!isNaN(d.getTime())) {
-            const month = d.getMonth() + 1;
-            const day = d.getDate();
-            return `${month}.${day}`; 
+    // Check if time part exists (format: YYYY-MM-DDTHH:MM)
+    if (dateStr.length > 10 && dateStr[10] === 'T') {
+        const timePart = dateStr.substring(11, 16); // HH:MM
+        if (timePart && timePart !== '00:00') {
+            return `${month}.${day} ${timePart}`;
         }
     }
-    
-    // Fallback for legacy date only (YYYY-MM-DD)
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
-    
-    const month = d.getMonth() + 1;
-    const day = d.getDate();
-    
-    // Legacy time argument support (deprecated but kept for safety)
-    if (timeStr && timeStr.trim()) {
-         return `${month}.${day} ${timeStr}`;
-    }
-    
     return `${month}.${day}`;
 };
 
@@ -312,30 +295,29 @@ const Events = () => {
       const title = encodeURIComponent(selectedEvent.title);
       const details = encodeURIComponent(selectedEvent.description + "\n\n" + selectedEvent.content); 
       const location = encodeURIComponent(selectedEvent.location);
-      
-      const startDateStr = selectedEvent.date.replace(/-/g, '');
-      let endDateStr = startDateStr; // Default to start date if no end date
-      
-      if (selectedEvent.end_date) {
-          // Google Calendar end date is exclusive for all-day events, so we might want to add 1 day
-          // But since we store simple YYYY-MM-DD, let's just use the end date + 1 day for all-day logic
-          // Or just use the end date. Let's try to be precise.
-          // If input is YYYY-MM-DD, Google treats it as all day.
-          // For multi-day all-day events, end date should be the day AFTER the last day.
-          const d = new Date(selectedEvent.end_date);
-          d.setDate(d.getDate() + 1);
-          const year = d.getFullYear();
-          const month = String(d.getMonth() + 1).padStart(2, '0');
-          const day = String(d.getDate()).padStart(2, '0');
-          endDateStr = `${year}${month}${day}`;
+      const hasTime = (str) => str && str.length > 10 && str[10] === 'T';
+
+      let dates;
+      if (hasTime(selectedEvent.date)) {
+          // datetime event: format YYYYMMDDTHHMMSS/YYYYMMDDTHHMMSS
+          const toGCalDateTime = (str) => str.substring(0, 16).replace(/[-:T]/g, '') + '00';
+          const startStr = toGCalDateTime(selectedEvent.date);
+          const endStr = selectedEvent.end_date
+              ? toGCalDateTime(selectedEvent.end_date)
+              : toGCalDateTime(selectedEvent.date); // same time if no end
+          dates = `${startStr}/${endStr}`;
       } else {
-          // Single day all-day event: end date should be next day too?
-          // Google Calendar template dates=YYYYMMDD/YYYYMMDD usually means start/end.
-          // If same day, it works as single day.
+          // all-day event: format YYYYMMDD/YYYYMMDD (end is exclusive, add 1 day)
+          const startStr = selectedEvent.date.replace(/-/g, '');
+          let endStr = startStr;
+          if (selectedEvent.end_date) {
+              const d = new Date(selectedEvent.end_date.replace(/-/g, '/'));
+              d.setDate(d.getDate() + 1);
+              endStr = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+          }
+          dates = `${startStr}/${endStr}`;
       }
 
-      const dates = `${startDateStr}/${endDateStr}`; 
-      
       const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}&dates=${dates}`;
       window.open(url, '_blank');
   };
@@ -345,16 +327,25 @@ const Events = () => {
       const title = selectedEvent.title;
       const desc = selectedEvent.description;
       const location = selectedEvent.location;
-      const startDateStr = selectedEvent.date.replace(/-/g, '');
-      let endDateStr = startDateStr;
+      const hasTime = (str) => str && str.length > 10 && str[10] === 'T';
 
-      if (selectedEvent.end_date) {
-           const d = new Date(selectedEvent.end_date);
-           d.setDate(d.getDate() + 1); // ICS also uses exclusive end date for all-day events
-           const year = d.getFullYear();
-           const month = String(d.getMonth() + 1).padStart(2, '0');
-           const day = String(d.getDate()).padStart(2, '0');
-           endDateStr = `${year}${month}${day}`;
+      let dtStart, dtEnd;
+      if (hasTime(selectedEvent.date)) {
+          // datetime event: DTSTART:YYYYMMDDTHHMMSS
+          const toICSDateTime = (str) => str.substring(0, 16).replace(/[-:T]/g, '') + '00';
+          dtStart = `DTSTART:${toICSDateTime(selectedEvent.date)}`;
+          dtEnd = `DTEND:${selectedEvent.end_date ? toICSDateTime(selectedEvent.end_date) : toICSDateTime(selectedEvent.date)}`;
+      } else {
+          // all-day event: DTSTART;VALUE=DATE:YYYYMMDD (end is exclusive)
+          const startStr = selectedEvent.date.replace(/-/g, '');
+          let endStr = startStr;
+          if (selectedEvent.end_date) {
+              const d = new Date(selectedEvent.end_date.replace(/-/g, '/'));
+              d.setDate(d.getDate() + 1);
+              endStr = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+          }
+          dtStart = `DTSTART;VALUE=DATE:${startStr}`;
+          dtEnd = `DTEND;VALUE=DATE:${endStr}`;
       }
 
       const icsContent = `BEGIN:VCALENDAR
@@ -363,8 +354,8 @@ PRODID:-//777//Events//EN
 BEGIN:VEVENT
 UID:${selectedEvent.id}@777.com
 DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z
-DTSTART;VALUE=DATE:${startDateStr}
-DTEND;VALUE=DATE:${endDateStr}
+${dtStart}
+${dtEnd}
 SUMMARY:${title}
 DESCRIPTION:${desc}
 LOCATION:${location}

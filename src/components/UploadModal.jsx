@@ -72,12 +72,9 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
         if (data) {
             if (data.title) setTitle(data.title);
             
-            // Smart Time Merging - DISABLED as per user request for Date Only
-            let startDate = data.date;
-            let endDate = data.end_date;
-
-            if (startDate) setEventDate(startDate);
-            if (endDate) setEventEndDate(endDate);
+            // date and end_date are now YYYY-MM-DDTHH:MM format from AI parsing
+            if (data.date) setEventDate(data.date);
+            if (data.end_date) setEventEndDate(data.end_date);
             if (data.location) setEventLocation(data.location);
             if (data.content) setContent(data.content); // Store full content for parsing/editing
             if (data.description) setDescription(data.description); // Summary for description
@@ -546,9 +543,10 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                                <div className="col-span-1">
                                     <label className={labelClasses}>{t('event_fields.start_date')}</label>
                                     <input
-                                        type="date"
+                                        type="datetime-local"
+                                        step="1800"
                                         required
-                                        value={eventDate ? eventDate.split('T')[0] : ''}
+                                        value={eventDate ? (eventDate.length === 10 ? eventDate + 'T00:00' : eventDate.substring(0, 16)) : ''}
                                         onChange={e => setEventDate(e.target.value)}
                                         className={inputClasses}
                                     />
@@ -556,9 +554,10 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                                <div className="col-span-1">
                                     <label className={labelClasses}>{t('event_fields.end_date')}</label>
                                     <input
-                                        type="date"
+                                        type="datetime-local"
+                                        step="1800"
                                         required
-                                        value={eventEndDate ? eventEndDate.split('T')[0] : ''}
+                                        value={eventEndDate ? (eventEndDate.length === 10 ? eventEndDate + 'T00:00' : eventEndDate.substring(0, 16)) : ''}
                                         onChange={e => setEventEndDate(e.target.value)}
                                         className={inputClasses}
                                     />
