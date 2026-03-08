@@ -99,6 +99,9 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                 setCoverPreview(data.coverImage);
             }
 
+            // Auto-fill event link with source WeChat URL if not already set
+            if (!eventLink) setEventLink(wechatUrl);
+
             toast.success(t('upload.parse_success'));
         }
     } catch (error) {
@@ -123,6 +126,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
       setEventVolunteerTime('');
       setEventScore('');
       setDateReasoning('');
+      setEventLink('');
       setTags('');
       toast.success(t('upload.cleared'));
   };
