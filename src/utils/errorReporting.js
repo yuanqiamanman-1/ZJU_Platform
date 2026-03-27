@@ -3,6 +3,8 @@
  * Captures and reports errors to monitoring service
  */
 
+import React, { useEffect } from 'react';
+
 // Error severity levels
 const SEVERITY = {
   CRITICAL: 'critical',

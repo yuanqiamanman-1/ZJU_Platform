@@ -80,7 +80,7 @@ const TagFilter = ({ selectedTags = [], onChange, className, variant = 'card', t
                   <div className={`p-2.5 sm:p-2 rounded-lg ${variant === 'card' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-white/10 text-white'}`}>
                       <Filter size={isMobile ? 16 : 18} />
                   </div>
-                  <span className="font-bold text-white text-base md:text-lg tracking-wide">{t('common.filter_by_tags', 'Filter by Tags')}</span>
+                  <span className="font-bold text-white text-base md:text-lg tracking-wide">{t('common.filter_by_tags', '标签筛选')}</span>
                   {isMobile && (
                       <motion.div 
                           animate={{ rotate: isMobileCollapsed ? 0 : 180 }}
@@ -97,13 +97,13 @@ const TagFilter = ({ selectedTags = [], onChange, className, variant = 'card', t
                       className="text-xs font-medium text-gray-400 hover:text-white flex items-center gap-1 transition-colors px-3 py-2 sm:px-3 sm:py-1.5 rounded-full bg-white/5 hover:bg-white/10 min-h-[44px] sm:min-h-0"
                   >
                       <X size={12} />
-                      {t('common.clear_all', 'Clear All')}
+                      {t('common.clear_all', '清除全部')}
                   </button>
               )}
           </div>
         ) : (
           <div className="mb-3 pl-1">
-             <span className="text-sm font-bold text-white/80">{t('common.filter_by_tags', 'Filter by Tags')}</span>
+             <span className="text-sm font-bold text-white/80">{t('common.filter_by_tags', '标签筛选')}</span>
           </div>
         )}
 

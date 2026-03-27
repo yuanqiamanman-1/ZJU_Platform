@@ -23,8 +23,8 @@ const EventFilterPanel = ({
   const isSheetMode = mode === 'sheet';
 
   const sortExtraOptions = [
-    { value: 'date_asc', label: t('sort_filter.date_asc') || 'Date (Earliest)' },
-    { value: 'date_desc', label: t('sort_filter.date_desc') || 'Date (Latest)' },
+    { value: 'date_asc', label: t('sort_filter.date_asc', '日期（最早）') },
+    { value: 'date_desc', label: t('sort_filter.date_desc', '日期（最晚）') },
   ];
 
   const hasActiveFilters =
@@ -77,7 +77,7 @@ const EventFilterPanel = ({
               className={`${isSheetMode ? 'w-full justify-center rounded-2xl py-3.5' : 'px-4 py-2 rounded-full'} flex items-center gap-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all border border-red-500/10 text-sm font-medium shrink-0`}
             >
               <X size={14} />
-              {t('advanced_filter.clear') || '清除所有筛选'}
+              {t('advanced_filter.clear', '清除所有筛选')}
             </motion.button>
           )}
         </AnimatePresence>

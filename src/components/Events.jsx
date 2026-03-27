@@ -160,7 +160,7 @@ const EventCard = memo(({ event, index, onClick, onToggleFavorite }) => {
             
             <div className="flex items-center gap-1.5 min-w-0">
                 <MapPin size={14} className="text-indigo-400 shrink-0 md:w-4 md:h-4" />
-                <span className="truncate">{event.location || 'Online'}</span>
+                <span className="truncate">{event.location || t('common.online', '线上')}</span>
             </div>
         </div>
 
@@ -220,6 +220,7 @@ const EventCard = memo(({ event, index, onClick, onToggleFavorite }) => {
   </motion.div>
   );
 });
+EventCard.displayName = 'EventCard';
 
 const Events = () => {
   const { t } = useTranslation();
@@ -568,7 +569,7 @@ END:VCALENDAR`;
                           <div className="p-4 border-b border-white/10 flex justify-between items-center sticky top-0 z-10 bg-[#1a1a1a]/95 backdrop-blur-xl rounded-t-3xl">
                               <div>
                                   <h3 className="text-lg font-bold text-white">{t('common.filters', '筛选')}</h3>
-                                  <p className="text-xs text-gray-400 mt-1">{t('advanced_filter.title') || '筛选活动内容'}</p>
+                                  <p className="text-xs text-gray-400 mt-1">{t('advanced_filter.title', '筛选活动内容')}</p>
                               </div>
                               <button onClick={() => setIsMobileFilterOpen(false)} className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-full transition-colors">
                                   <X size={20} />
@@ -635,7 +636,7 @@ END:VCALENDAR`;
                           <div className="p-4 border-b border-white/10 flex justify-between items-center sticky top-0 z-10 bg-[#1a1a1a]/95 backdrop-blur-xl rounded-t-3xl">
                               <div>
                                   <h3 className="text-lg font-bold text-white">{t('common.sort', '排序')}</h3>
-                                  <p className="text-xs text-gray-400 mt-1">{t('sort_filter.title') || '选择活动排序方式'}</p>
+                                  <p className="text-xs text-gray-400 mt-1">{t('sort_filter.title', '选择活动排序方式')}</p>
                               </div>
                               <button onClick={() => setIsMobileSortOpen(false)} className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-full transition-colors">
                                   <X size={20} />
@@ -650,8 +651,8 @@ END:VCALENDAR`;
                                   }} 
                                   className="w-full" 
                                   extraOptions={[
-                                      { value: 'date_asc', label: t('sort_filter.date_asc') || 'Date (Earliest)' },
-                                      { value: 'date_desc', label: t('sort_filter.date_desc') || 'Date (Latest)' }
+                                      { value: 'date_asc', label: t('sort_filter.date_asc', '日期（最早）') },
+                                      { value: 'date_desc', label: t('sort_filter.date_desc', '日期（最晚）') }
                                   ]}
                                   renderMode="list"
                               />
@@ -667,12 +668,12 @@ END:VCALENDAR`;
       {error ? (
           <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
             <AlertCircle size={48} className="text-red-400 mb-4 opacity-50 mx-auto" />
-            <p className="text-gray-300 mb-6">{t('common.error_fetching_data') || 'Failed to load events'}</p>
+            <p className="text-gray-300 mb-6">{t('common.error_fetching_data', '获取数据失败')}</p>
             <button 
               onClick={refresh}
               className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all border border-white/10"
             >
-              Retry
+              {t('common.retry', '重试')}
             </button>
           </div>
         ) : loading && events.length === 0 ? (
@@ -720,7 +721,7 @@ END:VCALENDAR`;
             <h3 className="text-3xl font-bold text-white mb-3 tracking-tight">{t('events.no_events')}</h3>
             <p className="text-gray-400 mb-8 max-w-md text-lg">
                 {(selectedTags.length > 0 || debouncedSearch || Object.values(filters).some(v => v))
-                  ? (t('advanced_filter.clear') || "Clear filters") + " " + (t('common.or') || "or") + " " + (t('common.search') || "search")
+                  ? `${t('advanced_filter.clear', '清除所有筛选')} ${t('common.or', '或')} ${t('common.search', '搜索...')}`
                   : "暂时没有即将开始的活动，稍后再来看看吧"}
             </p>
             <motion.button

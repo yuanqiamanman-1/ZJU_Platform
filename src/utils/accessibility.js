@@ -3,7 +3,7 @@
  * ARIA labels, keyboard navigation, focus management, screen reader support
  */
 
-import { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 
 // ============================================
 // ARIA Labels and Roles

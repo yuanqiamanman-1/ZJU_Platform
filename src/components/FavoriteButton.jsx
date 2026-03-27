@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
@@ -23,6 +24,7 @@ const FavoriteButton = ({
   const [loading, setLoading] = useState(false);
   const [likeCount, setLikeCount] = useState(typeof count === 'number' ? count : 0);
   const { user } = useAuth();
+  const { t } = useTranslation();
   
   // Sync with controlled prop if provided
   useEffect(() => {
@@ -75,7 +77,7 @@ const FavoriteButton = ({
     e.stopPropagation();
 
     if (!user) {
-      toast.error(t('auth.login_required', 'Please login first'));
+      toast.error(t('auth.login_required', '请先登录'));
       return;
     }
 
@@ -102,7 +104,7 @@ const FavoriteButton = ({
       setIsFavorited(previousState);
       setLikeCount(previousLikes);
       console.error("Failed to toggle favorite", error);
-      toast.error(t('common.error_occurred'));
+      toast.error(t('common.error_occurred', '发生错误'));
     } finally {
       setLoading(false);
     }

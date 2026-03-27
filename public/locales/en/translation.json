@@ -110,6 +110,7 @@
     "home": "Home",
     "gallery": "Gallery",
     "music": "Music",
+    "tags": "Tags",
     "videos": "Videos",
     "articles": "Articles",
     "about": "About",
@@ -278,7 +279,8 @@
     "clear": "Clear",
     "done": "Done",
     "sort": "Sort",
-    "filters": "Filters"
+    "filters": "Filters",
+    "or": "or"
   },
   "gallery": {
     "title": "Selected Works",

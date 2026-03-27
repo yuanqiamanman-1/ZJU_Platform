@@ -286,5 +286,6 @@ const FullFeaturedMusicPlayer = memo(({ tracks = [] }) => {
     </div>
   );
 });
+FullFeaturedMusicPlayer.displayName = 'FullFeaturedMusicPlayer';
 
 export default FullFeaturedMusicPlayer;

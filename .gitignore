@@ -3,6 +3,7 @@ node_modules/
 server/node_modules/
 
 # Build outputs
+dist/
 dev-dist/
 .vite/
 
@@ -28,7 +29,9 @@ Thumbs.db
 *.sqlite-wal
 *.sqlite-shm
 *.db
-server/uploads
+server/data/
+server/uploads/
+
 # Uploads (user-generated content, not for git)
 server/uploads/
 

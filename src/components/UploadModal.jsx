@@ -587,7 +587,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, type = 'image', initialData = 
                                            </div>
                                            <div>
                                                <h5 className="text-xs font-bold text-indigo-300 uppercase tracking-widest mb-1.5">
-                                                   {t('upload.ai_reasoning') || 'AI Reasoning'}
+                                                   {t('upload.ai_reasoning', 'AI 日期推断逻辑')}
                                                </h5>
                                                <p className="text-sm text-indigo-100/80 leading-relaxed font-medium">
                                                    {dateReasoning}

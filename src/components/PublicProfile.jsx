@@ -105,6 +105,18 @@ const PublicProfile = () => {
       }
   };
 
+  const fetchUploads = async () => {
+      setLoadingUploads(true);
+      try {
+          const res = await api.get(`/users/${id}/uploads?type=${uploadType}`);
+          setUploads(res.data || []);
+      } catch (err) {
+          setUploads([]);
+      } finally {
+          setLoadingUploads(false);
+      }
+  };
+
   const handleProfileUpdate = async (e) => {
       e.preventDefault();
       setProfileLoading(true);

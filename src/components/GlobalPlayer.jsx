@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, SkipBack, SkipForward, X, Music, Volume2, Maximize2, VolumeX, Minimize2 } from 'lucide-react';
+import React, { useState, useEffect, memo, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import { Play, Pause, SkipBack, SkipForward, X, Music } from 'lucide-react';
 import { useMusic } from '../context/MusicContext';
 import { useLocation } from 'react-router-dom';
 
@@ -27,6 +27,7 @@ const Visualizer = memo(({ isPlaying }) => {
     </div>
   );
 });
+Visualizer.displayName = 'Visualizer';
 
 // Memoized Player Info Component
 const PlayerInfo = memo(({ currentTrack, isPlaying, onClose }) => {
@@ -63,6 +64,7 @@ const PlayerInfo = memo(({ currentTrack, isPlaying, onClose }) => {
     </div>
   );
 });
+PlayerInfo.displayName = 'PlayerInfo';
 
 // Memoized Progress Bar Component
 const ProgressBar = memo(({ progress, duration, onSeek }) => {
@@ -88,6 +90,7 @@ const ProgressBar = memo(({ progress, duration, onSeek }) => {
     </div>
   );
 });
+ProgressBar.displayName = 'ProgressBar';
 
 // Memoized Controls Component
 const PlayerControls = memo(({ isPlaying, onPlayPause, onNext, onPrev }) => {
@@ -108,6 +111,7 @@ const PlayerControls = memo(({ isPlaying, onPlayPause, onNext, onPrev }) => {
     </div>
   );
 });
+PlayerControls.displayName = 'PlayerControls';
 
 const GlobalPlayer = () => {
   const { currentTrack, isPlaying, togglePlay, nextTrack, prevTrack, audioRef, isMiniPlayerVisible, setIsMiniPlayerVisible } = useMusic();

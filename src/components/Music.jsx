@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom';
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
-import { motion } from 'framer-motion';
-import { Play, Pause, SkipForward, SkipBack, Music as MusicIcon, Volume2, VolumeX, Upload, AlertCircle, Tag } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Play, Pause, SkipForward, SkipBack, Music as MusicIcon, Volume2, VolumeX, Upload, AlertCircle, Tag, X } from 'lucide-react';
 import UploadModal from './UploadModal';
 import FavoriteButton from './FavoriteButton';
 import { useTranslation } from 'react-i18next';
@@ -108,6 +108,7 @@ const TrackItem = memo(({ track, activeTrackId, isPlaying, onClick, onToggleFavo
     </motion.div>
   );
 });
+TrackItem.displayName = 'TrackItem';
 
 const Music = () => {
   const { t } = useTranslation();
@@ -407,7 +408,7 @@ const Music = () => {
                         <div className="p-4 border-b border-white/10 flex justify-between items-center sticky top-0 z-10 bg-[#1a1a1a]/95 backdrop-blur-xl rounded-t-3xl">
                             <div>
                                 <h3 className="text-lg font-bold text-white">{t('common.filters', '筛选')}</h3>
-                                <p className="text-xs text-gray-400 mt-1">{t('common.filter_by_tags', 'Filter by Tags')}</p>
+                                <p className="text-xs text-gray-400 mt-1">{t('common.filter_by_tags', '标签筛选')}</p>
                             </div>
                             <button onClick={() => setIsMobileFilterOpen(false)} className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-full transition-colors">
                                 <X size={20} />
@@ -416,14 +417,14 @@ const Music = () => {
                         <div className="p-6 overflow-y-auto custom-scrollbar flex-1 min-h-0 space-y-6">
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between gap-3">
-                                    <h4 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">{t('common.tags') || 'Tags'}</h4>
+                                    <h4 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">{t('common.tags', '标签')}</h4>
                                     {selectedTags.length > 0 && (
                                         <button
                                             type="button"
                                             onClick={() => setSelectedTags([])}
                                             className="text-xs text-red-300 bg-red-500/10 border border-red-500/20 px-3 py-1.5 rounded-full"
                                         >
-                                            {t('common.clear_all') || 'Clear All'}
+                                            {t('common.clear_all', '清除全部')}
                                         </button>
                                     )}
                                 </div>
@@ -476,7 +477,7 @@ const Music = () => {
                         <div className="p-4 border-b border-white/10 flex justify-between items-center sticky top-0 z-10 bg-[#1a1a1a]/95 backdrop-blur-xl rounded-t-3xl">
                             <div>
                                 <h3 className="text-lg font-bold text-white">{t('common.sort', '排序')}</h3>
-                                <p className="text-xs text-gray-400 mt-1">{t('sort_filter.title') || '选择排序方式'}</p>
+                                <p className="text-xs text-gray-400 mt-1">{t('sort_filter.title', '选择排序方式')}</p>
                             </div>
                             <button onClick={() => setIsMobileSortOpen(false)} className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-full transition-colors">
                                 <X size={20} />
@@ -679,12 +680,12 @@ const Music = () => {
               ) : error ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <AlertCircle size={48} className="text-red-400 mb-4 opacity-50 mx-auto" />
-                  <p className="text-gray-300 mb-6">{t('common.error_fetching_data') || 'Failed to load music'}</p>
+                  <p className="text-gray-300 mb-6">{t('common.error_fetching_data', '获取数据失败')}</p>
                   <button 
                     onClick={refresh}
                     className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all border border-white/10"
                   >
-                    {t('common.retry') || 'Retry'}
+                    {t('common.retry', '重试')}
                   </button>
                 </div>
               ) : (
