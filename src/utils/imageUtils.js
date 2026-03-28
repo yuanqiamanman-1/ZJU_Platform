@@ -1,19 +1,35 @@
+export const normalizeExternalImageUrl = (url, width) => {
+  if (!url) return url;
+
+  if (url.includes('images.unsplash.com')) {
+    const normalizedUrl = new URL(url);
+
+    if (width) {
+      normalizedUrl.searchParams.set('w', String(width));
+    }
+
+    if (!normalizedUrl.searchParams.has('auto')) {
+      normalizedUrl.searchParams.set('auto', 'format');
+    }
+
+    if (!normalizedUrl.searchParams.has('fit')) {
+      normalizedUrl.searchParams.set('fit', 'crop');
+    }
+
+    normalizedUrl.searchParams.set('fm', 'jpg');
+
+    return normalizedUrl.toString();
+  }
+
+  return url;
+};
+
 export const getHighResUrl = (url) => {
   if (!url) return url;
-  if (url.includes('images.unsplash.com')) {
-    return url.replace('&w=800', '&w=1600').replace('?w=800', '?w=1600');
-  }
-  return url;
+  return normalizeExternalImageUrl(url, 1600);
 };
 
 export const getThumbnailUrl = (url) => {
   if (!url) return url;
-  if (url.includes('images.unsplash.com')) {
-    // Replace existing width param or append if missing (simplified logic)
-    if (url.includes('w=')) {
-      return url.replace(/w=\d+/, 'w=200');
-    }
-    return `${url}&w=200`;
-  }
-  return url;
+  return normalizeExternalImageUrl(url, 200);
 };

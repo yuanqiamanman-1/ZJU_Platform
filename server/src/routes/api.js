@@ -71,7 +71,7 @@ router.get('/audit-logs', authenticateToken, isAdmin, systemController.getAuditL
 router.get('/admin/pending', authenticateToken, isAdmin, systemController.getPendingContent);
 
 // Settings Routes
-router.get('/settings', authenticateToken, isAdmin, settingsController.getSettings);
+router.get('/settings', settingsController.getSettings);
 router.post('/settings', authenticateToken, isAdmin, validate(settingsValidation), settingsController.updateSetting);
 
 // File System Routes

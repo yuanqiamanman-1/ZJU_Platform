@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, Film, Image as ImageIcon, Calendar, Music, AlertCircle } from 'lucide-react';
+import { normalizeExternalImageUrl } from '../utils/imageUtils';
 
 const getGradient = (text) => {
   if (!text) return 'from-gray-700 to-gray-900';
@@ -122,7 +123,8 @@ const SmartImage = ({
   const gradient = getGradient(alt || type);
 
   // Get actual image source
-  const imageSrc = typeof src === 'object' ? (src.url || src.medium?.url || src.small?.url) : src;
+  const rawImageSrc = typeof src === 'object' ? (src.url || src.medium?.url || src.small?.url) : src;
+  const imageSrc = normalizeExternalImageUrl(rawImageSrc);
 
   // Fallback state (error or missing src)
   if (!imageSrc || error) {

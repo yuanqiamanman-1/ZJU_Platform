@@ -19,7 +19,7 @@ const updateUser = async (req, res, next) => {
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     // Validate invite code if setting organization
-    if (organization_cr !== undefined && organization_cr !== user.organization) {
+    if (organization_cr !== undefined && organization_cr !== user.organization_cr) {
         // Only require code if joining an organization (not clearing it)
         if (organization_cr) {
             if (!invitation_code) {
@@ -31,7 +31,7 @@ const updateUser = async (req, res, next) => {
                 return res.status(400).json({ error: 'Invalid invitation code' });
             }
         }
-        await db.run('UPDATE users SET organization = ? WHERE id = ?', [organization_cr, id]);
+        await db.run('UPDATE users SET organization_cr = ? WHERE id = ?', [organization_cr, id]);
     }
 
     if (role) {
