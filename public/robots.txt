@@ -1,0 +1,46 @@
+# robots.txt for 拓途浙享 (TUOTU ZHEXIANG)
+# https://tuotuzj.com
+
+User-agent: *
+Allow: /
+
+# 允许所有搜索引擎爬取
+Allow: /gallery
+Allow: /music
+Allow: /videos
+Allow: /articles
+Allow: /events
+Allow: /about
+
+# 管理后台不需要索引
+Disallow: /admin
+Disallow: /admin/
+
+# API 端点不需要索引
+Disallow: /api
+Disallow: /api/
+
+# 认证相关页面
+Disallow: /auth
+Disallow: /auth/
+
+# Sitemap 位置
+Sitemap: https://tuotuzj.com/sitemap.xml
+
+# 通用爬虫延迟 (1 秒)
+Crawl-delay: 1
+
+# Google 特定设置
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0.5
+
+# Bing 特定设置
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# 百度特定设置
+User-agent: Baiduspider
+Allow: /
+Crawl-delay: 2

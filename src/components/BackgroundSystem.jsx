@@ -307,10 +307,7 @@ const BackgroundSystem = ({ forcedTheme = null }) => {
   const prefersReducedMotion = useReducedMotion();
   const [viewportWidth, setViewportWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1440));
 
-  // 调试：输出 uiMode 和背景场景
-  useEffect(() => {
-    console.log('[BackgroundSystem] uiMode:', uiMode, 'backgroundScene:', backgroundScene, 'forcedTheme:', forcedTheme);
-  }, [uiMode, backgroundScene, forcedTheme]);
+  // 调试日志已移除 - 生产环境不应输出
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -361,10 +358,7 @@ const BackgroundSystem = ({ forcedTheme = null }) => {
   const bloomIntensity = Number.parseFloat(settings.background_bloom || 0.55);
   const vignetteDarkness = Number.parseFloat(settings.background_vignette || 0.45);
 
-  // 调试：输出 profile 信息
-  useEffect(() => {
-    console.log('[BackgroundSystem] profile:', profile, 'themeMode:', themeMode, 'activeScene:', activeScene);
-  }, [profile, themeMode, activeScene]);
+  // 调试日志已移除 - 生产环境不应输出
 
   return (
     <div className={`fixed inset-0 -z-10 overflow-hidden ${themeMode === 'day' ? 'bg-[#f8fafc]' : 'bg-black'}`} style={{ filter: `brightness(${brightness})` }}>

@@ -10,7 +10,9 @@ import { HelmetProvider } from 'react-helmet-async';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ResourceHints } from './components/ResourceHints';
 import { usePerformanceMonitor } from './hooks/usePerformanceMonitor';
+import { useServiceWorker } from './hooks/useServiceWorker';
 import api from './services/api';
+import SEO from './components/SEO';
 
 import Navbar from './components/Navbar';
 import ScrollToTop from './components/ScrollToTop';
@@ -78,6 +80,10 @@ const PageTransition = ({ children }) => {
 const Home = () => {
     return (
         <>
+            <SEO 
+              title="首页"
+              description="探索数字艺术与科技的边界 - 浙江大学 SQTP 项目组官方平台，展示摄影、音乐、视频、文章等多元创作内容"
+            />
             <Hero />
             <PlatformStats />
             <HomeCategories />
@@ -103,14 +109,17 @@ const AppContent = () => {
   const [canRenderHeavyEffects, setCanRenderHeavyEffects] = useState(true);
   const allowBackgroundEffects = !isAdminRoute && settings?.backgroundEnabled !== false;
   const shouldUseThreeBackground = location.pathname === '/';
+  
+  // 注册 Service Worker
+  useServiceWorker();
 
   // 调试：强制启用 3D 背景渲染
   // useEffect(() => {
-  //   if (typeof window === 'undefined') return;
+  //   if (typeof window === 'undefined') return undefined;
   //   const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   //   const isSmallScreen = window.innerWidth < 1024;
   //   const saveDataEnabled = navigator.connection?.saveData === true;
-  //   console.log('[App] 性能检测:', { prefersReducedMotion, isSmallScreen, saveDataEnabled, innerWidth: window.innerWidth });
+  //   // 调试日志已移除
   //   setCanRenderHeavyEffects(!prefersReducedMotion && !isSmallScreen && !saveDataEnabled);
   // }, []);
 
@@ -118,9 +127,10 @@ const AppContent = () => {
   usePerformanceMonitor({
     enabled: import.meta.env.PROD,
     onMetric: (metric) => {
-      // Log metrics in development
-      if (import.meta.env.DEV) {
-        console.log('[Performance]', metric);
+      // 仅在生产环境记录性能指标
+      if (import.meta.env.PROD && window.location.hostname === 'tuotuzj.com') {
+        // 发送到分析服务
+        // analytics.track('performance', metric);
       }
     }
   });
@@ -131,16 +141,7 @@ const AppContent = () => {
     }
   }, [settings?.site_title]);
 
-  // 调试：输出背景渲染条件
-  useEffect(() => {
-    console.log('[App] 背景渲染条件:', {
-      allowBackgroundEffects,
-      shouldUseThreeBackground,
-      canRenderHeavyEffects,
-      shouldMountHeavyBackground,
-      location: location.pathname
-    });
-  }, [allowBackgroundEffects, shouldUseThreeBackground, canRenderHeavyEffects, shouldMountHeavyBackground, location.pathname]);
+  // 背景渲染条件调试已移除
 
   // Scroll to top on route change
   useEffect(() => {
@@ -176,6 +177,13 @@ const AppContent = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <ResourceHints />
+      {/* 跳过链接 - 无障碍功能 */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-6 focus:py-3 focus:bg-blue-600 focus:text-white focus:rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+      >
+        跳转到主要内容
+      </a>
       {!isAdminRoute && (
         <ErrorBoundary variant="inline" silent>
             <Navbar />
@@ -199,7 +207,7 @@ const AppContent = () => {
         </ErrorBoundary>
       )}
 
-      <main className="flex-grow pb-24 md:pb-0">
+      <main id="main-content" className="flex-grow pb-24 md:pb-0" role="main">
         <Suspense fallback={<LoadingScreen />}>
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>

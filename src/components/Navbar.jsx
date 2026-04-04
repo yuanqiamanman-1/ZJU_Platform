@@ -149,11 +149,13 @@ const Navbar = () => {
       animate={prefersReducedMotion ? undefined : { y: 0, opacity: 1 }}
       transition={prefersReducedMotion ? undefined : { duration: 0.28, ease: 'easeOut' }}
       className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-6 py-3 backdrop-blur-lg border-b ${shellClasses}`}
+      role="navigation"
+      aria-label="主导航"
     >
-      <Link to="/" className="hidden md:flex items-center gap-3 text-white group z-50">
+      <Link to="/" className="hidden md:flex items-center gap-3 text-white group z-50" aria-label="拓途浙享首页">
         <div className="relative">
           <div className="absolute inset-0 bg-indigo-500/35 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
-          <img src="/newlogo.png" alt="拓途浙享" className="relative h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105" />
+          <img src="/newlogo.png" alt="拓途浙享 Logo" className="relative h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105" />
         </div>
         <div className="flex flex-col items-start leading-none">
           <span className={`text-lg font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r transition-all duration-300 ${isDayMode ? 'from-slate-900 to-slate-500 group-hover:to-indigo-500' : 'from-white to-white/70 group-hover:to-indigo-300'}`}>拓途浙享</span>
@@ -161,12 +163,14 @@ const Navbar = () => {
         </div>
       </Link>
       
-      <div className={`hidden md:flex items-center gap-1 px-2 py-1 rounded-full border backdrop-blur-sm ${desktopPillClasses}`}>
+      <div className={`hidden md:flex items-center gap-1 px-2 py-1 rounded-full border backdrop-blur-sm ${desktopPillClasses}`} role="menubar" aria-label="导航菜单">
         {navLinks.map((item) => (
           <Link 
             key={item.key} 
             to={item.path} 
             className={navLinkClasses}
+            role="menuitem"
+            aria-current={location.pathname === item.path ? 'page' : undefined}
           >
             <span className="relative z-10">{t(`nav.${item.key}`)}</span>
             {location.pathname === item.path && (
@@ -183,30 +187,32 @@ const Navbar = () => {
           </Link>
         ))}
         
-        <div className={`w-px h-5 mx-2 ${isDayMode ? 'bg-slate-200/80' : 'bg-white/10'}`} />
+        <div className={`w-px h-5 mx-2 ${isDayMode ? 'bg-slate-200/80' : 'bg-white/10'}`} role="separator" />
         
         <button 
           onClick={() => window.dispatchEvent(new Event('open-search-palette'))}
           className="btn-icon"
           title={t('nav.search_title')}
+          aria-label={t('nav.search_title', '搜索')}
         >
-          <Search size={18} />
+          <Search size={18} aria-hidden="true" />
         </button>
 
         <button 
             onClick={() => setIsWeatherModalOpen(true)}
             className={weatherButtonClasses}
+            aria-label={`天气信息：${city}，${weather ? `${Math.round(weather.temperature)}°C` : '加载中'}`}
         >
             <div className="flex items-center gap-1 group-hover:text-indigo-300 transition-colors">
-                <Clock size={12} />
+                <Clock size={12} aria-hidden="true" />
                 <span>{time.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
             </div>
-            <div className={`w-px h-3 transition-colors ${isDayMode ? 'bg-slate-200/80 group-hover:bg-indigo-200/80' : 'bg-white/10 group-hover:bg-indigo-500/30'}`} />
+            <div className={`w-px h-3 transition-colors ${isDayMode ? 'bg-slate-200/80 group-hover:bg-indigo-200/80' : 'bg-white/10 group-hover:bg-indigo-500/30'}`} role="separator" aria-hidden="true" />
             <div className="flex items-center gap-1 group-hover:text-indigo-300 transition-colors">
-                {weather ? getWeatherIcon(weather.weathercode) : <Cloud size={12} />}
+                {weather ? getWeatherIcon(weather.weathercode) : <Cloud size={12} aria-hidden="true" />}
                 <span>{weather ? `${Math.round(weather.temperature)}°C` : '...'}</span>
             </div>
-            <div className={`w-px h-3 transition-colors ${isDayMode ? 'bg-slate-200/80 group-hover:bg-indigo-200/80' : 'bg-white/10 group-hover:bg-indigo-500/30'}`} />
+            <div className={`w-px h-3 transition-colors ${isDayMode ? 'bg-slate-200/80 group-hover:bg-indigo-200/80' : 'bg-white/10 group-hover:bg-indigo-500/30'}`} role="separator" aria-hidden="true" />
             <span className={`truncate max-w-[60px] transition-colors ${isDayMode ? 'group-hover:text-slate-900' : 'group-hover:text-white'}`}>{city}</span>
         </button>
 
@@ -214,8 +220,10 @@ const Navbar = () => {
           onClick={() => setIsThemeOpen(true)}
             className={`btn-icon ${isThemeOpen ? (isDayMode ? 'text-slate-900 bg-white/90 shadow-[0_8px_20px_rgba(148,163,184,0.12)]' : 'text-white bg-white/10') : ''}`}
             title={t('nav.theme_settings')}
+            aria-label={t('nav.theme_settings', '主题设置')}
+            aria-expanded={isThemeOpen}
         >
-            <Palette size={18} />
+            <Palette size={18} aria-hidden="true" />
         </button>
         
         <NotificationCenter />
@@ -227,8 +235,9 @@ const Navbar = () => {
              <Link 
                 to={`/public-profile/${user.id}`}
                 className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full border transition-all active:scale-95 ${isDayMode ? 'text-slate-900 border-slate-200/80 bg-white/80 hover:bg-white shadow-[0_8px_18px_rgba(148,163,184,0.12)]' : 'text-white border-white/10 bg-white/5 hover:bg-white/10'}`}
+                aria-label={`访问 ${user.username} 的个人主页`}
              >
-                <div className="w-5 h-5 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] text-white">
+                <div className="w-5 h-5 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] text-white" aria-hidden="true">
                     {user.username.charAt(0).toUpperCase()}
                 </div>
                 <span>{user.username}</span>
@@ -237,14 +246,16 @@ const Navbar = () => {
                 onClick={logout}
                 className="btn-icon"
                 title={t('auth.log_out')}
+                aria-label={t('auth.log_out', '退出登录')}
              >
-                <LogOut size={18} />
+                <LogOut size={18} aria-hidden="true" />
              </button>
           </div>
         ) : (
           <button 
             onClick={() => setIsAuthOpen(true)}
             className={authButtonClasses}
+            aria-label={t('auth.log_in', '登录')}
           >
             {t('auth.log_in')}
           </button>
