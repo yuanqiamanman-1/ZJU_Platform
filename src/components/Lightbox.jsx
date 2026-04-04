@@ -5,6 +5,7 @@ import { X, ChevronLeft, ChevronRight, Download, Info, Camera, Aperture, Clock, 
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 import FavoriteButton from './FavoriteButton';
 import { useBackClose } from '../hooks/useBackClose';
 import api from '../services/api';
@@ -14,14 +15,16 @@ const Lightbox = ({ photo, onClose, onNext, onPrev, onLikeToggle, onSelect }) =>
   const [showInfo, setShowInfo] = useState(false);
   const [activeTab, setActiveTab] = useState('info'); // 'info', 'related'
   const { user } = useAuth();
+  const { uiMode } = useSettings();
   const [isApp, setIsApp] = useState(false);
   const [relatedPhotos, setRelatedPhotos] = useState([]);
+  const isDayMode = uiMode === 'day';
 
   useEffect(() => {
     if (photo?.id) {
-        api.get(`/photos/${photo.id}/related?limit=6`)
+        api.get(`/photos/${photo.id}/related?limit=6`, { silent: true })
            .then(res => setRelatedPhotos(res.data))
-           .catch(err => console.error("Failed to fetch related photos", err));
+           .catch(() => setRelatedPhotos([]));
     }
   }, [photo?.id]);
   
@@ -96,30 +99,30 @@ const Lightbox = ({ photo, onClose, onNext, onPrev, onLikeToggle, onSelect }) =>
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 backdrop-blur-md p-4"
+            className={`fixed inset-0 z-[60] flex items-center justify-center backdrop-blur-md p-4 ${isDayMode ? 'bg-white/78' : 'bg-black/95'}`}
             onClick={onClose}
         >
             {/* Top Controls */}
             <div className="absolute top-4 right-4 flex gap-4 z-50" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md rounded-full p-1 border border-white/10">
+                <div className={`flex items-center gap-2 backdrop-blur-md rounded-full p-1 border ${isDayMode ? 'bg-white/88 border-slate-200/80 shadow-[0_14px_32px_rgba(148,163,184,0.16)]' : 'bg-black/40 border-white/10'}`}>
             <FavoriteButton 
               itemId={photo.id}
               itemType="photo"
-              className="p-3 hover:bg-white/10 rounded-full"
+              className={isDayMode ? 'p-3 hover:bg-indigo-50 rounded-full text-slate-600 hover:text-indigo-500' : 'p-3 hover:bg-white/10 rounded-full'}
               onToggle={onLikeToggle}
               favorited={photo.favorited}
               initialFavorited={photo.favorited}
             />
             <button 
               onClick={handleDownload}
-              className="hidden md:block p-3 text-white/70 hover:text-green-400 hover:bg-white/10 rounded-full transition-all"
+              className={`hidden md:block p-3 rounded-full transition-all ${isDayMode ? 'text-slate-500 hover:text-green-500 hover:bg-green-50' : 'text-white/70 hover:text-green-400 hover:bg-white/10'}`}
               title={t('common.download')}
             >
               <Download size={20} />
             </button>
             <button 
               onClick={() => setShowInfo(!showInfo)}
-              className={`p-3 rounded-full transition-all ${showInfo ? 'text-white bg-white/20' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
+              className={`p-3 rounded-full transition-all ${showInfo ? (isDayMode ? 'text-indigo-600 bg-indigo-50' : 'text-white bg-white/20') : (isDayMode ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-100' : 'text-white/70 hover:text-white hover:bg-white/10')}`}
               title={t('lightbox.info')}
             >
               <Info size={20} />
@@ -128,7 +131,7 @@ const Lightbox = ({ photo, onClose, onNext, onPrev, onLikeToggle, onSelect }) =>
 
         <button 
           onClick={onClose}
-          className="p-3 bg-black/40 hover:bg-red-500/20 text-white/70 hover:text-red-400 border border-white/10 rounded-full backdrop-blur-md transition-all"
+          className={`p-3 rounded-full backdrop-blur-md transition-all border ${isDayMode ? 'bg-white/88 hover:bg-red-50 text-slate-500 hover:text-red-500 border-slate-200/80 shadow-[0_14px_32px_rgba(148,163,184,0.16)]' : 'bg-black/40 hover:bg-red-500/20 text-white/70 hover:text-red-400 border-white/10'}`}
         >
           <X size={24} />
         </button>
@@ -141,7 +144,7 @@ const Lightbox = ({ photo, onClose, onNext, onPrev, onLikeToggle, onSelect }) =>
       >
         <button 
           onClick={onPrev}
-          className="absolute left-0 md:-left-16 p-4 text-white/50 hover:text-white transition-colors hover:bg-white/5 rounded-full"
+          className={`absolute left-0 md:-left-16 p-4 rounded-full transition-colors ${isDayMode ? 'text-slate-400 hover:text-slate-900 hover:bg-white/88' : 'text-white/50 hover:text-white hover:bg-white/5'}`}
         >
           <ChevronLeft size={48} />
         </button>
@@ -158,15 +161,15 @@ const Lightbox = ({ photo, onClose, onNext, onPrev, onLikeToggle, onSelect }) =>
 
         <button 
           onClick={onNext}
-          className="absolute right-0 md:-right-16 p-4 text-white/50 hover:text-white transition-colors hover:bg-white/5 rounded-full"
+          className={`absolute right-0 md:-right-16 p-4 rounded-full transition-colors ${isDayMode ? 'text-slate-400 hover:text-slate-900 hover:bg-white/88' : 'text-white/50 hover:text-white hover:bg-white/5'}`}
         >
           <ChevronRight size={48} />
         </button>
 
         {/* Bottom Info Bar */}
         <div className="absolute -bottom-16 left-0 right-0 text-center">
-          <h3 className="text-2xl font-serif font-bold text-white mb-1">{photo.title}</h3>
-          <p className="text-sm text-gray-400 uppercase tracking-widest">{photo.category}</p>
+          <h3 className={`text-2xl font-serif font-bold mb-1 ${isDayMode ? 'text-slate-900' : 'text-white'}`}>{photo.title}</h3>
+          <p className={`text-sm uppercase tracking-widest ${isDayMode ? 'text-slate-500' : 'text-gray-400'}`}>{photo.category}</p>
         </div>
       </div>
 
@@ -178,25 +181,25 @@ const Lightbox = ({ photo, onClose, onNext, onPrev, onLikeToggle, onSelect }) =>
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="fixed top-0 right-0 bottom-0 w-full sm:w-80 md:w-96 bg-[#1a1a1a]/95 backdrop-blur-xl border-l border-white/10 md:border-l flex flex-col z-[70]"
+                className={`fixed top-0 right-0 bottom-0 w-full sm:w-80 md:w-96 backdrop-blur-xl border-l md:border-l flex flex-col z-[70] ${isDayMode ? 'bg-white/96 border-slate-200/80 shadow-[-18px_0_44px_rgba(148,163,184,0.18)]' : 'bg-[#1a1a1a]/95 border-white/10'}`}
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex justify-between items-center p-6 pb-2">
                     <div className="flex gap-4">
                         <button 
                             onClick={() => setActiveTab('info')}
-                            className={`text-lg font-bold pb-2 border-b-2 transition-colors ${activeTab === 'info' ? 'text-white border-indigo-500' : 'text-gray-500 border-transparent hover:text-gray-300'}`}
+                            className={`text-lg font-bold pb-2 border-b-2 transition-colors ${activeTab === 'info' ? (isDayMode ? 'text-slate-900 border-indigo-500' : 'text-white border-indigo-500') : (isDayMode ? 'text-slate-400 border-transparent hover:text-slate-700' : 'text-gray-500 border-transparent hover:text-gray-300')}`}
                         >
                             {t('lightbox.info')}
                         </button>
                         <button 
                             onClick={() => setActiveTab('related')}
-                            className={`text-lg font-bold pb-2 border-b-2 transition-colors ${activeTab === 'related' ? 'text-white border-indigo-500' : 'text-gray-500 border-transparent hover:text-gray-300'}`}
+                            className={`text-lg font-bold pb-2 border-b-2 transition-colors ${activeTab === 'related' ? (isDayMode ? 'text-slate-900 border-indigo-500' : 'text-white border-indigo-500') : (isDayMode ? 'text-slate-400 border-transparent hover:text-slate-700' : 'text-gray-500 border-transparent hover:text-gray-300')}`}
                         >
                             {t('lightbox.related', 'Related')}
                         </button>
                     </div>
-                    <button onClick={() => setShowInfo(false)} className="text-gray-400 hover:text-white">
+                    <button onClick={() => setShowInfo(false)} className={isDayMode ? 'text-slate-400 hover:text-slate-900' : 'text-gray-400 hover:text-white'}>
                         <X size={20} />
                     </button>
                 </div>
@@ -205,30 +208,30 @@ const Lightbox = ({ photo, onClose, onNext, onPrev, onLikeToggle, onSelect }) =>
                     {activeTab === 'info' ? (
                         <div className="space-y-6">
                             <div>
-                                <h4 className="text-sm font-bold text-gray-500 uppercase mb-2">{t('common.title')}</h4>
-                                <p className="text-white text-lg font-serif">{photo.title}</p>
+                                <h4 className={`text-sm font-bold uppercase mb-2 ${isDayMode ? 'text-slate-500' : 'text-gray-500'}`}>{t('common.title')}</h4>
+                                <p className={`text-lg font-serif ${isDayMode ? 'text-slate-900' : 'text-white'}`}>{photo.title}</p>
                             </div>
                             
                             <div>
-                                <h4 className="text-sm font-bold text-gray-500 uppercase mb-2">{t('common.category')}</h4>
-                                <span className="px-3 py-1 bg-white/10 rounded-full text-sm text-white">{photo.category}</span>
+                                <h4 className={`text-sm font-bold uppercase mb-2 ${isDayMode ? 'text-slate-500' : 'text-gray-500'}`}>{t('common.category')}</h4>
+                                <span className={`px-3 py-1 rounded-full text-sm ${isDayMode ? 'bg-slate-100 text-slate-700 border border-slate-200/80' : 'bg-white/10 text-white'}`}>{photo.category}</span>
                             </div>
 
-                            <div className="border-t border-white/10 pt-6">
-                                <h4 className="text-sm font-bold text-gray-500 uppercase mb-4">{t('lightbox.exif')}</h4>
+                            <div className={`border-t pt-6 ${isDayMode ? 'border-slate-200/80' : 'border-white/10'}`}>
+                                <h4 className={`text-sm font-bold uppercase mb-4 ${isDayMode ? 'text-slate-500' : 'text-gray-500'}`}>{t('lightbox.exif')}</h4>
                                 <div className="space-y-4">
-                                    <div className="flex items-center gap-3 text-gray-300">
+                                    <div className={`flex items-center gap-3 ${isDayMode ? 'text-slate-600' : 'text-gray-300'}`}>
                                         <Camera size={18} className="text-indigo-400" />
                                         <span>{exif.camera}</span>
                                     </div>
-                                    <div className="flex items-center gap-3 text-gray-300">
+                                    <div className={`flex items-center gap-3 ${isDayMode ? 'text-slate-600' : 'text-gray-300'}`}>
                                         <Aperture size={18} className="text-purple-400" />
                                         <div className="flex gap-4">
                                             <span>{exif.lens}</span>
                                             <span>{exif.aperture}</span>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-3 text-gray-300">
+                                    <div className={`flex items-center gap-3 ${isDayMode ? 'text-slate-600' : 'text-gray-300'}`}>
                                         <Clock size={18} className="text-pink-400" />
                                         <div className="flex gap-4">
                                             <span>{exif.shutter}</span>
@@ -238,12 +241,12 @@ const Lightbox = ({ photo, onClose, onNext, onPrev, onLikeToggle, onSelect }) =>
                                 </div>
                             </div>
                             
-                            <div className="border-t border-white/10 pt-6">
-                                <h4 className="text-sm font-bold text-gray-500 uppercase mb-4">{t('lightbox.stats')}</h4>
+                            <div className={`border-t pt-6 ${isDayMode ? 'border-slate-200/80' : 'border-white/10'}`}>
+                                <h4 className={`text-sm font-bold uppercase mb-4 ${isDayMode ? 'text-slate-500' : 'text-gray-500'}`}>{t('lightbox.stats')}</h4>
                                 <div className="grid grid-cols-1 gap-4">
-                                    <div className="bg-white/5 p-4 rounded-xl text-center">
-                                        <div className="text-2xl font-bold text-white mb-1">{photo.likes || 0}</div>
-                                        <div className="text-xs text-gray-500 uppercase">{t('lightbox.likes')}</div>
+                                    <div className={`p-4 rounded-xl text-center ${isDayMode ? 'bg-slate-50 border border-slate-200/80' : 'bg-white/5'}`}>
+                                        <div className={`text-2xl font-bold mb-1 ${isDayMode ? 'text-slate-900' : 'text-white'}`}>{photo.likes || 0}</div>
+                                        <div className={`text-xs uppercase ${isDayMode ? 'text-slate-500' : 'text-gray-500'}`}>{t('lightbox.likes')}</div>
                                     </div>
                                 </div>
                             </div>
@@ -254,21 +257,21 @@ const Lightbox = ({ photo, onClose, onNext, onPrev, onLikeToggle, onSelect }) =>
                                 <div 
                                     key={p.id} 
                                     onClick={() => onSelect && onSelect(p)} 
-                                    className="cursor-pointer group relative aspect-square bg-white/5 rounded-xl overflow-hidden border border-white/10 hover:border-indigo-500/50 transition-all"
+                                    className={`cursor-pointer group relative aspect-square rounded-xl overflow-hidden border transition-all ${isDayMode ? 'bg-white border-slate-200/80 hover:border-indigo-300/80 shadow-[0_12px_28px_rgba(148,163,184,0.12)]' : 'bg-white/5 border-white/10 hover:border-indigo-500/50'}`}
                                 >
                                     <img 
                                         src={p.thumbnail || p.url} 
                                         alt={p.title} 
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                                     />
-                                    <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
-                                    <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <p className="text-xs text-white truncate">{p.title}</p>
+                                    <div className={`absolute inset-0 transition-colors ${isDayMode ? 'bg-white/10 group-hover:bg-transparent' : 'bg-black/20 group-hover:bg-transparent'}`} />
+                                    <div className={`absolute bottom-0 left-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity ${isDayMode ? 'bg-gradient-to-t from-white via-white/92 to-transparent' : 'bg-gradient-to-t from-black/80 to-transparent'}`}>
+                                        <p className={`text-xs truncate ${isDayMode ? 'text-slate-900' : 'text-white'}`}>{p.title}</p>
                                     </div>
                                 </div>
                             ))}
                             {relatedPhotos.length === 0 && (
-                                <div className="col-span-2 text-center py-8 text-gray-500">
+                                <div className={`col-span-2 text-center py-8 ${isDayMode ? 'text-slate-500' : 'text-gray-500'}`}>
                                     <Grid size={32} className="mx-auto mb-2 opacity-50" />
                                     <p>{t('lightbox.no_related', 'No related photos found')}</p>
                                 </div>

@@ -1,7 +1,7 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowUpDown, Check } from 'lucide-react';
 import Dropdown from './Dropdown';
+import { useSettings } from '../context/SettingsContext';
 
 const SortSelector = ({
   sort,
@@ -12,6 +12,8 @@ const SortSelector = ({
   renderMode = 'dropdown'
 }) => {
   const { t } = useTranslation();
+  const { uiMode } = useSettings();
+  const isDayMode = uiMode === 'day';
 
   const options = [
     { value: 'newest', label: t('sort_filter.newest') },
@@ -34,18 +36,22 @@ const SortSelector = ({
                 onClick={() => onSortChange(option.value)}
                 className={`w-full flex items-center justify-between gap-3 px-4 py-4 rounded-2xl border transition-all text-left ${
                   active
-                    ? 'bg-indigo-500/15 border-indigo-400/40 text-white shadow-[0_0_20px_rgba(99,102,241,0.15)]'
-                    : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:border-white/20'
+                    ? isDayMode
+                      ? 'bg-indigo-500/10 border-indigo-300/50 text-slate-900 shadow-[0_10px_24px_rgba(99,102,241,0.12)]'
+                      : 'bg-indigo-500/15 border-indigo-400/40 text-white shadow-[0_0_20px_rgba(99,102,241,0.15)]'
+                    : isDayMode
+                      ? 'bg-white/80 border-slate-200/80 text-slate-600 hover:bg-white hover:border-indigo-200/80'
+                      : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:border-white/20'
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className={`p-2 rounded-xl ${active ? 'bg-indigo-500/20 text-indigo-300' : 'bg-white/5 text-gray-400'}`}>
+                  <div className={`p-2 rounded-xl ${active ? (isDayMode ? 'bg-indigo-500/12 text-indigo-600' : 'bg-indigo-500/20 text-indigo-300') : (isDayMode ? 'bg-slate-100 text-slate-500' : 'bg-white/5 text-gray-400')}`}>
                     <ArrowUpDown size={16} />
                   </div>
                   <span className="font-medium truncate">{option.label}</span>
                 </div>
                 <div className={`shrink-0 transition-opacity ${active ? 'opacity-100' : 'opacity-0'}`}>
-                  <Check size={18} className="text-indigo-300" />
+                  <Check size={18} className={isDayMode ? 'text-indigo-600' : 'text-indigo-300'} />
                 </div>
               </button>
             );
@@ -62,7 +68,9 @@ const SortSelector = ({
         onChange={onSortChange}
         options={options}
         icon={ArrowUpDown}
-        buttonClassName={buttonClassName || "bg-[#0a0a0a]/60 border border-white/10 hover:bg-[#0a0a0a]/80 hover:border-indigo-500/30 rounded-full px-6 py-2.5 backdrop-blur-3xl transition-all text-sm font-medium shadow-lg text-white hover:shadow-[0_0_15px_rgba(99,102,241,0.2)]"}
+        buttonClassName={buttonClassName || (isDayMode
+          ? "bg-white/82 border border-slate-200/80 hover:bg-white hover:border-indigo-300/70 rounded-full px-6 py-2.5 backdrop-blur-3xl transition-all text-sm font-medium shadow-[0_12px_28px_rgba(148,163,184,0.14)] text-slate-700"
+          : "bg-[#0a0a0a]/60 border border-white/10 hover:bg-[#0a0a0a]/80 hover:border-indigo-500/30 rounded-full px-6 py-2.5 backdrop-blur-3xl transition-all text-sm font-medium shadow-lg text-white hover:shadow-[0_0_15px_rgba(99,102,241,0.2)]")}
       />
     </div>
   );

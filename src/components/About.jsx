@@ -8,11 +8,12 @@ import { normalizeExternalImageUrl } from '../utils/imageUtils';
 
 const About = () => {
   const { t } = useTranslation();
-  const { settings } = useSettings();
+  const { settings, uiMode } = useSettings();
   const profileImageUrl = normalizeExternalImageUrl(
     settings.profile_image_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80',
     960
   );
+  const isDayMode = uiMode === 'day';
   
   // Contact Form State
   const [formState, setFormState] = useState({
@@ -66,11 +67,11 @@ const About = () => {
             viewport={{ once: true }}
             className="relative"
           >
-            <div className="absolute -inset-4 border-2 border-white/20 rounded-lg translate-x-4 translate-y-4" />
+            <div className={`absolute -inset-4 border-2 rounded-lg translate-x-4 translate-y-4 ${isDayMode ? 'border-indigo-200/70 bg-white/30' : 'border-white/20'}`} />
             <img 
               src={profileImageUrl}
               alt="Photographer" 
-              className="relative z-10 rounded-lg shadow-2xl grayscale hover:grayscale-0 transition-all duration-500"
+              className={`relative z-10 rounded-lg transition-all duration-500 ${isDayMode ? 'shadow-[0_24px_70px_rgba(148,163,184,0.2)] grayscale-0' : 'shadow-2xl grayscale hover:grayscale-0'}`}
               loading="lazy"
               decoding="async"
               sizes="(max-width: 768px) 100vw, 50vw"
@@ -83,29 +84,29 @@ const About = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl md:text-5xl font-bold font-serif mb-8 leading-tight">
+            <h2 className={`text-4xl md:text-5xl font-bold font-serif mb-8 leading-tight ${isDayMode ? 'text-slate-900' : 'text-white'}`}>
               {settings.about_title || t('about.title')} <br />
-              <span className="text-gray-500">{settings.about_subtitle || t('about.subtitle')}</span>
+              <span className={isDayMode ? 'text-slate-500' : 'text-gray-500'}>{settings.about_subtitle || t('about.subtitle')}</span>
             </h2>
-            <p className="text-lg text-gray-300 mb-6 leading-relaxed whitespace-pre-line">
+            <p className={`text-lg mb-6 leading-relaxed whitespace-pre-line ${isDayMode ? 'text-slate-600' : 'text-gray-300'}`}>
               {settings.about_intro || t('about.p1')}
             </p>
-            <p className="text-lg text-gray-300 mb-8 leading-relaxed whitespace-pre-line">
+            <p className={`text-lg mb-8 leading-relaxed whitespace-pre-line ${isDayMode ? 'text-slate-600' : 'text-gray-300'}`}>
               {settings.about_detail || t('about.p2')}
             </p>
             
             <div className="flex flex-wrap gap-6 md:gap-8">
               <div>
-                <span className="block text-2xl md:text-3xl font-bold font-serif">{settings.about_exp_years || "10+"}</span>
-                <span className="text-xs md:text-sm text-gray-500">{t('about.exp')}</span>
+                <span className={`block text-2xl md:text-3xl font-bold font-serif ${isDayMode ? 'text-slate-900' : 'text-white'}`}>{settings.about_exp_years || "10+"}</span>
+                <span className={`text-xs md:text-sm ${isDayMode ? 'text-slate-500' : 'text-gray-500'}`}>{t('about.exp')}</span>
               </div>
               <div>
-                <span className="block text-2xl md:text-3xl font-bold font-serif">{settings.about_exhibitions || "50+"}</span>
-                <span className="text-xs md:text-sm text-gray-500">{t('about.exhibitions')}</span>
+                <span className={`block text-2xl md:text-3xl font-bold font-serif ${isDayMode ? 'text-slate-900' : 'text-white'}`}>{settings.about_exhibitions || "50+"}</span>
+                <span className={`text-xs md:text-sm ${isDayMode ? 'text-slate-500' : 'text-gray-500'}`}>{t('about.exhibitions')}</span>
               </div>
               <div>
-                <span className="block text-2xl md:text-3xl font-bold font-serif">{settings.about_projects || "200+"}</span>
-                <span className="text-xs md:text-sm text-gray-500">{t('about.projects')}</span>
+                <span className={`block text-2xl md:text-3xl font-bold font-serif ${isDayMode ? 'text-slate-900' : 'text-white'}`}>{settings.about_projects || "200+"}</span>
+                <span className={`text-xs md:text-sm ${isDayMode ? 'text-slate-500' : 'text-gray-500'}`}>{t('about.projects')}</span>
               </div>
             </div>
           </motion.div>
@@ -113,7 +114,7 @@ const About = () => {
       </section>
 
       {/* Contact Section */}
-      <section className="py-20 md:py-24 px-4 pb-28 md:pb-24 relative overflow-hidden bg-white/5">
+      <section className={`py-20 md:py-24 px-4 pb-28 md:pb-24 relative overflow-hidden ${isDayMode ? 'bg-white/35' : 'bg-white/5'}`}>
         {/* Background Elements - Hidden on mobile */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0 hidden md:block">
             <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[120px]" />
@@ -131,41 +132,41 @@ const About = () => {
             className="space-y-12"
           >
             <div>
-              <h2 className="text-5xl md:text-7xl font-bold font-serif mb-6 bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent leading-tight">
+              <h2 className={`text-5xl md:text-7xl font-bold font-serif mb-6 bg-clip-text text-transparent leading-tight ${isDayMode ? 'bg-gradient-to-r from-slate-900 via-indigo-700 to-slate-500' : 'bg-gradient-to-r from-white to-gray-500'}`}>
                 {t('contact.title')}
               </h2>
-              <p className="text-xl text-gray-400 max-w-md leading-relaxed">
+              <p className={`text-xl max-w-md leading-relaxed ${isDayMode ? 'text-slate-500' : 'text-gray-400'}`}>
                 {t('contact.subtitle')}
               </p>
             </div>
 
             <div className="space-y-6">
-              <div className="flex items-center gap-4 text-gray-300 group cursor-pointer">
-                <div className="p-4 bg-white/5 border border-white/10 rounded-2xl group-hover:bg-white/10 group-hover:border-white/20 transition-all">
+              <div className={`flex items-center gap-4 group cursor-pointer ${isDayMode ? 'text-slate-600' : 'text-gray-300'}`}>
+                <div className={`p-4 rounded-2xl transition-all ${isDayMode ? 'bg-white/80 border border-slate-200/80 group-hover:bg-white shadow-[0_14px_36px_rgba(148,163,184,0.14)]' : 'bg-white/5 border border-white/10 group-hover:bg-white/10 group-hover:border-white/20'}`}>
                   <Mail size={24} className="text-indigo-400" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{t('contact.email_label')}</div>
+                  <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${isDayMode ? 'text-slate-500' : 'text-gray-500'}`}>{t('contact.email_label')}</div>
                   <div className="text-lg font-medium">{settings.contact_email || 'hello@lumos.studio'}</div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 text-gray-300 group cursor-pointer">
-                <div className="p-4 bg-white/5 border border-white/10 rounded-2xl group-hover:bg-white/10 group-hover:border-white/20 transition-all">
+              <div className={`flex items-center gap-4 group cursor-pointer ${isDayMode ? 'text-slate-600' : 'text-gray-300'}`}>
+                <div className={`p-4 rounded-2xl transition-all ${isDayMode ? 'bg-white/80 border border-slate-200/80 group-hover:bg-white shadow-[0_14px_36px_rgba(148,163,184,0.14)]' : 'bg-white/5 border border-white/10 group-hover:bg-white/10 group-hover:border-white/20'}`}>
                   <MapPin size={24} className="text-pink-400" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{t('contact.studio_label')}</div>
+                  <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${isDayMode ? 'text-slate-500' : 'text-gray-500'}`}>{t('contact.studio_label')}</div>
                   <div className="text-lg font-medium">{settings.contact_address || '123 Creative Ave, New York, NY'}</div>
                 </div>
               </div>
               
-              <div className="flex items-center gap-4 text-gray-300 group cursor-pointer">
-                <div className="p-4 bg-white/5 border border-white/10 rounded-2xl group-hover:bg-white/10 group-hover:border-white/20 transition-all">
+              <div className={`flex items-center gap-4 group cursor-pointer ${isDayMode ? 'text-slate-600' : 'text-gray-300'}`}>
+                <div className={`p-4 rounded-2xl transition-all ${isDayMode ? 'bg-white/80 border border-slate-200/80 group-hover:bg-white shadow-[0_14px_36px_rgba(148,163,184,0.14)]' : 'bg-white/5 border border-white/10 group-hover:bg-white/10 group-hover:border-white/20'}`}>
                   <Phone size={24} className="text-cyan-400" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{t('contact.phone_label')}</div>
+                  <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${isDayMode ? 'text-slate-500' : 'text-gray-500'}`}>{t('contact.phone_label')}</div>
                   <div className="text-lg font-medium">{settings.contact_phone || '+1 (555) 123-4567'}</div>
                 </div>
               </div>
@@ -179,13 +180,13 @@ const About = () => {
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             viewport={{ once: true }}
-            className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-10 relative overflow-hidden"
+            className={`backdrop-blur-xl rounded-3xl p-8 md:p-10 relative overflow-hidden ${isDayMode ? 'bg-white/82 border border-slate-200/80 shadow-[0_24px_70px_rgba(148,163,184,0.18)]' : 'bg-white/5 border border-white/10'}`}
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             
             <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
               <div>
-                <label className="block text-sm font-bold text-gray-400 mb-2 uppercase tracking-wider">{t('contact.name')}</label>
+                <label className={`block text-sm font-bold mb-2 uppercase tracking-wider ${isDayMode ? 'text-slate-500' : 'text-gray-400'}`}>{t('contact.name')}</label>
                 <div className="relative group">
                   <input 
                     type="text" 
@@ -193,7 +194,7 @@ const About = () => {
                     value={formState.name}
                     onChange={handleChange}
                     placeholder={t('contact.name')}
-                    className={`w-full bg-white/5 border ${status === 'error' && !formState.name ? 'border-red-500/50' : 'border-white/10'} rounded-xl px-6 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 focus:bg-white/10 transition-all`}
+                    className={`w-full border rounded-xl px-6 py-4 placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 transition-all ${status === 'error' && !formState.name ? 'border-red-500/50' : isDayMode ? 'border-slate-200/80' : 'border-white/10'} ${isDayMode ? 'bg-white text-slate-900 focus:bg-white' : 'bg-white/5 text-white focus:bg-white/10'}`}
                   />
                   {status === 'error' && !formState.name && (
                       <motion.div 
@@ -206,24 +207,24 @@ const About = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-bold text-gray-400 mb-2 uppercase tracking-wider">{t('contact.email')}</label>
+                <label className={`block text-sm font-bold mb-2 uppercase tracking-wider ${isDayMode ? 'text-slate-500' : 'text-gray-400'}`}>{t('contact.email')}</label>
                 <input 
                   type="email" 
                   name="email"
                   value={formState.email}
                   onChange={handleChange}
-                  className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder-gray-600"
+                  className={`w-full border rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors placeholder-gray-600 ${isDayMode ? 'bg-white border-slate-200/80 text-slate-900' : 'bg-black/20 border-white/10 text-white'}`}
                   placeholder={t('contact.email')}
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-gray-400 mb-2 uppercase tracking-wider">{t('contact.message')}</label>
+                <label className={`block text-sm font-bold mb-2 uppercase tracking-wider ${isDayMode ? 'text-slate-500' : 'text-gray-400'}`}>{t('contact.message')}</label>
                 <textarea 
                   name="message"
                   value={formState.message}
                   onChange={handleChange}
                   rows="4"
-                  className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder-gray-600 resize-none"
+                  className={`w-full border rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors placeholder-gray-600 resize-none ${isDayMode ? 'bg-white border-slate-200/80 text-slate-900' : 'bg-black/20 border-white/10 text-white'}`}
                   placeholder={t('contact.message')}
                 />
               </div>
@@ -231,7 +232,7 @@ const About = () => {
               <button 
                 type="submit"
                 disabled={status === 'submitting'}
-                className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group"
+                className={`w-full font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group ${isDayMode ? 'bg-slate-900 text-white hover:bg-slate-800 shadow-[0_18px_40px_rgba(15,23,42,0.16)]' : 'bg-white text-black hover:bg-gray-200'}`}
               >
                 {status === 'submitting' ? (
                   <span className="animate-pulse">{t('contact.sending')}</span>

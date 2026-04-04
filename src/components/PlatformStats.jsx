@@ -4,6 +4,7 @@ import { Activity, Eye, Heart, Sparkles, TrendingUp, Upload } from 'lucide-react
 import { useTranslation } from 'react-i18next';
 import { useCachedResource } from '../hooks/useCachedResource';
 import { useReducedMotion } from '../utils/animations';
+import { useSettings } from '../context/SettingsContext';
 
 const formatCompactNumber = (value) => {
   const number = Number(value || 0);
@@ -67,34 +68,34 @@ const AnimatedNumber = memo(({ value, compact = true, shouldAnimate = true }) =>
 
 AnimatedNumber.displayName = 'AnimatedNumber';
 
-const SectionTitle = memo(({ eyebrow, title, meta }) => (
+const SectionTitle = memo(({ eyebrow, title, meta, isDayMode }) => (
   <div className="flex items-end justify-between gap-4">
     <div>
-      <p className="text-[11px] sm:text-xs font-medium uppercase tracking-[0.38em] text-white/40 mb-2">{eyebrow}</p>
-      <h3 className="text-[1.65rem] sm:text-[2.1rem] font-bold tracking-[-0.045em] text-white leading-[1.02]">{title}</h3>
+      <p className={`text-[11px] sm:text-xs font-medium uppercase tracking-[0.38em] mb-2 ${isDayMode ? 'text-slate-400' : 'text-white/40'}`}>{eyebrow}</p>
+      <h3 className={`text-[1.65rem] sm:text-[2.1rem] font-bold tracking-[-0.045em] leading-[1.02] ${isDayMode ? 'text-slate-900' : 'text-white'}`}>{title}</h3>
     </div>
-    {meta ? <div className="text-sm sm:text-[15px] text-white/42">{meta}</div> : null}
+    {meta ? <div className={`text-sm sm:text-[15px] ${isDayMode ? 'text-slate-500' : 'text-white/42'}`}>{meta}</div> : null}
   </div>
 ));
 
 SectionTitle.displayName = 'SectionTitle';
 
-const TodayCard = memo(({ icon: Icon, label, value, meta, accentClass, featured = false, reduceMotion = false }) => (
+const TodayCard = memo(({ icon: Icon, label, value, meta, accentClass, featured = false, reduceMotion = false, isDayMode }) => (
   <motion.div
     whileHover={reduceMotion ? undefined : { y: -3, scale: 1.01 }}
     transition={reduceMotion ? undefined : { type: 'spring', stiffness: 240, damping: 22 }}
-    className={`relative overflow-hidden rounded-[1.75rem] border p-6 sm:p-7 backdrop-blur-2xl ${featured ? 'border-white/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.035))] shadow-[0_28px_90px_rgba(0,0,0,0.22)]' : 'border-white/10 bg-white/[0.035] shadow-[0_20px_60px_rgba(0,0,0,0.18)]'}`}
+    className={`relative overflow-hidden rounded-[1.75rem] border p-6 sm:p-7 backdrop-blur-2xl ${featured ? (isDayMode ? 'border-indigo-100/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(238,242,255,0.72))] shadow-[0_28px_90px_rgba(148,163,184,0.18)]' : 'border-white/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.035))] shadow-[0_28px_90px_rgba(0,0,0,0.22)]') : (isDayMode ? 'border-slate-200/80 bg-white/82 shadow-[0_20px_60px_rgba(148,163,184,0.14)]' : 'border-white/10 bg-white/[0.035] shadow-[0_20px_60px_rgba(0,0,0,0.18)]')}`}
   >
-    {featured ? <div className="pointer-events-none absolute inset-x-10 top-0 h-24 rounded-full bg-white/10 blur-3xl opacity-80" /> : null}
+    {featured ? <div className={`pointer-events-none absolute inset-x-10 top-0 h-24 rounded-full blur-3xl opacity-80 ${isDayMode ? 'bg-indigo-200/60' : 'bg-white/10'}`} /> : null}
     <div className="flex items-start justify-between gap-5">
       <div>
-        <p className={`text-[11px] sm:text-xs font-medium uppercase tracking-[0.28em] mb-3 ${featured ? 'text-white/60' : 'text-white/40'}`}>{label}</p>
-        <p className={`${featured ? 'text-6xl sm:text-7xl lg:text-[6.1rem]' : 'text-5xl sm:text-[4.35rem] lg:text-[5rem]'} font-black tracking-[-0.055em] text-white leading-[0.92]`}>
+        <p className={`text-[11px] sm:text-xs font-medium uppercase tracking-[0.28em] mb-3 ${isDayMode ? featured ? 'text-slate-500' : 'text-slate-400' : featured ? 'text-white/60' : 'text-white/40'}`}>{label}</p>
+        <p className={`${featured ? 'text-6xl sm:text-7xl lg:text-[6.1rem]' : 'text-5xl sm:text-[4.35rem] lg:text-[5rem]'} font-black tracking-[-0.055em] leading-[0.92] ${isDayMode ? 'text-slate-900' : 'text-white'}`}>
           <AnimatedNumber value={value} shouldAnimate={!reduceMotion} />
         </p>
-        <p className={`text-[15px] sm:text-base leading-7 mt-4 ${featured ? 'text-white/62' : 'text-white/48'}`}>{meta}</p>
+        <p className={`text-[15px] sm:text-base leading-7 mt-4 ${isDayMode ? featured ? 'text-slate-600' : 'text-slate-500' : featured ? 'text-white/62' : 'text-white/48'}`}>{meta}</p>
       </div>
-      <div className={`flex ${featured ? 'h-14 w-14' : 'h-12 w-12'} items-center justify-center rounded-2xl border border-white/10 bg-black/20 ${accentClass}`}>
+      <div className={`flex ${featured ? 'h-14 w-14' : 'h-12 w-12'} items-center justify-center rounded-2xl border ${isDayMode ? 'border-slate-200/80 bg-white/88 shadow-[0_10px_24px_rgba(148,163,184,0.12)]' : 'border-white/10 bg-black/20'} ${accentClass}`}>
         <Icon size={featured ? 22 : 20} />
       </div>
     </div>
@@ -103,36 +104,36 @@ const TodayCard = memo(({ icon: Icon, label, value, meta, accentClass, featured 
 
 TodayCard.displayName = 'TodayCard';
 
-const TotalCard = memo(({ icon: Icon, label, value, meta, reduceMotion = false }) => (
-  <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl shadow-[0_18px_48px_rgba(0,0,0,0.12)]">
+const TotalCard = memo(({ icon: Icon, label, value, meta, reduceMotion = false, isDayMode }) => (
+  <div className={`rounded-[1.5rem] border p-5 backdrop-blur-xl ${isDayMode ? 'border-slate-200/80 bg-white/82 shadow-[0_18px_48px_rgba(148,163,184,0.12)]' : 'border-white/10 bg-white/[0.03] shadow-[0_18px_48px_rgba(0,0,0,0.12)]'}`}>
     <div className="flex items-center justify-between gap-4 mb-4">
-      <p className="text-[11px] sm:text-xs font-medium uppercase tracking-[0.24em] text-white/40">{label}</p>
-      <div className="flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-black/20 text-gray-300">
+      <p className={`text-[11px] sm:text-xs font-medium uppercase tracking-[0.24em] ${isDayMode ? 'text-slate-400' : 'text-white/40'}`}>{label}</p>
+      <div className={`flex h-9 w-9 items-center justify-center rounded-2xl border ${isDayMode ? 'border-slate-200/80 bg-slate-50 text-slate-500' : 'border-white/10 bg-black/20 text-gray-300'}`}>
         <Icon size={16} />
       </div>
     </div>
-    <p className="text-[2rem] sm:text-[2.65rem] font-black tracking-[-0.045em] text-white leading-[0.95]">
+    <p className={`text-[2rem] sm:text-[2.65rem] font-black tracking-[-0.045em] leading-[0.95] ${isDayMode ? 'text-slate-900' : 'text-white'}`}>
       <AnimatedNumber value={value} shouldAnimate={!reduceMotion} />
     </p>
-    <p className="text-[15px] leading-7 text-white/48 mt-3">{meta}</p>
+    <p className={`text-[15px] leading-7 mt-3 ${isDayMode ? 'text-slate-500' : 'text-white/48'}`}>{meta}</p>
   </div>
 ));
 
 TotalCard.displayName = 'TotalCard';
 
-const TrendBars = memo(({ title, colorClass, values, labels, totalLabel, totalValue }) => {
+const TrendBars = memo(({ title, colorClass, values, labels, totalLabel, totalValue, isDayMode }) => {
   const maxValue = Math.max(...values, 1);
   const [activeIndex, setActiveIndex] = useState(Math.max(values.length - 1, 0));
   const safeIndex = activeIndex >= 0 ? activeIndex : 0;
 
   return (
-    <div className="relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5 sm:p-6 backdrop-blur-2xl shadow-[0_22px_64px_rgba(0,0,0,0.16)]">
-      <div className="pointer-events-none absolute -top-14 left-1/2 h-28 w-40 -translate-x-1/2 rounded-full bg-white/10 blur-3xl opacity-60" />
-      <SectionTitle eyebrow="TREND" title={title} meta={`${totalLabel} ${formatCompactNumber(totalValue)}`} />
-      <div className="mt-4 flex items-center justify-between gap-4 rounded-[1.1rem] border border-white/8 bg-black/20 px-4 py-3 backdrop-blur-xl">
+    <div className={`relative overflow-hidden rounded-[1.75rem] border p-5 sm:p-6 backdrop-blur-2xl ${isDayMode ? 'border-slate-200/80 bg-white/82 shadow-[0_22px_64px_rgba(148,163,184,0.12)]' : 'border-white/10 bg-white/[0.03] shadow-[0_22px_64px_rgba(0,0,0,0.16)]'}`}>
+      <div className={`pointer-events-none absolute -top-14 left-1/2 h-28 w-40 -translate-x-1/2 rounded-full blur-3xl opacity-60 ${isDayMode ? 'bg-indigo-100/80' : 'bg-white/10'}`} />
+      <SectionTitle eyebrow="TREND" title={title} meta={`${totalLabel} ${formatCompactNumber(totalValue)}`} isDayMode={isDayMode} />
+      <div className={`mt-4 flex items-center justify-between gap-4 rounded-[1.1rem] border px-4 py-3 backdrop-blur-xl ${isDayMode ? 'border-slate-200/80 bg-slate-50/90' : 'border-white/8 bg-black/20'}`}>
         <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-gray-400 mb-1">{labels[safeIndex]}</p>
-          <p className="text-xl sm:text-[1.35rem] font-bold text-white">{formatFullNumber(values[safeIndex] || 0)}</p>
+          <p className={`text-xs uppercase tracking-[0.18em] mb-1 ${isDayMode ? 'text-slate-500' : 'text-gray-400'}`}>{labels[safeIndex]}</p>
+          <p className={`text-xl sm:text-[1.35rem] font-bold ${isDayMode ? 'text-slate-900' : 'text-white'}`}>{formatFullNumber(values[safeIndex] || 0)}</p>
         </div>
         <div className={`h-2.5 w-2.5 rounded-full ${colorClass}`} />
       </div>
@@ -149,14 +150,14 @@ const TrendBars = memo(({ title, colorClass, values, labels, totalLabel, totalVa
                 onFocus={() => setActiveIndex(index)}
             className="flex-1 flex flex-col items-center gap-2 focus:outline-none"
               >
-                <div className={`text-xs sm:text-[13px] ${index === safeIndex ? 'text-white' : 'text-gray-400'}`}>{formatCompactNumber(value)}</div>
+                <div className={`text-xs sm:text-[13px] ${index === safeIndex ? (isDayMode ? 'text-slate-900' : 'text-white') : (isDayMode ? 'text-slate-500' : 'text-gray-400')}`}>{formatCompactNumber(value)}</div>
                 <div className="w-full h-full flex items-end">
                   <div
                     className={`w-full rounded-t-2xl transition-all duration-200 ${colorClass} ${index === safeIndex ? 'opacity-100' : 'opacity-60'}`}
                     style={{ height }}
                   />
                 </div>
-                <div className={`text-xs uppercase tracking-[0.12em] ${index === safeIndex ? 'text-gray-300' : 'text-gray-500'}`}>{labels[index]}</div>
+                <div className={`text-xs uppercase tracking-[0.12em] ${index === safeIndex ? (isDayMode ? 'text-slate-600' : 'text-gray-300') : (isDayMode ? 'text-slate-400' : 'text-gray-500')}`}>{labels[index]}</div>
               </button>
             );
           })}
@@ -171,7 +172,9 @@ TrendBars.displayName = 'TrendBars';
 const PlatformStats = () => {
   const { t } = useTranslation();
   const prefersReducedMotion = useReducedMotion();
-  const { data, loading } = useCachedResource('/site-metrics', {}, { keyPrefix: 'site-metrics', ttl: 1000 * 60 * 3 });
+  const { uiMode } = useSettings();
+  const isDayMode = uiMode === 'day';
+  const { data, loading } = useCachedResource('/site-metrics', {}, { keyPrefix: 'site-metrics', ttl: 1000 * 60 * 3, silent: true });
 
   const summary = data?.summary || {};
   const growth = data?.growth || {};
@@ -242,52 +245,52 @@ const PlatformStats = () => {
           transition={prefersReducedMotion ? undefined : { duration: 0.5 }}
           className="mb-8"
         >
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.03] px-4 py-2 text-[11px] sm:text-xs font-medium uppercase tracking-[0.32em] text-white/50 backdrop-blur-xl">
+          <div className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[11px] sm:text-xs font-medium uppercase tracking-[0.32em] backdrop-blur-xl ${isDayMode ? 'border-slate-200/80 bg-white/82 text-slate-500' : 'border-white/8 bg-white/[0.03] text-white/50'}`}>
             <Sparkles size={13} />
             {t('home.stats.eyebrow', '平台热度')}
           </div>
           <div className="mt-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-4xl">
-              <h2 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[5.35rem] font-black tracking-[-0.065em] text-white leading-[0.88]">
-                <span className="block text-white/92">{t('home.stats.title', '平台最近的使用情况')}</span>
-                <span className="block bg-gradient-to-r from-white via-white to-white/65 bg-clip-text text-transparent">在这里一眼看清</span>
+              <h2 className={`text-4xl sm:text-5xl lg:text-6xl xl:text-[5.35rem] font-black tracking-[-0.065em] leading-[0.88] ${isDayMode ? 'text-slate-900' : 'text-white'}`}>
+                <span className={`block ${isDayMode ? 'text-slate-900' : 'text-white/92'}`}>{t('home.stats.title', '平台最近的使用情况')}</span>
+                <span className={`block bg-clip-text text-transparent ${isDayMode ? 'bg-gradient-to-r from-slate-900 via-indigo-600 to-slate-500' : 'bg-gradient-to-r from-white via-white to-white/65'}`}>在这里一眼看清</span>
               </h2>
-              <p className="mt-5 text-base sm:text-lg text-white/45 leading-8 max-w-3xl">
+              <p className={`mt-5 text-base sm:text-lg leading-8 max-w-3xl ${isDayMode ? 'text-slate-500' : 'text-white/45'}`}>
                 {t('home.stats.subtitle', '这里展示最近访问、作品上传和内容规模，帮助用户快速了解平台近况。')}
               </p>
             </div>
-            <div className="inline-flex items-center gap-3 rounded-[1.35rem] border border-emerald-400/15 bg-emerald-400/[0.07] px-5 py-4 backdrop-blur-xl">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-300">
+            <div className={`inline-flex items-center gap-3 rounded-[1.35rem] border px-5 py-4 backdrop-blur-xl ${isDayMode ? 'border-emerald-200/80 bg-white/82 shadow-[0_18px_44px_rgba(148,163,184,0.14)]' : 'border-emerald-400/15 bg-emerald-400/[0.07]'}`}>
+              <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${isDayMode ? 'bg-emerald-50 text-emerald-500' : 'bg-emerald-400/10 text-emerald-300'}`}>
                 <TrendingUp size={19} />
               </div>
               <div>
-                <p className="text-[11px] sm:text-xs font-medium uppercase tracking-[0.22em] text-white/42">{t('home.stats.weekly_growth', '周增长')}</p>
-                <p className="text-[2.15rem] sm:text-[2.8rem] font-black tracking-[-0.055em] text-white leading-none">{formatPercentage(growth.viewsChange)}</p>
+                <p className={`text-[11px] sm:text-xs font-medium uppercase tracking-[0.22em] ${isDayMode ? 'text-slate-500' : 'text-white/42'}`}>{t('home.stats.weekly_growth', '周增长')}</p>
+                <p className={`text-[2.15rem] sm:text-[2.8rem] font-black tracking-[-0.055em] leading-none ${isDayMode ? 'text-slate-900' : 'text-white'}`}>{formatPercentage(growth.viewsChange)}</p>
               </div>
             </div>
           </div>
-          <p className="mt-4 text-[15px] text-white/34">{formatRelativeTime(meta.updatedAt || meta.generatedAt)}</p>
+          <p className={`mt-4 text-[15px] ${isDayMode ? 'text-slate-400' : 'text-white/34'}`}>{formatRelativeTime(meta.updatedAt || meta.generatedAt)}</p>
         </motion.div>
 
         {loading ? (
-          <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8 backdrop-blur-2xl">
+          <div className={`rounded-[2rem] border p-6 sm:p-8 backdrop-blur-2xl ${isDayMode ? 'border-slate-200/80 bg-white/82 shadow-[0_24px_60px_rgba(148,163,184,0.14)]' : 'border-white/10 bg-white/[0.03]'}`}>
             <div className="space-y-6">
               <div className="grid gap-4 md:grid-cols-2">
                 {[...Array(2)].map((_, index) => (
-                  <div key={index} className="h-40 rounded-[1.75rem] bg-white/[0.04] animate-pulse" />
+                  <div key={index} className={`h-40 rounded-[1.75rem] animate-pulse ${isDayMode ? 'bg-slate-100' : 'bg-white/[0.04]'}`} />
                 ))}
               </div>
               <div className="grid gap-4 md:grid-cols-4">
                 {[...Array(4)].map((_, index) => (
-                  <div key={index} className="h-32 rounded-[1.5rem] bg-white/[0.04] animate-pulse" />
+                  <div key={index} className={`h-32 rounded-[1.5rem] animate-pulse ${isDayMode ? 'bg-slate-100' : 'bg-white/[0.04]'}`} />
                 ))}
               </div>
               <div className="grid gap-6 xl:grid-cols-2">
                 {[...Array(2)].map((_, index) => (
-                  <div key={index} className="h-80 rounded-[1.75rem] bg-white/[0.04] animate-pulse" />
+                  <div key={index} className={`h-80 rounded-[1.75rem] animate-pulse ${isDayMode ? 'bg-slate-100' : 'bg-white/[0.04]'}`} />
                 ))}
               </div>
-              <div className="h-24 rounded-[1.5rem] bg-white/[0.04] animate-pulse" />
+              <div className={`h-24 rounded-[1.5rem] animate-pulse ${isDayMode ? 'bg-slate-100' : 'bg-white/[0.04]'}`} />
             </div>
           </div>
         ) : (
@@ -296,30 +299,30 @@ const PlatformStats = () => {
             whileInView={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.15 }}
             transition={prefersReducedMotion ? undefined : { duration: 0.55 }}
-            className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.025))] p-6 sm:p-8 backdrop-blur-3xl shadow-[0_28px_80px_rgba(0,0,0,0.18)]"
+            className={`relative overflow-hidden rounded-[2rem] border p-6 sm:p-8 backdrop-blur-3xl ${isDayMode ? 'border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(248,250,252,0.82))] shadow-[0_28px_80px_rgba(148,163,184,0.16)]' : 'border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.025))] shadow-[0_28px_80px_rgba(0,0,0,0.18)]'}`}
           >
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_62%)] blur-3xl opacity-70" />
+            <div className={`pointer-events-none absolute inset-x-0 top-0 h-40 blur-3xl opacity-70 ${isDayMode ? 'bg-[radial-gradient(circle_at_top,rgba(165,180,252,0.22),transparent_62%)]' : 'bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_62%)]'}`} />
             <div className="space-y-6">
               <div>
-                <SectionTitle eyebrow="TODAY" title="今日平台动态" meta={null} />
+                <SectionTitle eyebrow="TODAY" title="今日平台动态" meta={null} isDayMode={isDayMode} />
                 <div className="grid gap-4 md:grid-cols-2 mt-4">
                   {todayMetrics.map((metric) => (
-                    <TodayCard key={metric.label} {...metric} reduceMotion={prefersReducedMotion} />
+                    <TodayCard key={metric.label} {...metric} reduceMotion={prefersReducedMotion} isDayMode={isDayMode} />
                   ))}
                 </div>
               </div>
 
               <div>
-                <SectionTitle eyebrow="TOTAL" title="累计数据概览" meta={null} />
+                <SectionTitle eyebrow="TOTAL" title="累计数据概览" meta={null} isDayMode={isDayMode} />
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mt-4">
                   {totalMetrics.map((metric) => (
-                    <TotalCard key={metric.label} {...metric} reduceMotion={prefersReducedMotion} />
+                    <TotalCard key={metric.label} {...metric} reduceMotion={prefersReducedMotion} isDayMode={isDayMode} />
                   ))}
                 </div>
               </div>
 
               <div>
-                <SectionTitle eyebrow="TREND" title="最近 7 天数据趋势" meta="最近 7 天" />
+                <SectionTitle eyebrow="TREND" title="最近 7 天数据趋势" meta="最近 7 天" isDayMode={isDayMode} />
                 <div className="grid gap-6 xl:grid-cols-2 mt-4">
                   <TrendBars
                     title="访问趋势"
@@ -328,6 +331,7 @@ const PlatformStats = () => {
                     labels={trend.map(item => item.label)}
                     totalLabel="近 7 日访问"
                     totalValue={growth.views7d}
+                    isDayMode={isDayMode}
                   />
                   <TrendBars
                     title="上传趋势"
@@ -336,21 +340,23 @@ const PlatformStats = () => {
                     labels={trend.map(item => item.label)}
                     totalLabel="近 7 日上传"
                     totalValue={growth.uploads7d}
+                    isDayMode={isDayMode}
                   />
                 </div>
               </div>
 
-              <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5 sm:p-6 backdrop-blur-2xl shadow-[0_18px_48px_rgba(0,0,0,0.12)]">
+              <div className={`rounded-[1.5rem] border p-5 sm:p-6 backdrop-blur-2xl ${isDayMode ? 'border-slate-200/80 bg-white/82 shadow-[0_18px_48px_rgba(148,163,184,0.12)]' : 'border-white/10 bg-white/[0.03] shadow-[0_18px_48px_rgba(0,0,0,0.12)]'}`}>
                 <SectionTitle
                   eyebrow="CONTENT"
                   title="当前内容分布"
                   meta={`${t('home.stats.total_engagement', '累计互动量')} ${formatCompactNumber(summary.totalEngagement)}`}
+                  isDayMode={isDayMode}
                 />
                 <div className="flex flex-wrap gap-2.5 mt-4">
                   {contentSummary.map(item => (
-                    <div key={item.label} className="rounded-full border border-white/10 bg-black/20 px-4 py-2.5 text-[15px] text-gray-300">
+                    <div key={item.label} className={`rounded-full border px-4 py-2.5 text-[15px] ${isDayMode ? 'border-slate-200/80 bg-slate-50/90 text-slate-600' : 'border-white/10 bg-black/20 text-gray-300'}`}>
                       <span>{item.label}</span>
-                      <span className="ml-2 font-bold text-white">{formatCompactNumber(item.value)}</span>
+                      <span className={`ml-2 font-bold ${isDayMode ? 'text-slate-900' : 'text-white'}`}>{formatCompactNumber(item.value)}</span>
                     </div>
                   ))}
                 </div>

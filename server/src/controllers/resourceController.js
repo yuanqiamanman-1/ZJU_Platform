@@ -243,6 +243,10 @@ const getOneHandler = (table) => async (req, res, next) => {
         item.favorited = !!item.favorited;
     }
 
+    if (!userId && item.status === 'approved' && !item.deleted_at) {
+        res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+    }
+
     res.json(item);
   } catch (error) { next(error); }
 };
@@ -434,6 +438,10 @@ const getAllHandler = (table, defaultLimit = 12) => async (req, res, next) => {
             items.forEach(item => {
                 item.favorited = !!item.favorited;
             });
+        }
+
+        if (!userId && status === 'approved' && !trashed && !search && !uploader_id) {
+            res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
         }
 
         res.json({

@@ -2,12 +2,15 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Check } from 'lucide-react';
+import { useSettings } from '../context/SettingsContext';
 
 // Tooltip that only appears when text is actually truncated, rendered via portal
 const TruncatedLabel = ({ text }) => {
   const spanRef = useRef(null);
   const timerRef = useRef(null);
   const [tooltipPos, setTooltipPos] = useState(null); // { x, y } or null
+  const { uiMode } = useSettings();
+  const isDayMode = uiMode === 'day';
 
   const isTruncated = useCallback(() => {
     const el = spanRef.current;
@@ -48,7 +51,7 @@ const TruncatedLabel = ({ text }) => {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
               style={{ position: 'fixed', left: tooltipPos.x, top: tooltipPos.y, zIndex: 9999 }}
-              className="px-3 py-1.5 rounded-lg bg-[#1a1a2e] border border-white/15 text-white text-xs shadow-xl pointer-events-none max-w-xs whitespace-normal"
+              className={`px-3 py-1.5 rounded-lg border text-xs shadow-xl pointer-events-none max-w-xs whitespace-normal ${isDayMode ? 'bg-white/95 border-slate-200/80 text-slate-800' : 'bg-[#1a1a2e] border-white/15 text-white'}`}
             >
               {text}
             </motion.div>
@@ -73,6 +76,8 @@ const Dropdown = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
+  const { uiMode } = useSettings();
+  const isDayMode = uiMode === 'day';
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -95,17 +100,17 @@ const Dropdown = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center justify-between gap-2 w-full bg-black/40 backdrop-blur-sm border rounded-2xl px-4 py-3.5 sm:py-3 focus:outline-none transition-all duration-300 group min-h-[44px] sm:min-h-0 ${isSheet ? (hasSelection ? 'border-indigo-500/40 bg-indigo-500/10 text-white' : isOpen ? 'border-indigo-500/50 bg-white/10 text-white' : 'border-white/10 text-gray-300 hover:bg-white/5') : 'border-white/10 text-white hover:bg-white/5 hover:border-indigo-500/30 focus:border-indigo-500/50'} ${buttonClassName}`}
+        className={`flex items-center justify-between gap-2 w-full backdrop-blur-sm border rounded-2xl px-4 py-3.5 sm:py-3 focus:outline-none transition-all duration-300 group min-h-[44px] sm:min-h-0 ${isSheet ? (hasSelection ? (isDayMode ? 'border-indigo-300/50 bg-indigo-500/10 text-slate-900' : 'border-indigo-500/40 bg-indigo-500/10 text-white') : isOpen ? (isDayMode ? 'border-indigo-300/60 bg-white text-slate-900' : 'border-indigo-500/50 bg-white/10 text-white') : (isDayMode ? 'bg-white/82 border-slate-200/80 text-slate-600 hover:bg-white' : 'border-white/10 text-gray-300 hover:bg-white/5')) : (isDayMode ? 'bg-white/82 border-slate-200/80 text-slate-800 hover:bg-white hover:border-indigo-300/70 focus:border-indigo-400/60' : 'bg-black/40 border-white/10 text-white hover:bg-white/5 hover:border-indigo-500/30 focus:border-indigo-500/50')} ${buttonClassName}`}
       >
         <div className="flex items-center gap-3 min-w-0">
-          {Icon && <Icon size={18} className={`shrink-0 transition-colors ${hasSelection ? 'text-indigo-400' : 'text-gray-400 group-hover:text-indigo-400'}`} />}
-          <span className={`text-sm font-medium truncate min-w-0 flex-1 text-left ${hasSelection ? "text-white" : "text-gray-400"}`}>
+          {Icon && <Icon size={18} className={`shrink-0 transition-colors ${hasSelection ? (isDayMode ? 'text-indigo-600' : 'text-indigo-400') : (isDayMode ? 'text-slate-500 group-hover:text-indigo-500' : 'text-gray-400 group-hover:text-indigo-400')}`} />}
+          <span className={`text-sm font-medium truncate min-w-0 flex-1 text-left ${hasSelection ? (isDayMode ? "text-slate-900" : "text-white") : (isDayMode ? "text-slate-500" : "text-gray-400")}`}>
             {selectedOption ? selectedOption.label : placeholder}
           </span>
         </div>
         <ChevronDown 
           size={16} 
-          className={`transition-transform duration-300 ${hasSelection ? 'text-indigo-400' : 'text-gray-500 group-hover:text-white'} ${isOpen ? 'rotate-180' : ''}`} 
+          className={`transition-transform duration-300 ${hasSelection ? (isDayMode ? 'text-indigo-600' : 'text-indigo-400') : (isDayMode ? 'text-slate-500 group-hover:text-slate-900' : 'text-gray-500 group-hover:text-white')} ${isOpen ? 'rotate-180' : ''}`} 
         />
       </button>
 
@@ -117,8 +122,8 @@ const Dropdown = ({
             exit={isSheet ? { height: 0, opacity: 0 } : { opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
             className={isSheet 
-              ? `overflow-hidden mt-2 rounded-2xl border border-white/5 bg-white/5 ${menuClassName}` 
-              : `absolute top-full left-0 mt-2 min-w-full w-max max-w-[320px] bg-[#0a0a0a]/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[100] ring-1 ring-white/5 ${menuClassName}`
+              ? `overflow-hidden mt-2 rounded-2xl border ${isDayMode ? 'border-slate-200/80 bg-white/80' : 'border-white/5 bg-white/5'} ${menuClassName}` 
+              : `absolute top-full left-0 mt-2 min-w-full w-max max-w-[320px] backdrop-blur-xl border rounded-2xl shadow-2xl overflow-hidden z-[100] ${isDayMode ? 'bg-white/94 border-slate-200/80 ring-1 ring-slate-200/60' : 'bg-[#0a0a0a]/90 border-white/10 ring-1 ring-white/5'} ${menuClassName}`
             }
           >
             <div className={`${isSheet ? 'max-h-48' : 'max-h-60'} overflow-y-auto custom-scrollbar p-1.5 space-y-1`}>
@@ -133,7 +138,9 @@ const Dropdown = ({
                   className={`w-full flex items-center justify-between px-4 py-3.5 sm:py-3 text-sm rounded-xl transition-all min-h-[44px] sm:min-h-0 ${
                     value === option.value 
                       ? 'bg-gradient-to-r from-indigo-600/80 to-violet-600/80 text-white shadow-lg shadow-indigo-500/20 font-bold' 
-                      : 'text-gray-400 hover:bg-white/10 hover:text-white active:bg-white/5 active:scale-[0.98]'
+                      : isDayMode
+                        ? 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-50 active:scale-[0.98]'
+                        : 'text-gray-400 hover:bg-white/10 hover:text-white active:bg-white/5 active:scale-[0.98]'
                   }`}
                 >
                   <TruncatedLabel text={option.label} />

@@ -99,19 +99,20 @@ const AppContent = () => {
   const isAdminRoute = location.pathname.startsWith('/admin');
   const { cursorEnabled, settings } = useSettings();
   const shouldMountDeferredUi = useDeferredMount(700);
-  const shouldMountHeavyBackground = useDeferredMount(1400);
-  const [canRenderHeavyEffects, setCanRenderHeavyEffects] = useState(false);
+  const shouldMountHeavyBackground = useDeferredMount(100);
+  const [canRenderHeavyEffects, setCanRenderHeavyEffects] = useState(true);
   const allowBackgroundEffects = !isAdminRoute && settings?.backgroundEnabled !== false;
+  const shouldUseThreeBackground = location.pathname === '/';
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    const isSmallScreen = window.innerWidth < 1024;
-    const saveDataEnabled = navigator.connection?.saveData === true;
-
-    setCanRenderHeavyEffects(!prefersReducedMotion && !isSmallScreen && !saveDataEnabled);
-  }, []);
+  // 调试：强制启用 3D 背景渲染
+  // useEffect(() => {
+  //   if (typeof window === 'undefined') return;
+  //   const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  //   const isSmallScreen = window.innerWidth < 1024;
+  //   const saveDataEnabled = navigator.connection?.saveData === true;
+  //   console.log('[App] 性能检测:', { prefersReducedMotion, isSmallScreen, saveDataEnabled, innerWidth: window.innerWidth });
+  //   setCanRenderHeavyEffects(!prefersReducedMotion && !isSmallScreen && !saveDataEnabled);
+  // }, []);
 
   // Performance monitoring
   usePerformanceMonitor({
@@ -129,6 +130,17 @@ const AppContent = () => {
       document.title = settings.site_title;
     }
   }, [settings?.site_title]);
+
+  // 调试：输出背景渲染条件
+  useEffect(() => {
+    console.log('[App] 背景渲染条件:', {
+      allowBackgroundEffects,
+      shouldUseThreeBackground,
+      canRenderHeavyEffects,
+      shouldMountHeavyBackground,
+      location: location.pathname
+    });
+  }, [allowBackgroundEffects, shouldUseThreeBackground, canRenderHeavyEffects, shouldMountHeavyBackground, location.pathname]);
 
   // Scroll to top on route change
   useEffect(() => {
@@ -169,7 +181,7 @@ const AppContent = () => {
             <Navbar />
         </ErrorBoundary>
       )}
-      {allowBackgroundEffects && canRenderHeavyEffects && shouldMountHeavyBackground && (
+      {allowBackgroundEffects && shouldUseThreeBackground && canRenderHeavyEffects && shouldMountHeavyBackground && (
         <ErrorBoundary variant="inline" silent>
           <Suspense fallback={null}>
             <BackgroundSystem />

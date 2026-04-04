@@ -21,34 +21,26 @@ import toast from 'react-hot-toast';
 import { useBackClose } from '../hooks/useBackClose';
 import { useCachedResource } from '../hooks/useCachedResource';
 import { getThumbnailUrl } from '../utils/imageUtils';
+import { useReducedMotion } from '../utils/animations';
 
 // Enhanced Photo Card with better micro-interactions
-const PhotoCard = memo(forwardRef(({ photo, index, onClick, onToggleFavorite }, ref) => {
-  const [isHovered, setIsHovered] = useState(false);
-  
+const PhotoCard = memo(forwardRef(({ photo, index, onClick, onToggleFavorite, canAnimate, isDayMode }, ref) => {
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
+      initial={canAnimate ? { opacity: 0, y: 16 } : false}
+      animate={canAnimate ? { opacity: 1, y: 0 } : undefined}
+      exit={canAnimate ? { opacity: 0, scale: 0.98 } : undefined}
       transition={{ 
-        duration: 0.4, 
-        delay: index * 0.05,
+        duration: 0.28, 
+        delay: Math.min(index, 5) * 0.03,
         ease: [0.25, 0.46, 0.45, 0.94]
       }}
-      whileHover={{ 
-        y: -4,
-        transition: { duration: 0.2 }
-      }}
-      className="break-inside-avoid relative group overflow-hidden rounded-2xl cursor-pointer 
-                 bg-white/5 backdrop-blur-sm border border-white/10
-                 hover:shadow-2xl hover:shadow-indigo-500/10 
-                 hover:border-white/20
-                 transition-all duration-300 w-full inline-block touch-manipulation mb-4 md:mb-6"
+      whileHover={canAnimate ? { y: -4, transition: { duration: 0.18 } } : undefined}
+      className={`break-inside-avoid relative group overflow-hidden rounded-2xl cursor-pointer 
+                 backdrop-blur-sm border transition-all duration-300 w-full inline-block touch-manipulation mb-4 md:mb-6
+                 ${isDayMode ? 'bg-white/72 border-slate-200/80 hover:shadow-[0_24px_60px_rgba(148,163,184,0.2)] hover:border-indigo-200/80' : 'bg-white/5 border-white/10 hover:shadow-2xl hover:shadow-indigo-500/10 hover:border-white/20'}`}
       onClick={() => onClick(index)}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       <SmartImage 
         src={getThumbnailUrl(photo.url)} 
@@ -59,26 +51,12 @@ const PhotoCard = memo(forwardRef(({ photo, index, onClick, onToggleFavorite }, 
         blurPlaceholder={photo.blurPlaceholder}
       />
       
-      {/* Gradient Overlay - Always visible on mobile, hover on desktop */}
-      <motion.div 
-        initial={false}
-        animate={{ 
-          opacity: isHovered ? 1 : 0 
-        }}
-        transition={{ duration: 0.3 }}
-        className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent 
-                   md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300
-                   flex flex-col justify-end p-4"
+      <div
+        className={`absolute inset-0 ${isDayMode ? 'bg-gradient-to-t from-slate-950/90 via-slate-900/30 to-transparent' : 'bg-gradient-to-t from-black/90 via-black/40 to-transparent'} 
+                   opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300
+                   flex flex-col justify-end p-4`}
       >
-        <motion.div 
-          initial={false}
-          animate={{ 
-            y: isHovered ? 0 : 10,
-            opacity: isHovered ? 1 : 0
-          }}
-          transition={{ duration: 0.3, delay: 0.05 }}
-          className="flex flex-col gap-2"
-        >
+        <div className="flex flex-col gap-2 md:translate-y-3 md:group-hover:translate-y-0 transition-transform duration-300">
             <div className="flex justify-between items-end gap-2">
                 <h3 className="text-lg font-bold text-white drop-shadow-md line-clamp-2 flex-1 
                                transform transition-transform duration-300">
@@ -86,11 +64,7 @@ const PhotoCard = memo(forwardRef(({ photo, index, onClick, onToggleFavorite }, 
                 </h3>
                 
                 <div className="flex items-center gap-2">
-                     <motion.div 
-                       whileHover={{ scale: 1.1 }}
-                       whileTap={{ scale: 0.95 }}
-                       onClick={(e) => e.stopPropagation()}
-                     >
+                     <div onClick={(e) => e.stopPropagation()}>
                         <FavoriteButton 
                             itemId={photo.id}
                             itemType="photo"
@@ -98,59 +72,49 @@ const PhotoCard = memo(forwardRef(({ photo, index, onClick, onToggleFavorite }, 
                             showCount={false}
                             favorited={photo.favorited}
                             initialFavorited={photo.favorited}
-                            className="p-2 bg-white/10 hover:bg-pink-500/30 rounded-full backdrop-blur-md 
-                                       transition-all duration-200 text-white border border-white/10
-                                       hover:border-pink-500/50 hover:shadow-lg hover:shadow-pink-500/20"
+                            className={`p-2 rounded-full backdrop-blur-md 
+                                       transition-all duration-200 text-white border
+                                       ${isDayMode ? 'bg-white/70 hover:bg-pink-500/30 border-white/40 shadow-[0_12px_24px_rgba(15,23,42,0.18)]' : 'bg-white/10 border-white/10'}
+                                       hover:border-pink-500/50 hover:shadow-lg hover:shadow-pink-500/20`}
                             onToggle={(favorited, likes) => onToggleFavorite(photo.id, favorited, likes)}
                         />
-                     </motion.div>
-                     <motion.div 
-                       whileHover={{ scale: 1.1, rotate: 90 }}
-                       whileTap={{ scale: 0.95 }}
-                       className="p-2 rounded-full bg-white/20 backdrop-blur-md border border-white/10 
+                     </div>
+                     <div className={`p-2 rounded-full backdrop-blur-md border 
+                                  ${isDayMode ? 'bg-white/72 border-white/40 shadow-[0_12px_24px_rgba(15,23,42,0.18)]' : 'bg-white/20 border-white/10'} 
                                   group-hover:bg-indigo-500 group-hover:text-white 
-                                  transition-all duration-300"
+                                  transition-all duration-300`}
                      >
                         <Maximize2 size={18} />
-                    </motion.div>
+                    </div>
                 </div>
             </div>
 
             {photo.tags && (
-              <motion.div 
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 5 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-                className="flex flex-wrap gap-1.5"
-              >
+              <div className="hidden md:flex flex-wrap gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 {photo.tags.split(',').slice(0, 3).map((tag, i) => (
-                  <motion.span 
+                  <span 
                     key={i}
-                    whileHover={{ scale: 1.05 }}
                     className="text-[10px] px-2 py-0.5 rounded-lg bg-white/20 text-white/90 
                                backdrop-blur-sm border border-white/10 flex items-center gap-1
                                hover:bg-white/30 transition-colors cursor-pointer"
                   >
                     <Tag size={10} /> {tag.trim()}
-                  </motion.span>
+                  </span>
                 ))}
-              </motion.div>
+              </div>
             )}
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
 
-      {/* Likes Badge */}
       {photo.likes > 0 && (
-        <motion.div 
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="absolute top-3 right-3 flex items-center gap-1 
-                   bg-black/40 backdrop-blur-md rounded-full px-2 py-1
+        <div className="absolute top-3 right-3 flex items-center gap-1 
+                   backdrop-blur-md rounded-full px-2 py-1
                    border border-white/10"
+          style={{ backgroundColor: isDayMode ? 'rgba(255,255,255,0.82)' : 'rgba(0,0,0,0.4)' }}
       >
         <span className="text-pink-400 text-xs">♥</span>
-        <span className="text-white text-xs font-medium">{photo.likes}</span>
-      </motion.div>
+        <span className={`text-xs font-medium ${isDayMode ? 'text-slate-900' : 'text-white'}`}>{photo.likes}</span>
+      </div>
     )}
   </motion.div>
 );
@@ -161,12 +125,16 @@ const Gallery = () => {
   const [sort, setSort] = useState('newest');
   const [selectedTags, setSelectedTags] = useState([]);
   const { t } = useTranslation();
-  const { settings } = useSettings();
+  const { settings, uiMode } = useSettings();
   const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
+  const prefersReducedMotion = useReducedMotion();
+  const isPaginationEnabled = settings.pagination_enabled === 'true';
+  const pageSize = isPaginationEnabled ? 12 : 24;
+  const [displayPhotos, setDisplayPhotos] = useState([]);
+  const isDayMode = uiMode === 'day';
   
   // Use cached resource hook
-  const limit = settings.pagination_enabled === 'true' ? 12 : 1000;
   const { 
     data: photos, 
     pagination, 
@@ -176,7 +144,7 @@ const Gallery = () => {
     refresh 
   } = useCachedResource('/photos', {
     page: currentPage,
-    limit,
+    limit: pageSize,
     sort,
     tags: selectedTags.join(',')
   }, {
@@ -184,7 +152,7 @@ const Gallery = () => {
   });
 
   const totalPages = pagination?.totalPages || 1;
-  const [refreshKey, setRefreshKey] = useState(0);
+  const hasMore = !isPaginationEnabled && currentPage < totalPages;
 
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(null);
   const [tempPhoto, setTempPhoto] = useState(null);
@@ -204,6 +172,7 @@ const Gallery = () => {
         return t('sort_filter.newest', '最新');
     }
   }, [sort, t]);
+  const allowAmbientEffects = !prefersReducedMotion && (typeof window === 'undefined' || window.innerWidth >= 768);
 
   // Listen for global events from Navbar
   useEffect(() => {
@@ -230,6 +199,24 @@ const Gallery = () => {
   }, []);
 
   useEffect(() => {
+    setCurrentPage(1);
+  }, [sort, selectedTags.join(','), settings.pagination_enabled]);
+
+  useEffect(() => {
+    if (isPaginationEnabled) {
+      setDisplayPhotos(photos);
+      return;
+    }
+
+    setDisplayPhotos((prev) => {
+      if (currentPage === 1) return photos;
+      const seen = new Set(prev.map((item) => item.id));
+      const next = photos.filter((item) => !seen.has(item.id));
+      return next.length === 0 ? prev : [...prev, ...next];
+    });
+  }, [photos, currentPage, isPaginationEnabled]);
+
+  useEffect(() => {
     window.dispatchEvent(new CustomEvent('set-mobile-toolbar-state', {
       detail: {
         filterCount: selectedTags.length,
@@ -251,7 +238,7 @@ const Gallery = () => {
         api.get(`/photos/${id}`)
            .then(res => {
                if (res.data) {
-                   const foundIndex = photos.findIndex(p => String(p.id) === String(res.data.id));
+                   const foundIndex = displayPhotos.findIndex(p => String(p.id) === String(res.data.id));
                    if (foundIndex !== -1) {
                        setSelectedPhotoIndex(foundIndex);
                    } else {
@@ -261,7 +248,7 @@ const Gallery = () => {
            })
            .catch(err => console.error("Failed to fetch deep linked photo", err));
     }
-  }, [searchParams, photos]);
+  }, [searchParams, displayPhotos]);
 
   const addPhoto = (newItem) => {
     api.post('/photos', newItem)
@@ -272,11 +259,11 @@ const Gallery = () => {
   };
 
   const handleNext = () => {
-    setSelectedPhotoIndex((prev) => (prev + 1) % photos.length);
+    setSelectedPhotoIndex((prev) => (prev + 1) % displayPhotos.length);
   };
 
   const handlePrev = () => {
-    setSelectedPhotoIndex((prev) => (prev - 1 + photos.length) % photos.length);
+    setSelectedPhotoIndex((prev) => (prev - 1 + displayPhotos.length) % displayPhotos.length);
   };
 
   const handleUpload = (newItem) => {
@@ -292,6 +279,10 @@ const Gallery = () => {
     setPhotos(prev => prev.map(p => 
         p.id === photoId ? { ...p, likes: likes !== undefined ? likes : p.likes, favorited } : p
     ));
+
+    setDisplayPhotos(prev => prev.map(p => 
+      p.id === photoId ? { ...p, likes: likes !== undefined ? likes : p.likes, favorited } : p
+    ));
     
     setTempPhoto(prev => {
         if (prev && prev.id === photoId) {
@@ -299,37 +290,46 @@ const Gallery = () => {
         }
         return prev;
     });
-  }, [setPhotos]);
+  }, [setPhotos, setDisplayPhotos]);
 
   return (
     <section className="pt-24 pb-28 md:py-20 px-4 md:px-8 relative overflow-hidden flex-grow">
       {/* Enhanced Ambient Background */}
       <div className="fixed inset-0 pointer-events-none z-0">
-          <motion.div 
-            animate={{ 
-              scale: [1, 1.1, 1],
-              opacity: [0.1, 0.15, 0.1]
-            }}
-            transition={{ 
-              duration: 8,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-blue-500/10 blur-[130px]" 
-          />
-          <motion.div 
-            animate={{ 
-              scale: [1, 1.2, 1],
-              opacity: [0.1, 0.12, 0.1]
-            }}
-            transition={{ 
-              duration: 10,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 1
-            }}
-            className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-cyan-500/10 blur-[120px]" 
-          />
+          {allowAmbientEffects ? (
+            <>
+              <motion.div 
+                animate={{ 
+                  scale: [1, 1.1, 1],
+                  opacity: [0.1, 0.15, 0.1]
+                }}
+                transition={{ 
+                  duration: 8,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-blue-500/10 blur-[130px]" 
+              />
+              <motion.div 
+                animate={{ 
+                  scale: [1, 1.2, 1],
+                  opacity: [0.1, 0.12, 0.1]
+                }}
+                transition={{ 
+                  duration: 10,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 1
+                }}
+                className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-cyan-500/10 blur-[120px]" 
+              />
+            </>
+          ) : (
+            <>
+              <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-blue-500/10 blur-[90px] hidden md:block" />
+              <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-cyan-500/10 blur-[80px] hidden md:block" />
+            </>
+          )}
       </div>
 
       <motion.div 
@@ -502,7 +502,7 @@ const Gallery = () => {
         document.body
         )}
 
-        {loading && photos.length === 0 ? (
+        {loading && displayPhotos.length === 0 ? (
           <GallerySkeleton count={12} />
         ) : error ? (
             <motion.div 
@@ -529,46 +529,44 @@ const Gallery = () => {
             </motion.div>
         ) : (
           <motion.div 
-            layout={typeof window !== 'undefined' && window.innerWidth >= 768}
+            layout={!prefersReducedMotion && typeof window !== 'undefined' && window.innerWidth >= 768}
             className="columns-2 md:columns-3 lg:columns-4 gap-4 md:gap-6 max-w-7xl mx-auto pb-8 md:pb-0"
           >
               <AnimatePresence mode="popLayout">
-                {photos.map((photo, index) => (
+                {displayPhotos.map((photo, index) => (
                   <PhotoCard
                     key={photo.id}
                     photo={photo}
                     index={index}
                     onClick={setSelectedPhotoIndex}
                     onToggleFavorite={handleToggleFavorite}
+                    canAnimate={!prefersReducedMotion && index < 8}
+                    isDayMode={isDayMode}
                   />
                 ))}
               </AnimatePresence>
           </motion.div>
         )}
         
-        {!loading && !error && photos.length > 0 && settings.pagination_enabled !== 'true' && (
+        {!loading && !error && displayPhotos.length > 0 && settings.pagination_enabled !== 'true' && hasMore && (
+             <div className="flex items-center justify-center py-10">
+               <motion.button
+                 whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+                 whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+                 onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                 className="px-6 py-2.5 rounded-full bg-white/10 hover:bg-white/15 text-white border border-white/10 hover:border-white/20 transition-colors text-sm font-semibold"
+               >
+                 {t('common.load_more', '加载更多')}
+               </motion.button>
+             </div>
+        )}
+
+        {!loading && !error && displayPhotos.length > 0 && settings.pagination_enabled !== 'true' && !hasMore && (
              <motion.div 
                initial={{ opacity: 0 }}
                animate={{ opacity: 1 }}
                transition={{ delay: 0.5 }}
                className="text-center py-10"
-             >
-                 <motion.div 
-                   initial={{ scaleX: 0 }}
-                   animate={{ scaleX: 1 }}
-                   transition={{ duration: 0.8 }}
-                   className="inline-block h-1 w-20 bg-gradient-to-r from-transparent via-white/20 to-transparent mb-4" 
-                 />
-                 <p className="text-gray-500 text-sm font-medium tracking-widest uppercase">
-                   {t('gallery.end_of_list', 'End of Gallery')}
-                 </p>
-             </motion.div>
-        )}
-
-      {settings.pagination_enabled === 'true' && (
-        <Pagination 
-          currentPage={currentPage} 
-          totalPages={totalPages} 
           onPageChange={handlePageChange} 
         />
       )}
@@ -576,12 +574,12 @@ const Gallery = () => {
       <AnimatePresence>
         {(selectedPhotoIndex !== null || tempPhoto) && (
           <Lightbox 
-            photo={selectedPhotoIndex !== null ? photos[selectedPhotoIndex] : tempPhoto} 
+            photo={selectedPhotoIndex !== null ? displayPhotos[selectedPhotoIndex] : tempPhoto} 
             onClose={() => { setSelectedPhotoIndex(null); setTempPhoto(null); }}
             onNext={selectedPhotoIndex !== null ? handleNext : undefined}
             onPrev={selectedPhotoIndex !== null ? handlePrev : undefined}
             onSelect={(photo) => {
-                const idx = photos.findIndex(p => p.id === photo.id);
+                const idx = displayPhotos.findIndex(p => p.id === photo.id);
                 if (idx !== -1) {
                     setSelectedPhotoIndex(idx);
                     setTempPhoto(null);

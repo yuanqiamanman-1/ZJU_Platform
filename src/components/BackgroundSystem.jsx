@@ -1,352 +1,417 @@
-import React, { useState, useRef, useMemo, useEffect, Suspense } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useSettings } from '../context/SettingsContext';
-import { Canvas, useFrame, useThree, extend } from '@react-three/fiber';
-import { shaderMaterial, useTexture, Float, Stars, Cloud, Sparkles, Torus, Icosahedron, Points, PointMaterial, Line, Circle, Sphere, Box, PerformanceMonitor } from '@react-three/drei';
+import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Box, Cloud, Float, Icosahedron, PointMaterial, Points, Sparkles, Sphere, Stars, Torus } from '@react-three/drei';
 import { EffectComposer, Bloom, Noise, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
-import { Palette, X, Grid, Droplets, Sparkles as SparklesIcon, Zap, Hexagon, Flame, Wind, Mountain, Aperture, Cpu, Dna, Binary, Network, Globe, Waves, Box as BoxIcon, Radio, Orbit, Scan } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useSettings } from '../context/SettingsContext';
+import { useReducedMotion } from '../utils/animations';
 
 const CLOUD_URL = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cmFkaWFsR3JhZGllbnQgaWQ9ImciIGN4PSI1MCUiIGN5PSI1MCUiIHI9IjUwJSIgZng9IjUwJSIgZnk9IjUwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0id2hpdGUiIHN0b3Atb3BhY2l0eT0iMSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0id2hpdGUiIHN0b3Atb3BhY2l0eT0iMCIvPjwvcmFkaWFsR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjY0IiBjeT0iNjQiIHI9IjY0IiBmaWxsPSJ1cmwoI2cpIi8+PC9zdmc+";
 
-// ==========================================
-// 🌌 1. DEEP SPACE (Stars + Nebula)
-// ==========================================
-const DeepSpaceScene = () => (
+const themeStyles = {
+  dark: {
+    space: { gradient: 'radial-gradient(circle at top, rgba(99,102,241,0.16), transparent 46%), linear-gradient(180deg, #020617 0%, #000000 100%)', orb: '#4f46e5' },
+    grid: { gradient: 'radial-gradient(circle at top, rgba(236,72,153,0.18), transparent 44%), linear-gradient(180deg, #09090b 0%, #020617 100%)', orb: '#ec4899' },
+    embers: { gradient: 'radial-gradient(circle at top, rgba(249,115,22,0.18), transparent 44%), linear-gradient(180deg, #120400 0%, #000000 100%)', orb: '#f97316' },
+    crystal: { gradient: 'radial-gradient(circle at top, rgba(34,211,238,0.16), transparent 46%), linear-gradient(180deg, #020617 0%, #000000 100%)', orb: '#22d3ee' },
+    clouds: { gradient: 'radial-gradient(circle at top, rgba(125,211,252,0.18), transparent 42%), linear-gradient(180deg, #082f49 0%, #020617 100%)', orb: '#7dd3fc' },
+    cyber: { gradient: 'radial-gradient(circle at top, rgba(6,182,212,0.18), transparent 44%), linear-gradient(180deg, #020617 0%, #000000 100%)', orb: '#06b6d4' },
+    dna: { gradient: 'radial-gradient(circle at top, rgba(34,197,94,0.16), transparent 44%), linear-gradient(180deg, #03170d 0%, #000000 100%)', orb: '#22c55e' },
+    binary: { gradient: 'radial-gradient(circle at top, rgba(16,185,129,0.16), transparent 44%), linear-gradient(180deg, #02170f 0%, #000000 100%)', orb: '#10b981' },
+    network: { gradient: 'radial-gradient(circle at top, rgba(59,130,246,0.18), transparent 44%), linear-gradient(180deg, #020617 0%, #000000 100%)', orb: '#3b82f6' },
+    wave: { gradient: 'radial-gradient(circle at top, rgba(236,72,153,0.16), transparent 42%), linear-gradient(180deg, #170212 0%, #000000 100%)', orb: '#ec4899' },
+    orbit: { gradient: 'radial-gradient(circle at top, rgba(244,63,94,0.16), transparent 42%), linear-gradient(180deg, #14020b 0%, #000000 100%)', orb: '#f43f5e' }
+  },
+  day: {
+    space: { gradient: 'radial-gradient(circle at top, rgba(99,102,241,0.18), transparent 44%), linear-gradient(180deg, #f8fafc 0%, #eef2ff 52%, #f8fafc 100%)', orb: '#818cf8' },
+    grid: { gradient: 'radial-gradient(circle at top, rgba(236,72,153,0.14), transparent 44%), linear-gradient(180deg, #fff7fb 0%, #f5f3ff 52%, #fdf2f8 100%)', orb: '#f472b6' },
+    embers: { gradient: 'radial-gradient(circle at top, rgba(249,115,22,0.16), transparent 42%), linear-gradient(180deg, #fffbeb 0%, #fff7ed 52%, #fffbeb 100%)', orb: '#fb923c' },
+    crystal: { gradient: 'radial-gradient(circle at top, rgba(34,211,238,0.14), transparent 42%), linear-gradient(180deg, #f0fdfa 0%, #ecfeff 52%, #f8fafc 100%)', orb: '#22d3ee' },
+    clouds: { gradient: 'radial-gradient(circle at top, rgba(125,211,252,0.14), transparent 42%), linear-gradient(180deg, #f8fafc 0%, #eff6ff 52%, #f0f9ff 100%)', orb: '#7dd3fc' },
+    cyber: { gradient: 'radial-gradient(circle at top, rgba(6,182,212,0.14), transparent 42%), linear-gradient(180deg, #f8fafc 0%, #ecfeff 48%, #eef2ff 100%)', orb: '#22d3ee' },
+    dna: { gradient: 'radial-gradient(circle at top, rgba(34,197,94,0.14), transparent 42%), linear-gradient(180deg, #f0fdf4 0%, #ecfdf5 52%, #f8fafc 100%)', orb: '#4ade80' },
+    binary: { gradient: 'radial-gradient(circle at top, rgba(16,185,129,0.14), transparent 42%), linear-gradient(180deg, #f0fdfa 0%, #ecfdf5 52%, #f8fafc 100%)', orb: '#34d399' },
+    network: { gradient: 'radial-gradient(circle at top, rgba(59,130,246,0.14), transparent 42%), linear-gradient(180deg, #eff6ff 0%, #eef2ff 52%, #f8fafc 100%)', orb: '#60a5fa' },
+    wave: { gradient: 'radial-gradient(circle at top, rgba(236,72,153,0.12), transparent 42%), linear-gradient(180deg, #fff7fb 0%, #fdf2f8 52%, #f8fafc 100%)', orb: '#f472b6' },
+    orbit: { gradient: 'radial-gradient(circle at top, rgba(244,63,94,0.12), transparent 42%), linear-gradient(180deg, #fff7ed 0%, #fff1f2 52%, #f8fafc 100%)', orb: '#fb7185' }
+  }
+};
+
+const MotionGroup = ({ enabled, children, ...props }) => {
+  if (!enabled) {
+    return <group>{children}</group>;
+  }
+
+  return <Float {...props}>{children}</Float>;
+};
+
+const DeepSpaceScene = ({ dense, animate }) => (
   <group>
-    <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={0.5} />
-    <Float speed={1} rotationIntensity={0.2} floatIntensity={0.2}>
-      <Cloud texture={CLOUD_URL} opacity={0.3} speed={0.2} width={10} depth={1.5} segments={20} position={[0, 0, -20]} color="#4c1d95" />
-      <Cloud texture={CLOUD_URL} opacity={0.3} speed={0.2} width={10} depth={1.5} segments={20} position={[10, 5, -25]} color="#1e40af" />
-    </Float>
+    <Stars radius={80} depth={36} count={dense ? 1200 : 480} factor={dense ? 3.4 : 2.2} saturation={0} fade speed={animate ? 0.2 : 0} />
+    <MotionGroup enabled={animate} speed={0.45} rotationIntensity={0.08} floatIntensity={0.15}>
+      <Cloud texture={CLOUD_URL} opacity={0.22} speed={animate ? 0.08 : 0} width={dense ? 10 : 8} depth={1.1} segments={dense ? 12 : 8} position={[0, 0, -18]} color="#4c1d95" />
+      <Cloud texture={CLOUD_URL} opacity={0.18} speed={animate ? 0.08 : 0} width={dense ? 9 : 7} depth={1.1} segments={dense ? 10 : 8} position={[8, 4, -20]} color="#1e40af" />
+    </MotionGroup>
   </group>
 );
 
-
-
-// ==========================================
-// 🕸️ 4. RETRO GRID (Synthwave)
-// ==========================================
-const RetroGridScene = () => {
+const RetroGridScene = ({ dense, animate }) => {
   const gridRef = useRef();
-  useFrame((state) => {
-    if (gridRef.current) gridRef.current.position.z = (state.clock.elapsedTime * 5) % 10;
+
+  useFrame((_, delta) => {
+    if (!animate || !gridRef.current) return;
+    gridRef.current.position.z = (gridRef.current.position.z + delta * 1.8) % 8;
   });
+
   return (
     <group rotation={[Math.PI / 2.5, 0, 0]} position={[0, -2, -10]}>
-      <gridHelper ref={gridRef} args={[100, 50, 0xff00ff, 0x220044]} />
-      <fog attach="fog" args={['#000', 5, 40]} />
-      <Stars radius={50} count={1000} factor={4} fade speed={1} />
+      <gridHelper ref={gridRef} args={[90, dense ? 36 : 24, 0xff00ff, 0x220044]} />
+      <fog attach="fog" args={['#000000', 5, 34]} />
+      <Stars radius={38} count={dense ? 320 : 160} factor={2.4} fade speed={animate ? 0.12 : 0} />
     </group>
   );
 };
 
-
-// ==========================================
-// 🔥 6. FIRE EMBERS (Rising Sparks)
-// ==========================================
-const FireEmbersScene = () => (
+const FireEmbersScene = ({ dense, animate }) => (
   <group>
-    <Sparkles 
-      count={500} 
-      scale={[20, 10, 10]} 
-      size={6} 
-      speed={0.4} 
-      opacity={0.8} 
-      color="#ffaa00"
-      position={[0, -5, 0]}
-    />
-    <pointLight position={[0, -5, 0]} intensity={2} color="#ff4400" distance={15} />
-    <fog attach="fog" args={['#1a0500', 5, 20]} />
+    <Sparkles count={dense ? 140 : 60} scale={[18, 8, 10]} size={dense ? 4 : 3} speed={animate ? 0.2 : 0} opacity={0.55} color="#ffaa00" position={[0, -4, 0]} />
+    <pointLight position={[0, -4, 0]} intensity={1.35} color="#ff4400" distance={12} />
+    <fog attach="fog" args={['#1a0500', 5, 18]} />
   </group>
 );
 
-// ==========================================
-// 💠 7. CRYSTAL CAVE (Reflective Geometry)
-// ==========================================
-const CrystalCaveScene = () => (
+const CrystalCaveScene = ({ dense, animate }) => (
   <group>
-    <Float speed={2} rotationIntensity={1} floatIntensity={2}>
-      <Icosahedron args={[2, 0]} position={[0, 0, -5]}>
-        <meshPhysicalMaterial 
-          roughness={0} 
-          metalness={0.1} 
-          transmission={0.9} 
-          thickness={2} 
-          color="#00ffff" 
-          emissive="#004444"
-          wireframe
-        />
+    <MotionGroup enabled={animate} speed={0.8} rotationIntensity={0.3} floatIntensity={0.35}>
+      <Icosahedron args={[1.5, 0]} position={[0, 0, -5]}>
+        <meshPhysicalMaterial roughness={0.15} metalness={0.1} transmission={0.82} thickness={1.3} color="#22d3ee" emissive="#0f172a" wireframe />
       </Icosahedron>
-      <Icosahedron args={[1.5, 0]} position={[4, 2, -8]}>
-        <meshPhysicalMaterial roughness={0} metalness={0.1} transmission={0.9} thickness={2} color="#ff00ff" emissive="#440044" wireframe />
+      <Icosahedron args={[1, 0]} position={[3, 1.6, -8]}>
+        <meshPhysicalMaterial roughness={0.18} metalness={0.1} transmission={0.8} thickness={1} color="#d946ef" emissive="#3b0764" wireframe />
       </Icosahedron>
-      <Icosahedron args={[1, 0]} position={[-4, -2, -6]}>
-        <meshPhysicalMaterial roughness={0} metalness={0.1} transmission={0.9} thickness={2} color="#ffff00" emissive="#444400" wireframe />
+      <Icosahedron args={[0.85, 0]} position={[-3, -1.6, -6]}>
+        <meshPhysicalMaterial roughness={0.18} metalness={0.1} transmission={0.78} thickness={1} color="#facc15" emissive="#422006" wireframe />
       </Icosahedron>
-    </Float>
-    <Sparkles count={100} scale={15} size={3} speed={0.5} opacity={0.5} color="white" />
+    </MotionGroup>
+    <Sparkles count={dense ? 42 : 20} scale={12} size={2.4} speed={animate ? 0.18 : 0} opacity={0.35} color="#ffffff" />
   </group>
 );
 
-
-// ==========================================
-// ☁️ 9. ETHEREAL CLOUDS (Soft Atmosphere)
-// ==========================================
-const EtherealCloudsScene = () => (
+const EtherealCloudsScene = ({ dense, animate }) => (
   <group>
-    <color attach="background" args={['#88ccff']} />
-    <Float speed={0.5} rotationIntensity={0.1} floatIntensity={0.5}>
-       <Cloud texture={CLOUD_URL} opacity={0.5} speed={0.1} width={20} depth={2} segments={20} position={[0, 0, -15]} color="white" />
-       <Cloud texture={CLOUD_URL} opacity={0.3} speed={0.1} width={10} depth={1} segments={10} position={[-5, 2, -10]} color="#ffdddd" />
-    </Float>
-    <ambientLight intensity={1} />
+    <color attach="background" args={['#0f172a']} />
+    <MotionGroup enabled={animate} speed={0.28} rotationIntensity={0.04} floatIntensity={0.12}>
+      <Cloud texture={CLOUD_URL} opacity={0.32} speed={animate ? 0.06 : 0} width={dense ? 18 : 14} depth={1.4} segments={dense ? 12 : 8} position={[0, 0, -15]} color="#ffffff" />
+      <Cloud texture={CLOUD_URL} opacity={0.2} speed={animate ? 0.04 : 0} width={dense ? 10 : 8} depth={1} segments={8} position={[-5, 2, -10]} color="#bfdbfe" />
+    </MotionGroup>
+    <ambientLight intensity={0.9} />
   </group>
 );
 
-
-// ==========================================
-// 🌐 11. CYBER CIRCUIT (Blue Grid)
-// ==========================================
-const CyberCircuitScene = () => {
+const CyberCircuitScene = ({ dense, animate }) => {
   const gridRef = useRef();
-  useFrame((state) => {
-    if (gridRef.current) {
-        gridRef.current.position.z = (state.clock.elapsedTime * 2) % 5;
-        gridRef.current.position.x = Math.sin(state.clock.elapsedTime * 0.5) * 2;
-    }
+
+  useFrame((state, delta) => {
+    if (!animate || !gridRef.current) return;
+    gridRef.current.position.z = (gridRef.current.position.z + delta * 1.15) % 5;
+    gridRef.current.position.x = Math.sin(state.clock.elapsedTime * 0.35) * 1.1;
   });
+
   return (
     <group rotation={[Math.PI / 3, 0, 0]} position={[0, -2, -10]}>
-      <gridHelper ref={gridRef} args={[60, 30, 0x00ffff, 0x003333]} />
-      <fog attach="fog" args={['#000', 2, 25]} />
-      <Stars radius={40} count={500} factor={3} fade speed={0.5} color="#00ffff" />
+      <gridHelper ref={gridRef} args={[60, dense ? 28 : 18, 0x00ffff, 0x003333]} />
+      <fog attach="fog" args={['#000000', 2, 22]} />
+      <Stars radius={34} count={dense ? 240 : 120} factor={2.3} fade speed={animate ? 0.12 : 0} color="#00ffff" />
     </group>
   );
 };
 
-// ==========================================
-// 🧬 12. DIGITAL DNA (Rotating Helix)
-// ==========================================
-const DNAScene = () => {
-  const group = useRef();
-  useFrame((state) => {
-    if (group.current) group.current.rotation.y = state.clock.elapsedTime * 0.5;
-  });
-  
+const DNAScene = ({ dense, animate }) => {
+  const groupRef = useRef();
+  const pointCount = dense ? 72 : 40;
+
   const points = useMemo(() => {
-    const p = [];
-    for(let i = 0; i < 100; i++) {
-        const t = i * 0.2;
-        p.push(new THREE.Vector3(Math.sin(t), i * 0.1 - 5, Math.cos(t)));
-        p.push(new THREE.Vector3(Math.sin(t + Math.PI), i * 0.1 - 5, Math.cos(t + Math.PI)));
+    const nextPoints = [];
+    for (let i = 0; i < pointCount; i += 1) {
+      const t = i * 0.28;
+      nextPoints.push(new THREE.Vector3(Math.sin(t), i * 0.12 - 4.5, Math.cos(t)));
+      nextPoints.push(new THREE.Vector3(Math.sin(t + Math.PI), i * 0.12 - 4.5, Math.cos(t + Math.PI)));
     }
-    return p;
-  }, []);
+    return nextPoints;
+  }, [pointCount]);
 
   const geometry = useMemo(() => new THREE.BufferGeometry().setFromPoints(points), [points]);
 
+  useEffect(() => () => geometry.dispose(), [geometry]);
+
+  useFrame((_, delta) => {
+    if (!animate || !groupRef.current) return;
+    groupRef.current.rotation.y += delta * 0.28;
+  });
+
   return (
-    <group ref={group} rotation={[0, 0, Math.PI / 4]}>
-      <Points limit={1000} range={1000}>
+    <group ref={groupRef} rotation={[0, 0, Math.PI / 5]}>
+      <Points limit={pointCount * 2} range={pointCount * 2}>
         <primitive object={geometry} attach="geometry" />
-        <PointMaterial transparent vertexColors size={0.15} sizeAttenuation={true} depthWrite={false} color="#00ff88" />
+        <PointMaterial transparent size={dense ? 0.14 : 0.16} sizeAttenuation depthWrite={false} color="#00ff88" />
       </Points>
-      <Stars radius={50} count={1000} factor={2} fade speed={0.2} />
+      <Stars radius={36} count={dense ? 260 : 120} factor={1.8} fade speed={animate ? 0.08 : 0} />
     </group>
   );
 };
 
-// ==========================================
-// 💻 13. BINARY STREAM (Data Flow)
-// ==========================================
-const BinaryStreamScene = () => (
+const BinaryStreamScene = ({ dense, animate }) => (
   <group>
-    <Sparkles 
-        count={300}
-        scale={[20, 10, 0]}
-        size={4}
-        speed={2}
-        opacity={0.5}
-        color="#00ff00"
-        noise={1} // Horizontal noise
-    />
-    <Float speed={5} rotationIntensity={0} floatIntensity={0}>
-        <Box args={[0.1, 20, 0.1]} position={[-5, 0, -5]}>
-            <meshBasicMaterial color="#003300" transparent opacity={0.5} />
-        </Box>
-        <Box args={[0.1, 20, 0.1]} position={[5, 0, -5]}>
-            <meshBasicMaterial color="#003300" transparent opacity={0.5} />
-        </Box>
-    </Float>
+    <Sparkles count={dense ? 110 : 60} scale={[18, 9, 0]} size={dense ? 3 : 2.4} speed={animate ? 0.45 : 0} opacity={0.32} color="#00ff88" noise={0.4} />
+    <MotionGroup enabled={animate} speed={0.65} rotationIntensity={0} floatIntensity={0.08}>
+      <Box args={[0.08, 16, 0.08]} position={[-4.5, 0, -5]}>
+        <meshBasicMaterial color="#064e3b" transparent opacity={0.45} />
+      </Box>
+      <Box args={[0.08, 16, 0.08]} position={[4.5, 0, -5]}>
+        <meshBasicMaterial color="#064e3b" transparent opacity={0.45} />
+      </Box>
+    </MotionGroup>
   </group>
 );
 
-// ==========================================
-// 🔗 14. NETWORK NODES (Connected Dots)
-// ==========================================
-const NetworkScene = () => (
-  <group>
-    <Stars radius={30} count={200} factor={6} fade speed={0.5} color="#4488ff" />
-    <group position={[0,0,-5]}>
-        {[...Array(5)].map((_, i) => (
-            <Float key={i} speed={1} rotationIntensity={1} floatIntensity={2} position={[Math.random()*10-5, Math.random()*6-3, Math.random()*5-5]}>
-                <Icosahedron args={[0.2, 0]}>
-                    <meshBasicMaterial color="#4488ff" wireframe />
-                </Icosahedron>
-            </Float>
-        ))}
-        {/* Fake connections using large sparkles or lines is hard, stick to aesthetic */}
-        <Sparkles count={50} scale={15} size={2} speed={0.2} opacity={0.3} color="#4488ff" />
-    </group>
-  </group>
-);
-
-
-// ==========================================
-// 🌊 16. PARTICLE WAVE (Sinusoidal Points)
-// ==========================================
-const ParticleWaveScene = () => {
-    const points = useMemo(() => {
-        const p = [];
-        for(let x=0; x<50; x++) {
-            for(let z=0; z<50; z++) {
-                p.push(new THREE.Vector3((x-25)*0.5, 0, (z-25)*0.5));
-            }
-        }
-        return p;
-    }, []);
-    
-    const geometry = useMemo(() => new THREE.BufferGeometry().setFromPoints(points), [points]);
-    
-    const ref = useRef();
-    useFrame((state) => {
-        if (!ref.current) return;
-        const geom = ref.current.geometry;
-        if (!geom) return;
-        
-        const positions = geom.attributes.position.array;
-        const t = state.clock.elapsedTime;
-        for(let i=0; i<positions.length; i+=3) {
-            const x = positions[i];
-            const z = positions[i+2];
-            positions[i+1] = Math.sin(x * 0.5 + t) * Math.cos(z * 0.5 + t) * 1.5;
-        }
-        geom.attributes.position.needsUpdate = true;
-    });
-
-    return (
-        <group rotation={[Math.PI/6, 0, 0]} position={[0, -2, -5]}>
-            <points ref={ref} geometry={geometry}>
-                <PointMaterial transparent size={0.1} color="#ff00aa" />
-            </points>
-        </group>
-    );
-};
-
-
-
-// ==========================================
-// 🪐 19. ORBITAL RINGS (Rotating Atoms)
-// ==========================================
-const OrbitalScene = () => {
-    const g1 = useRef();
-    const g2 = useRef();
-    const g3 = useRef();
-    useFrame((state) => {
-        const t = state.clock.elapsedTime;
-        if(g1.current) g1.current.rotation.set(t*0.2, t*0.3, 0);
-        if(g2.current) g2.current.rotation.set(t*0.3, 0, t*0.2);
-        if(g3.current) g3.current.rotation.set(0, t*0.2, t*0.4);
-    });
-    return (
-        <group>
-            <Sphere args={[0.5, 32, 32]}>
-                <meshStandardMaterial color="#ff3366" emissive="#aa0033" emissiveIntensity={2} />
-            </Sphere>
-            <group ref={g1}><Torus args={[3, 0.02, 16, 100]}><meshBasicMaterial color="#ff3366" /></Torus></group>
-            <group ref={g2}><Torus args={[4, 0.02, 16, 100]}><meshBasicMaterial color="#ff3366" /></Torus></group>
-            <group ref={g3}><Torus args={[5, 0.02, 16, 100]}><meshBasicMaterial color="#ff3366" /></Torus></group>
-            <Stars radius={50} count={500} factor={2} fade />
-        </group>
-    );
-};
-
-
-
-
-
-// ==========================================
-// 🚀 MAIN SYSTEM
-// ==========================================
-
-const BackgroundSystem = ({ forcedTheme = null }) => {
-  const { t } = useTranslation();
-  const { backgroundScene, settings } = useSettings();
-  
-  const scenes = useMemo(() => ({
-    space: { name: t('themes.space.name'), icon: SparklesIcon, component: DeepSpaceScene, desc: t('themes.space.desc'), color: 'text-purple-400', bg: 'bg-purple-500/20' },
-    grid: { name: t('themes.grid.name'), icon: Grid, component: RetroGridScene, desc: t('themes.grid.desc'), color: 'text-pink-400', bg: 'bg-pink-500/20' },
-    embers: { name: t('themes.embers.name'), icon: Flame, component: FireEmbersScene, desc: t('themes.embers.desc'), color: 'text-orange-400', bg: 'bg-orange-500/20' },
-    crystal: { name: t('themes.crystal.name'), icon: Hexagon, component: CrystalCaveScene, desc: t('themes.crystal.desc'), color: 'text-cyan-400', bg: 'bg-cyan-500/20' },
-    clouds: { name: t('themes.clouds.name'), icon: Mountain, component: EtherealCloudsScene, desc: t('themes.clouds.desc'), color: 'text-sky-300', bg: 'bg-sky-500/20' },
-    
-    // New Scenes
-    cyber: { name: t('themes.cyber.name'), icon: Cpu, component: CyberCircuitScene, desc: t('themes.cyber.desc'), color: 'text-cyan-500', bg: 'bg-cyan-500/20' },
-    dna: { name: t('themes.dna.name'), icon: Dna, component: DNAScene, desc: t('themes.dna.desc'), color: 'text-green-500', bg: 'bg-green-500/20' },
-    binary: { name: t('themes.binary.name'), icon: Binary, component: BinaryStreamScene, desc: t('themes.binary.desc'), color: 'text-green-300', bg: 'bg-green-500/20' },
-    network: { name: t('themes.network.name'), icon: Network, component: NetworkScene, desc: t('themes.network.desc'), color: 'text-blue-500', bg: 'bg-blue-500/20' },
-    wave: { name: t('themes.wave.name'), icon: Waves, component: ParticleWaveScene, desc: t('themes.wave.desc'), color: 'text-pink-500', bg: 'bg-pink-500/20' },
-    orbit: { name: t('themes.orbit.name'), icon: Orbit, component: OrbitalScene, desc: t('themes.orbit.desc'), color: 'text-rose-400', bg: 'bg-rose-500/20' },
-  }), [t]);
-
-  // Use forcedTheme if provided, otherwise use global setting
-  const activeScene = forcedTheme || backgroundScene;
-  const CurrentScene = (scenes[activeScene] || scenes['cyber']).component;
-
-  const [dpr, setDpr] = useState(1.5);
-  const [perfSufficient, setPerfSufficient] = useState(true);
-
-  // Check if mobile on mount
-  useEffect(() => {
-    const checkMobile = () => {
-      if (window.innerWidth < 768) {
-        setDpr(1); // Start with lower DPR on mobile
-        setPerfSufficient(false); // Disable heavy post-processing by default on mobile
-      }
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+const NetworkScene = ({ dense, animate }) => {
+  const nodes = useMemo(
+    () => Array.from({ length: dense ? 6 : 4 }, (_, index) => [
+      Math.sin(index * 1.7) * 4.2,
+      Math.cos(index * 1.4) * 2.4,
+      -4 - index * 0.5
+    ]),
+    [dense]
+  );
 
   return (
-    <>
-      <div className="fixed inset-0 -z-10 bg-black" style={{ filter: `brightness(${settings.background_brightness || 1})` }}>
-        <Canvas dpr={dpr} camera={{ position: [0, 0, 10], fov: 60 }} gl={{ antialias: false, powerPreference: "high-performance" }}>
-          <PerformanceMonitor onDecline={() => { setDpr(1); setPerfSufficient(false); }} onIncline={() => { setDpr(1.5); setPerfSufficient(true); }} />
+    <group>
+      <Stars radius={28} count={dense ? 120 : 60} factor={3.5} fade speed={animate ? 0.1 : 0} color="#4488ff" />
+      <group position={[0, 0, -5]}>
+        {nodes.map((position, index) => (
+          <MotionGroup key={`${position.join('-')}-${index}`} enabled={animate} speed={0.45} rotationIntensity={0.2} floatIntensity={0.18}>
+            <Icosahedron args={[0.18, 0]} position={position}>
+              <meshBasicMaterial color="#60a5fa" wireframe />
+            </Icosahedron>
+          </MotionGroup>
+        ))}
+        <Sparkles count={dense ? 22 : 12} scale={12} size={1.6} speed={animate ? 0.08 : 0} opacity={0.18} color="#60a5fa" />
+      </group>
+    </group>
+  );
+};
+
+const ParticleWaveScene = ({ dense, animate }) => {
+  const waveRef = useRef();
+  const throttleRef = useRef(0);
+  const dimension = dense ? 20 : 14;
+
+  const points = useMemo(() => {
+    const nextPoints = [];
+    for (let x = 0; x < dimension; x += 1) {
+      for (let z = 0; z < dimension; z += 1) {
+        nextPoints.push(new THREE.Vector3((x - dimension / 2) * 0.75, 0, (z - dimension / 2) * 0.75));
+      }
+    }
+    return nextPoints;
+  }, [dimension]);
+
+  const geometry = useMemo(() => new THREE.BufferGeometry().setFromPoints(points), [points]);
+
+  useEffect(() => () => geometry.dispose(), [geometry]);
+
+  useFrame((state, delta) => {
+    if (!animate || !waveRef.current) return;
+
+    throttleRef.current += delta;
+    if (throttleRef.current < 1 / 24) return;
+    throttleRef.current = 0;
+
+    const positions = waveRef.current.geometry?.attributes?.position?.array;
+    if (!positions) return;
+
+    const t = state.clock.elapsedTime * 0.7;
+    for (let index = 0; index < positions.length; index += 3) {
+      const x = positions[index];
+      const z = positions[index + 2];
+      positions[index + 1] = Math.sin(x * 0.55 + t) * Math.cos(z * 0.55 + t) * 0.7;
+    }
+    waveRef.current.geometry.attributes.position.needsUpdate = true;
+  });
+
+  return (
+    <group rotation={[Math.PI / 6, 0, 0]} position={[0, -2, -5]}>
+      <points ref={waveRef} geometry={geometry}>
+        <PointMaterial transparent size={dense ? 0.12 : 0.14} color="#ff00aa" depthWrite={false} />
+      </points>
+    </group>
+  );
+};
+
+const OrbitalScene = ({ dense, animate }) => {
+  const ringA = useRef();
+  const ringB = useRef();
+  const ringC = useRef();
+
+  useFrame((_, delta) => {
+    if (!animate) return;
+    if (ringA.current) ringA.current.rotation.x += delta * 0.18;
+    if (ringA.current) ringA.current.rotation.y += delta * 0.24;
+    if (ringB.current) ringB.current.rotation.x += delta * 0.28;
+    if (ringB.current) ringB.current.rotation.z += delta * 0.18;
+    if (ringC.current) ringC.current.rotation.y += delta * 0.16;
+    if (ringC.current) ringC.current.rotation.z += delta * 0.3;
+  });
+
+  return (
+    <group>
+      <Sphere args={[0.45, dense ? 18 : 12, dense ? 18 : 12]}>
+        <meshStandardMaterial color="#ff3366" emissive="#aa0033" emissiveIntensity={1.35} />
+      </Sphere>
+      <group ref={ringA}>
+        <Torus args={[3, 0.02, 10, dense ? 60 : 42]}>
+          <meshBasicMaterial color="#ff3366" />
+        </Torus>
+      </group>
+      <group ref={ringB}>
+        <Torus args={[4, 0.02, 10, dense ? 60 : 42]}>
+          <meshBasicMaterial color="#fb7185" />
+        </Torus>
+      </group>
+      <group ref={ringC}>
+        <Torus args={[5, 0.02, 10, dense ? 60 : 42]}>
+          <meshBasicMaterial color="#fda4af" />
+        </Torus>
+      </group>
+      <Stars radius={34} count={dense ? 180 : 90} factor={1.8} fade speed={animate ? 0.08 : 0} />
+    </group>
+  );
+};
+
+const sceneMap = {
+  space: DeepSpaceScene,
+  grid: RetroGridScene,
+  embers: FireEmbersScene,
+  crystal: CrystalCaveScene,
+  clouds: EtherealCloudsScene,
+  cyber: CyberCircuitScene,
+  dna: DNAScene,
+  binary: BinaryStreamScene,
+  network: NetworkScene,
+  wave: ParticleWaveScene,
+  orbit: OrbitalScene
+};
+
+const BackgroundSystem = ({ forcedTheme = null }) => {
+  const { backgroundScene, settings, uiMode } = useSettings();
+  const prefersReducedMotion = useReducedMotion();
+  const [viewportWidth, setViewportWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1440));
+
+  // 调试：输出 uiMode 和背景场景
+  useEffect(() => {
+    console.log('[BackgroundSystem] uiMode:', uiMode, 'backgroundScene:', backgroundScene, 'forcedTheme:', forcedTheme);
+  }, [uiMode, backgroundScene, forcedTheme]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const handleResize = () => setViewportWidth(window.innerWidth);
+    handleResize();
+    window.addEventListener('resize', handleResize, { passive: true });
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const profile = useMemo(() => {
+    if (typeof navigator === 'undefined') {
+      return {
+        tier: 'medium',
+        dense: false,
+        animate: false,
+        useCanvas: true,
+        dpr: 0.9,
+        enableComposer: false
+      };
+    }
+
+    const connection = navigator.connection;
+    const effectiveType = connection?.effectiveType || '';
+    const saveDataEnabled = connection?.saveData === true;
+    const slowNetwork = effectiveType === 'slow-2g' || effectiveType === '2g';
+    const hardwareConcurrency = navigator.hardwareConcurrency || 8;
+    const deviceMemory = navigator.deviceMemory || 8;
+    const lowTier = prefersReducedMotion || saveDataEnabled || slowNetwork || hardwareConcurrency <= 4 || deviceMemory <= 4;
+    const mediumTier = !lowTier && (viewportWidth < 1440 || hardwareConcurrency <= 8 || deviceMemory <= 8);
+
+    return {
+      tier: lowTier ? 'low' : mediumTier ? 'medium' : 'high',
+      dense: !mediumTier && !lowTier,
+      animate: !prefersReducedMotion && !saveDataEnabled && !slowNetwork,
+      useCanvas: true, // Always render Canvas for theme effects
+      dpr: lowTier ? 0.7 : mediumTier ? 0.9 : 1.1,
+      enableComposer: !mediumTier && deviceMemory > 8
+    };
+  }, [prefersReducedMotion, viewportWidth]);
+
+  const activeScene = forcedTheme || backgroundScene || 'cyber';
+  const CurrentScene = sceneMap[activeScene] || sceneMap.cyber;
+  const themeMode = uiMode === 'day' ? 'day' : 'dark';
+  const themeStyle = themeStyles[themeMode]?.[activeScene] || themeStyles[themeMode]?.cyber || themeStyles.dark.cyber;
+  const brightness = Number.parseFloat(settings.background_brightness || 1);
+  const bloomIntensity = Number.parseFloat(settings.background_bloom || 0.55);
+  const vignetteDarkness = Number.parseFloat(settings.background_vignette || 0.45);
+
+  // 调试：输出 profile 信息
+  useEffect(() => {
+    console.log('[BackgroundSystem] profile:', profile, 'themeMode:', themeMode, 'activeScene:', activeScene);
+  }, [profile, themeMode, activeScene]);
+
+  return (
+    <div className={`fixed inset-0 -z-10 overflow-hidden ${themeMode === 'day' ? 'bg-[#f8fafc]' : 'bg-black'}`} style={{ filter: `brightness(${brightness})` }}>
+      <div className="absolute inset-0" style={{ background: themeStyle.gradient }} />
+      <div
+        className="absolute left-1/2 top-0 h-[40vw] w-[40vw] min-h-[280px] min-w-[280px] -translate-x-1/2 rounded-full blur-3xl"
+        style={{ backgroundColor: themeStyle.orb, opacity: profile.tier === 'high' ? 0.24 : 0.16 }}
+      />
+      {profile.useCanvas ? (
+        <Canvas
+          dpr={profile.dpr}
+          camera={{ position: [0, 0, 10], fov: 60 }}
+          gl={{
+            antialias: false,
+            alpha: true,
+            powerPreference: profile.tier === 'high' ? 'high-performance' : 'default',
+            depth: false,
+            stencil: false
+          }}
+        >
           <Suspense fallback={null}>
-            <CurrentScene />
-            {perfSufficient && (
-              <EffectComposer disableNormalPass>
-                <Bloom 
-                  luminanceThreshold={0.5} 
-                  mipmapBlur 
-                  intensity={parseFloat(settings.background_bloom || 0.8)} 
-                  radius={0.4} 
-                />
-                <Noise opacity={0.02} />
-                <Vignette 
-                  offset={0.5} 
-                  darkness={parseFloat(settings.background_vignette || 0.5)} 
-                />
+            {/* 测试：渲染一个明显的立方体 */}
+            <mesh rotation={[0, 0, 0]}>
+              <boxGeometry args={[2, 2, 2]} />
+              <meshNormalMaterial />
+            </mesh>
+            <CurrentScene dense={profile.dense} animate={profile.animate} />
+            {profile.enableComposer && (
+              <EffectComposer disableNormalPass multisampling={0}>
+                <Bloom luminanceThreshold={0.55} mipmapBlur intensity={Math.min(bloomIntensity, 0.65)} radius={0.25} />
+                <Noise opacity={0.015} />
+                <Vignette offset={0.35} darkness={Math.min(vignetteDarkness, 0.45)} />
               </EffectComposer>
             )}
           </Suspense>
         </Canvas>
-      </div>
-    </>
+      ) : null}
+      {/* 根据白天/黑夜模式使用不同的遮罩颜色 */}
+      <div 
+        className="absolute inset-0" 
+        style={{ 
+          background: themeMode === 'day' 
+            ? 'radial-gradient(circle_at_center,transparent_0%,rgba(255,255,255,0.12)_72%,rgba(255,255,255,0.18)_100%)'
+            : 'radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.42)_72%,rgba(0,0,0,0.72)_100%)'
+        }} 
+      />
+    </div>
   );
 };
 

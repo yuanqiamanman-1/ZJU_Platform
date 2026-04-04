@@ -232,6 +232,27 @@ async function runMigrations(db) {
   }
 
   try {
+    await db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_photos_status_deleted_created_at ON photos(status, deleted_at, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_music_status_deleted_created_at ON music(status, deleted_at, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_videos_status_deleted_created_at ON videos(status, deleted_at, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_articles_status_deleted_created_at ON articles(status, deleted_at, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_events_status_deleted_date ON events(status, deleted_at, date DESC);
+      CREATE INDEX IF NOT EXISTS idx_events_status_deleted_views ON events(status, deleted_at, views DESC);
+      CREATE INDEX IF NOT EXISTS idx_events_uploader_id ON events(uploader_id);
+      CREATE INDEX IF NOT EXISTS idx_articles_uploader_id ON articles(uploader_id);
+      CREATE INDEX IF NOT EXISTS idx_videos_uploader_id ON videos(uploader_id);
+      CREATE INDEX IF NOT EXISTS idx_music_uploader_id ON music(uploader_id);
+      CREATE INDEX IF NOT EXISTS idx_photos_uploader_id ON photos(uploader_id);
+    `);
+    console.log('✅ Resource indexes ready');
+  } catch (err) {
+    if (!err.message.includes('already exists')) {
+      console.warn('Migration warning (resource indexes):', err.message);
+    }
+  }
+
+  try {
     const eventsInfo = await db.all(`PRAGMA table_info(events)`);
     const eventColumns = eventsInfo.map(col => col.name);
 

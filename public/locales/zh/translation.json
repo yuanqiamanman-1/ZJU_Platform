@@ -168,6 +168,11 @@
     "admin": "管理",
     "search_title": "搜索",
     "theme_settings": "主题设置",
+    "appearance_mode": "界面模式",
+    "day_mode": "白天模式",
+    "night_mode": "黑夜模式",
+    "day_mode_hint": "明亮、柔和、通透",
+    "night_mode_hint": "深邃、沉浸、克制",
     "cursor_enable": "启用自定义光标",
     "cursor_disable": "禁用自定义光标"
   },
@@ -509,6 +514,14 @@
     "visit_link": "前往活动",
     "no_link_available": "暂无链接",
     "view_count": "次访问",
+    "view_count_label": "访问热度",
+    "view_count_hint": "仅作活动热度参考",
+    "view_heat": {
+      "new": "新上架",
+      "rising": "升温中",
+      "hot": "热门",
+      "viral": "爆火"
+    },
     "processing": "处理中...",
     "signed_up": "已报名",
     "sign_up_now": "立即报名",

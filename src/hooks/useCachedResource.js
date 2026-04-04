@@ -1,6 +1,88 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import api from '../services/api';
 
+const memoryCache = new Map();
+const inflightRequests = new Map();
+
+const buildRequestKey = (keyPrefix, endpoint, params = {}) => {
+    const sortedParams = Object.keys(params).sort().reduce((acc, key) => {
+        const value = params[key];
+        if (value !== undefined && value !== null && value !== '') {
+            acc[key] = value;
+        }
+        return acc;
+    }, {});
+
+    const queryString = new URLSearchParams(sortedParams).toString();
+    const cacheKey = `${keyPrefix}${endpoint}?${queryString}`;
+    return { cacheKey, queryString };
+};
+
+const readStoredCache = (cacheKey) => {
+    const memoryValue = memoryCache.get(cacheKey);
+    if (memoryValue) return memoryValue;
+
+    const cached = localStorage.getItem(cacheKey);
+    if (!cached) return null;
+
+    try {
+        const parsed = JSON.parse(cached);
+        memoryCache.set(cacheKey, parsed);
+        return parsed;
+    } catch (error) {
+        console.warn('Cache parse error', error);
+        localStorage.removeItem(cacheKey);
+        memoryCache.delete(cacheKey);
+        return null;
+    }
+};
+
+const persistCache = (cacheKey, payload) => {
+    memoryCache.set(cacheKey, payload);
+    setTimeout(() => {
+        try {
+            localStorage.setItem(cacheKey, JSON.stringify(payload));
+        } catch (error) {
+            console.warn('Failed to save to cache', error);
+        }
+    }, 0);
+};
+
+const fetchAndCacheResource = async (endpoint, requestParams, cacheKey, requestOptions = {}) => {
+    const existingRequest = inflightRequests.get(cacheKey);
+    if (existingRequest) return existingRequest;
+
+    const requestPromise = api.get(endpoint, { params: requestParams, ...requestOptions }).then((res) => {
+        const newData = res.data.data !== undefined ? res.data.data : res.data;
+        const newPagination = res.data.pagination || {};
+        const payload = {
+            data: newData,
+            pagination: newPagination,
+            timestamp: Date.now()
+        };
+        persistCache(cacheKey, payload);
+        return payload;
+    }).finally(() => {
+        inflightRequests.delete(cacheKey);
+    });
+
+    inflightRequests.set(cacheKey, requestPromise);
+    return requestPromise;
+};
+
+export const prefetchCachedResource = async (endpoint, params = {}, options = {}) => {
+    const { keyPrefix = 'cache:', ttl = 24 * 60 * 60 * 1000, silent = false } = options;
+    const { cacheKey, queryString } = buildRequestKey(keyPrefix, endpoint, params);
+    const cached = readStoredCache(cacheKey);
+
+    if (cached && Date.now() - cached.timestamp < ttl) {
+        return cached;
+    }
+
+    const requestParams = Object.fromEntries(new URLSearchParams(queryString));
+    return fetchAndCacheResource(endpoint, requestParams, cacheKey, { silent });
+};
+
 /**
  * Custom hook to fetch data with local storage caching (Stale-While-Revalidate)
  * @param {string} endpoint - API endpoint (e.g., '/photos')
@@ -13,7 +95,8 @@ export const useCachedResource = (endpoint, params = {}, options = {}) => {
         keyPrefix = 'cache:', 
         ttl = 24 * 60 * 60 * 1000, // 24 hours default
         enabled = true,
-        dependencies = [] // Extra dependencies to trigger refresh
+        dependencies = [], // Extra dependencies to trigger refresh
+        silent = false
     } = options;
 
     const [data, setData] = useState([]);
@@ -22,18 +105,7 @@ export const useCachedResource = (endpoint, params = {}, options = {}) => {
     const [error, setError] = useState(null);
     const [refreshKey, setRefreshKey] = useState(0);
 
-    const queryString = useMemo(() => {
-        const sortedParams = Object.keys(params).sort().reduce((acc, key) => {
-            const value = params[key];
-            if (value !== undefined && value !== null) {
-                acc[key] = value;
-            }
-            return acc;
-        }, {});
-        return new URLSearchParams(sortedParams).toString();
-    }, [params]);
-
-    const cacheKey = useMemo(() => `${keyPrefix}${endpoint}?${queryString}`, [keyPrefix, endpoint, queryString]);
+    const { cacheKey, queryString } = useMemo(() => buildRequestKey(keyPrefix, endpoint, params), [keyPrefix, endpoint, params]);
 
     const dependenciesKey = useMemo(() => {
         try {
@@ -47,6 +119,7 @@ export const useCachedResource = (endpoint, params = {}, options = {}) => {
         const shouldClearCache = opts === true || opts?.clearCache === true;
         if (shouldClearCache) {
             localStorage.removeItem(cacheKey);
+            memoryCache.delete(cacheKey);
         }
         setRefreshKey((prev) => prev + 1);
     }, [cacheKey]);
@@ -55,25 +128,18 @@ export const useCachedResource = (endpoint, params = {}, options = {}) => {
         if (!enabled) return;
 
         const fetchData = async () => {
-            // 1. Try to load from cache
-            const cached = localStorage.getItem(cacheKey);
+            const now = Date.now();
+            const cached = readStoredCache(cacheKey);
             let hasCache = false;
-            
-            // Only use cache if this is the first load (loading is true) or we want to show stale data
-            // Usually we want to show cache immediately.
+            let isFreshCache = false;
             
             if (cached) {
-                try {
-                    const parsed = JSON.parse(cached);
-                    if (parsed.data !== undefined) {
-                        setData(parsed.data);
-                        if (parsed.pagination) setPagination(parsed.pagination);
-                        setLoading(false);
-                        hasCache = true;
-                    }
-                } catch (e) {
-                    console.warn('Cache parse error', e);
-                    localStorage.removeItem(cacheKey);
+                if (cached.data !== undefined) {
+                    setData(cached.data);
+                    if (cached.pagination) setPagination(cached.pagination);
+                    setLoading(false);
+                    hasCache = true;
+                    isFreshCache = now - (cached.timestamp || 0) < ttl;
                 }
             }
 
@@ -81,41 +147,23 @@ export const useCachedResource = (endpoint, params = {}, options = {}) => {
                 setLoading(true);
             }
 
-            // 2. Network request (Stale-while-revalidate)
+            if (isFreshCache && refreshKey === 0) {
+                setError(null);
+                return;
+            }
+
             try {
                 const requestParams = Object.fromEntries(new URLSearchParams(queryString));
-                const res = await api.get(endpoint, { params: requestParams });
-                
-                // Support both standard envelope { data: [...], pagination: {...} } and direct array
-                const newData = res.data.data !== undefined ? res.data.data : res.data; 
-                const newPagination = res.data.pagination || {};
-
-                // Only update if data actually changed (deep compare is expensive, so we just set it)
-                // React handles reference equality.
-                
-                setData(newData);
-                setPagination(newPagination);
+                const payload = await fetchAndCacheResource(endpoint, requestParams, cacheKey, { silent });
+                setData(payload.data);
+                setPagination(payload.pagination || {});
                 setError(null);
-
-                // Save to cache (non-blocking)
-                setTimeout(() => {
-                    try {
-                        const cachePayload = {
-                            data: newData,
-                            pagination: newPagination,
-                            timestamp: Date.now()
-                        };
-                        localStorage.setItem(cacheKey, JSON.stringify(cachePayload));
-                    } catch (e) {
-                        console.warn('Failed to save to cache', e);
-                    }
-                }, 0);
             } catch (err) {
-                console.error(`Fetch error for ${endpoint}`, err);
+                if (!silent) {
+                    console.error(`Fetch error for ${endpoint}`, err);
+                }
                 if (!hasCache) {
                     setError(err);
-                    // If we have cache, we keep showing it, maybe show a toast in UI if needed?
-                    // For now, we just set error state, consumer can decide.
                 }
             } finally {
                 setLoading(false);
@@ -123,7 +171,7 @@ export const useCachedResource = (endpoint, params = {}, options = {}) => {
         };
 
         fetchData();
-    }, [enabled, cacheKey, endpoint, queryString, refreshKey, ttl, dependenciesKey]);
+    }, [enabled, cacheKey, endpoint, queryString, refreshKey, ttl, dependenciesKey, silent]);
 
     return { data, pagination, loading, error, setData, refresh };
 };

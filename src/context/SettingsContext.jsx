@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext, useMemo, useCallback } from 'react';
+import { createContext, useState, useEffect, useContext, useMemo, useCallback } from 'react';
 import api from '../services/api';
 
 const SettingsContext = createContext();
@@ -35,6 +35,10 @@ export const SettingsProvider = ({ children }) => {
     return localStorage.getItem('background_scene') || 'cyber';
   });
 
+  const [uiMode, setUiMode] = useState(() => {
+    return localStorage.getItem('ui_mode') || 'dark';
+  });
+
   const updateSetting = useCallback((key, value) => {
     return api.post('/settings', { key, value })
       .then(res => {
@@ -52,8 +56,8 @@ export const SettingsProvider = ({ children }) => {
   const changeBackgroundScene = useCallback((scene) => {
     setBackgroundScene(scene);
     localStorage.setItem('background_scene', scene);
-    updateSetting('theme', scene);
-  }, [updateSetting]);
+    // Don't sync to DB - theme preference is user-specific
+  }, []);
 
   const changeBackgroundBrightness = useCallback((value) => {
     updateSetting('background_brightness', value);
@@ -65,6 +69,12 @@ export const SettingsProvider = ({ children }) => {
       localStorage.setItem('cursorEnabled', JSON.stringify(newValue));
       return newValue;
     });
+  }, []);
+
+  const changeUiMode = useCallback((mode) => {
+    const nextMode = mode === 'day' ? 'day' : 'dark';
+    setUiMode(nextMode);
+    localStorage.setItem('ui_mode', nextMode);
   }, []);
 
   const [loading, setLoading] = useState(true);
@@ -90,12 +100,22 @@ export const SettingsProvider = ({ children }) => {
     fetchSettings();
   }, []);
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    document.documentElement.dataset.theme = uiMode;
+    document.documentElement.style.colorScheme = uiMode === 'day' ? 'light' : 'dark';
+    document.body.dataset.theme = uiMode;
+  }, [uiMode]);
+
   const value = useMemo(() => ({
     settings,
     updateSetting,
     loading,
     cursorEnabled,
     toggleCursor,
+    uiMode,
+    changeUiMode,
     backgroundScene,
     changeBackgroundScene,
     changeBackgroundBrightness
@@ -105,6 +125,8 @@ export const SettingsProvider = ({ children }) => {
     loading, 
     cursorEnabled, 
     toggleCursor, 
+    uiMode,
+    changeUiMode,
     backgroundScene, 
     changeBackgroundScene, 
     changeBackgroundBrightness

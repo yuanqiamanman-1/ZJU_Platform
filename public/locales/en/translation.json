@@ -118,6 +118,12 @@
     "events": "Events",
     "admin": "Admin",
     "search_title": "Search",
+    "theme_settings": "Theme Settings",
+    "appearance_mode": "Appearance",
+    "day_mode": "Day Mode",
+    "night_mode": "Night Mode",
+    "day_mode_hint": "Bright, airy, refined",
+    "night_mode_hint": "Deep, immersive, restrained",
     "cursor_enable": "Enable Custom Cursor",
     "cursor_disable": "Disable Custom Cursor"
   },
@@ -392,6 +398,14 @@
     "date": "Date",
     "about_event": "About Event",
     "view_count": "views",
+    "view_count_label": "View Pulse",
+    "view_count_hint": "For popularity reference",
+    "view_heat": {
+      "new": "Fresh",
+      "rising": "Rising",
+      "hot": "Hot",
+      "viral": "Trending"
+    },
     "countdown": {
       "days": "Days",
       "hours": "Hours",

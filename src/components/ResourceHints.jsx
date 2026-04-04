@@ -9,7 +9,10 @@ export const ResourceHints = () => {
   const location = useLocation();
 
   useEffect(() => {
-    // Preconnect to critical domains
+    if (location.pathname.startsWith('/admin')) {
+      return undefined;
+    }
+
     const apiUrl = import.meta.env?.VITE_API_URL || '';
     const preconnectDomains = [
       'https://fonts.googleapis.com',
@@ -25,7 +28,6 @@ export const ResourceHints = () => {
         link.crossOrigin = 'anonymous';
         document.head.appendChild(link);
 
-        // Also add DNS prefetch as fallback
         const dnsLink = document.createElement('link');
         dnsLink.rel = 'dns-prefetch';
         dnsLink.href = domain;
@@ -33,27 +35,31 @@ export const ResourceHints = () => {
       }
     });
 
-    // Prefetch likely next routes
+    const connection = navigator.connection;
+    const saveDataEnabled = connection?.saveData === true;
+    const effectiveType = connection?.effectiveType || '';
+    const slowConnection = effectiveType === 'slow-2g' || effectiveType === '2g';
+
+    if (saveDataEnabled || slowConnection || document.visibilityState === 'hidden') {
+      return undefined;
+    }
+
     const prefetchRoutes = () => {
-      const currentPath = location.pathname;
-      
-      // Define route priorities
       const routeMap = {
-        '/': ['/gallery', '/about'],
-        '/gallery': ['/videos', '/articles'],
-        '/videos': ['/gallery', '/articles'],
-        '/articles': ['/resources', '/events'],
-        '/resources': ['/articles', '/events'],
+        '/': ['/gallery', '/events'],
+        '/gallery': ['/videos'],
+        '/music': ['/events'],
+        '/videos': ['/gallery'],
+        '/articles': ['/events'],
         '/events': ['/about'],
         '/about': ['/']
       };
 
-      const routesToPrefetch = routeMap[currentPath] || [];
+      const routesToPrefetch = routeMap[location.pathname] || [];
       
       routesToPrefetch.forEach(route => {
         const fullUrl = `${window.location.origin}${route}`;
         
-        // Check if not already prefetched
         if (!document.querySelector(`link[rel="prefetch"][href="${fullUrl}"]`)) {
           const link = document.createElement('link');
           link.rel = 'prefetch';
@@ -64,11 +70,22 @@ export const ResourceHints = () => {
       });
     };
 
-    // Delay prefetch to not interfere with current page load
-    const prefetchTimeout = setTimeout(prefetchRoutes, 2000);
+    let timeoutId;
+    let idleId;
+
+    if ('requestIdleCallback' in window) {
+      idleId = window.requestIdleCallback(prefetchRoutes, { timeout: 2500 });
+    } else {
+      timeoutId = window.setTimeout(prefetchRoutes, 2200);
+    }
 
     return () => {
-      clearTimeout(prefetchTimeout);
+      if (idleId) {
+        window.cancelIdleCallback?.(idleId);
+      }
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
   }, [location.pathname]);
 

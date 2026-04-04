@@ -4,17 +4,20 @@ import { Bell, Check, Trash2, X, CheckCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 const NotificationCenter = () => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const { uiMode } = useSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const isDayMode = uiMode === 'day';
 
   const fetchNotifications = async () => {
     if (!user) return;
@@ -124,7 +127,7 @@ const NotificationCenter = () => {
     <div className="relative z-50" ref={dropdownRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-300 hover:text-white transition-colors hover:bg-white/10 rounded-full"
+        className={`relative p-2 transition-colors rounded-full ${isDayMode ? 'text-slate-500 hover:text-slate-900 hover:bg-white/90' : 'text-gray-300 hover:text-white hover:bg-white/10'}`}
       >
         <motion.div
             animate={unreadCount > 0 ? { rotate: [0, -15, 15, -15, 15, 0] } : {}}
@@ -133,7 +136,7 @@ const NotificationCenter = () => {
             <Bell size={20} />
         </motion.div>
         {unreadCount > 0 && (
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-black" />
+          <span className={`absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ${isDayMode ? 'ring-white' : 'ring-black'}`} />
         )}
       </button>
 
@@ -144,10 +147,10 @@ const NotificationCenter = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-2 w-80 md:w-96 bg-[#0a0a0a]/90 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden origin-top-right"
+            className={`absolute right-0 mt-2 w-80 md:w-96 backdrop-blur-3xl border rounded-2xl shadow-2xl overflow-hidden origin-top-right ${isDayMode ? 'bg-white/96 border-slate-200/80 shadow-[0_22px_52px_rgba(148,163,184,0.2)]' : 'bg-[#0a0a0a]/90 border-white/10'}`}
           >
-            <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5">
-              <h3 className="font-bold text-white">{t('notifications.title')}</h3>
+            <div className={`flex items-center justify-between p-4 border-b ${isDayMode ? 'border-slate-200/80 bg-slate-50/90' : 'border-white/10 bg-white/5'}`}>
+              <h3 className={`font-bold ${isDayMode ? 'text-slate-900' : 'text-white'}`}>{t('notifications.title')}</h3>
               {notifications.length > 0 && (
                   <div className="flex gap-2">
                     <button 
@@ -170,31 +173,31 @@ const NotificationCenter = () => {
 
             <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
               {notifications.length === 0 ? (
-                <div className="p-8 text-center text-gray-500 flex flex-col items-center">
-                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-3">
+                <div className={`p-8 text-center flex flex-col items-center ${isDayMode ? 'text-slate-500' : 'text-gray-500'}`}>
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-3 ${isDayMode ? 'bg-slate-100' : 'bg-white/5'}`}>
                         <Bell size={24} className="opacity-50" />
                     </div>
                     <p>{t('notifications.empty')}</p>
                 </div>
               ) : (
-                <div className="divide-y divide-white/5">
+                <div className={`divide-y ${isDayMode ? 'divide-slate-200/70' : 'divide-white/5'}`}>
                   {notifications.map((notification) => (
                     <div 
                       key={notification.id}
                       onClick={() => handleNotificationClick(notification)}
-                      className={`p-4 hover:bg-white/5 transition-colors cursor-pointer group relative ${notification.is_read ? 'opacity-60' : 'bg-indigo-500/5'}`}
+                      className={`p-4 transition-colors cursor-pointer group relative ${notification.is_read ? 'opacity-60' : 'bg-indigo-500/5'} ${isDayMode ? 'hover:bg-slate-50' : 'hover:bg-white/5'}`}
                     >
                       <div className="flex gap-3">
                         <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 transition-colors ${notification.is_read ? 'bg-transparent' : 'bg-indigo-500'}`} />
                         <div className="flex-1 pr-6">
-                          <p className="text-sm text-gray-200 leading-relaxed line-clamp-2">{notification.content}</p>
-                          <p className="text-[10px] text-gray-500 mt-1.5 font-mono">
+                          <p className={`text-sm leading-relaxed line-clamp-2 ${isDayMode ? 'text-slate-700' : 'text-gray-200'}`}>{notification.content}</p>
+                          <p className={`text-[10px] mt-1.5 font-mono ${isDayMode ? 'text-slate-500' : 'text-gray-500'}`}>
                             {formatDate(notification.created_at)}
                           </p>
                         </div>
                         <button 
                           onClick={(e) => handleDelete(notification.id, e)}
-                          className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 rounded-lg transition-all absolute top-2 right-2"
+                          className={`opacity-0 group-hover:opacity-100 p-1.5 rounded-lg transition-all absolute top-2 right-2 ${isDayMode ? 'hover:bg-red-50 text-slate-400 hover:text-red-500' : 'hover:bg-red-500/20 text-gray-400 hover:text-red-400'}`}
                           title={t('common.delete')}
                         >
                           <X size={14} />

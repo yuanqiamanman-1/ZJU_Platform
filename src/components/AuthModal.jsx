@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, Lock, ArrowRight, Loader, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 import { useTranslation } from 'react-i18next';
 import { useBackClose } from '../hooks/useBackClose';
 
@@ -16,6 +17,8 @@ const AuthModal = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { login, register } = useAuth();
+  const { uiMode } = useSettings();
+  const isDayMode = uiMode === 'day';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -49,29 +52,29 @@ const AuthModal = ({ isOpen, onClose }) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-black/40 backdrop-blur-3xl"
+          className={`absolute inset-0 backdrop-blur-3xl ${isDayMode ? 'bg-white/60' : 'bg-black/40'}`}
         />
         
         <motion.div 
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-md bg-[#0a0a0a]/80 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden p-8 z-10"
+          className={`relative w-full max-w-md backdrop-blur-3xl border rounded-2xl shadow-2xl overflow-hidden p-8 z-10 ${isDayMode ? 'bg-white/94 border-slate-200/80 shadow-[0_24px_64px_rgba(148,163,184,0.22)]' : 'bg-[#0a0a0a]/80 border-white/10'}`}
         >
           {/* Glass Effect Background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 opacity-50 pointer-events-none" />
+          <div className={`absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 opacity-50 pointer-events-none ${isDayMode ? '' : ''}`} />
           <button 
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-20 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className={`absolute top-4 right-4 transition-colors z-20 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center ${isDayMode ? 'text-slate-400 hover:text-slate-900' : 'text-gray-400 hover:text-white'}`}
           >
             <X size={20} />
           </button>
 
           <div className="text-center mb-8 relative z-10">
-            <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">
+            <h2 className={`text-3xl font-bold mb-2 tracking-tight ${isDayMode ? 'text-slate-900' : 'text-white'}`}>
               {isLogin ? t('auth.welcome_back') : t('auth.join_lumos')}
             </h2>
-            <p className="text-gray-400 text-sm">
+            <p className={`text-sm ${isDayMode ? 'text-slate-500' : 'text-gray-400'}`}>
               {isLogin ? t('auth.signin_desc') : t('auth.signup_desc')}
             </p>
           </div>
@@ -82,10 +85,10 @@ const AuthModal = ({ isOpen, onClose }) => {
                 initial={{ opacity: 0, y: -10, height: 0 }}
                 animate={{ opacity: 1, y: 0, height: 'auto' }}
                 exit={{ opacity: 0, y: -10, height: 0 }}
-                className="relative z-10 mb-6 bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex items-center gap-3"
+                className={`relative z-10 mb-6 border rounded-xl p-3 flex items-center gap-3 ${isDayMode ? 'bg-red-50 border-red-200/80' : 'bg-red-500/10 border-red-500/20'}`}
               >
                 <AlertCircle className="text-red-400 shrink-0" size={18} />
-                <p className="text-red-200 text-sm font-medium">{error}</p>
+                <p className={`text-sm font-medium ${isDayMode ? 'text-red-600' : 'text-red-200'}`}>{error}</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -94,12 +97,12 @@ const AuthModal = ({ isOpen, onClose }) => {
             <div>
               <label className="block text-xs font-bold text-indigo-400 uppercase mb-2 tracking-wider">{t('auth.username')}</label>
               <div className="relative group">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-indigo-400 transition-colors" size={18} />
+                <User className={`absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-indigo-400 transition-colors ${isDayMode ? 'text-slate-400' : 'text-gray-500'}`} size={18} />
                 <input 
                   type="text" 
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-black/20 border border-white/10 rounded-xl py-3.5 sm:py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 focus:bg-white/5 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300 min-h-[44px]"
+                  className={`w-full border rounded-xl py-3.5 sm:py-3 pl-10 pr-4 focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300 min-h-[44px] ${isDayMode ? 'bg-slate-50 border-slate-200/80 text-slate-900 placeholder-slate-400 focus:bg-white' : 'bg-black/20 border-white/10 text-white placeholder-gray-500 focus:bg-white/5'}`}
                   placeholder={t('auth.username_placeholder')}
                 />
               </div>
@@ -108,12 +111,12 @@ const AuthModal = ({ isOpen, onClose }) => {
             <div>
               <label className="block text-xs font-bold text-indigo-400 uppercase mb-2 tracking-wider">{t('auth.password')}</label>
               <div className="relative group">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-indigo-400 transition-colors" size={18} />
+                <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-indigo-400 transition-colors ${isDayMode ? 'text-slate-400' : 'text-gray-500'}`} size={18} />
                 <input 
                   type="password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-black/20 border border-white/10 rounded-xl py-3.5 sm:py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 focus:bg-white/5 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300 min-h-[44px]"
+                  className={`w-full border rounded-xl py-3.5 sm:py-3 pl-10 pr-4 focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300 min-h-[44px] ${isDayMode ? 'bg-slate-50 border-slate-200/80 text-slate-900 placeholder-slate-400 focus:bg-white' : 'bg-black/20 border-white/10 text-white placeholder-gray-500 focus:bg-white/5'}`}
                   placeholder={t('auth.password_placeholder')}
                   minLength={6}
                 />
@@ -134,11 +137,11 @@ const AuthModal = ({ isOpen, onClose }) => {
             </button>
           </form>
 
-          <div className="mt-8 text-center text-sm text-gray-400 relative z-10">
+          <div className={`mt-8 text-center text-sm relative z-10 ${isDayMode ? 'text-slate-500' : 'text-gray-400'}`}>
             {isLogin ? t('auth.no_account') : t('auth.has_account')}
             <button 
               onClick={() => setIsLogin(!isLogin)}
-              className="text-white hover:text-indigo-400 font-bold ml-1 transition-colors underline decoration-indigo-500/50 hover:decoration-indigo-500 py-2 px-1"
+              className={`font-bold ml-1 transition-colors underline decoration-indigo-500/50 hover:decoration-indigo-500 py-2 px-1 ${isDayMode ? 'text-slate-900 hover:text-indigo-500' : 'text-white hover:text-indigo-400'}`}
             >
               {isLogin ? t('auth.sign_up') : t('auth.log_in')}
             </button>

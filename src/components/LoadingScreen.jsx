@@ -1,40 +1,24 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 
 const LoadingScreen = () => {
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-3xl">
-      <div className="relative w-24 h-24">
-        {/* Outer rotating ring */}
-        <motion.div
-          className="absolute inset-0 rounded-full border-4 border-t-indigo-500 border-r-transparent border-b-purple-500 border-l-transparent"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-xl">
+      <div className="relative h-20 w-20">
+        <div className="absolute inset-0 rounded-full border border-white/10" />
+        <div
+          className="absolute inset-0 rounded-full border-2 border-transparent border-t-indigo-500 border-r-purple-500 animate-spin"
+          style={{ animationDuration: '1.1s' }}
         />
-        
-        {/* Inner rotating ring (reverse) */}
-        <motion.div
-          className="absolute inset-2 rounded-full border-4 border-t-transparent border-r-pink-500 border-b-transparent border-l-cyan-500"
-          animate={{ rotate: -360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        <div
+          className="absolute inset-3 rounded-full border-2 border-transparent border-b-cyan-400 border-l-fuchsia-500 animate-spin"
+          style={{ animationDuration: '1.6s', animationDirection: 'reverse' }}
         />
-        
-        {/* Center pulsing dot */}
-        <motion.div
-          className="absolute inset-[38%] rounded-full bg-white"
-          animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-        />
+        <div className="absolute inset-[42%] rounded-full bg-white/90 animate-pulse" />
       </div>
       
-      {/* Loading text */}
-      <motion.p
-        className="mt-8 text-white/50 text-sm font-medium tracking-[0.2em] uppercase"
-        animate={{ opacity: [0.3, 1, 0.3] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-      >
+      <p className="mt-6 text-white/55 text-xs font-semibold tracking-[0.28em] uppercase animate-pulse">
         Loading
-      </motion.p>
+      </p>
     </div>
   );
 };

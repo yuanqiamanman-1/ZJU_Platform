@@ -13,6 +13,8 @@ export const usePerformanceMonitor = (options = {}) => {
     // Check if PerformanceObserver is supported
     if (!('PerformanceObserver' in window)) return;
 
+    const observers = [];
+
     const observeMetrics = () => {
       // Core Web Vitals
       const vitalsObserver = new PerformanceObserver((list) => {
@@ -51,6 +53,8 @@ export const usePerformanceMonitor = (options = {}) => {
           console.warn('PerformanceObserver not supported for web vitals');
         }
       }
+
+      observers.push(vitalsObserver);
     };
 
     // Resource loading metrics
@@ -79,6 +83,8 @@ export const usePerformanceMonitor = (options = {}) => {
       } catch (e) {
         console.warn('Resource timing not supported');
       }
+
+      observers.push(resourceObserver);
     };
 
     // Navigation timing
@@ -114,7 +120,8 @@ export const usePerformanceMonitor = (options = {}) => {
     }
 
     return () => {
-      // Cleanup
+      window.removeEventListener('load', reportNavigationTiming);
+      observers.forEach((observer) => observer.disconnect());
     };
   }, [enabled, onMetric, reportUrl]);
 

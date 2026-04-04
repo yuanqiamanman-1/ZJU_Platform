@@ -4,6 +4,7 @@ import Dropdown from './Dropdown';
 import api from '../services/api';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSettings } from '../context/SettingsContext';
 
 const AdvancedFilter = ({
     filters,
@@ -15,6 +16,8 @@ const AdvancedFilter = ({
     onLifecycleChange,
 }) => {
     const { t } = useTranslation();
+    const { uiMode } = useSettings();
+    const isDayMode = uiMode === 'day';
     const [options, setOptions] = useState({
         location: [],
         organizer: [],
@@ -40,6 +43,7 @@ const AdvancedFilter = ({
 
     useEffect(() => {
         const fetchOptions = async () => {
+            setLoading(true);
             try {
                 // Prepare params from current filters
                 const params = {};
@@ -49,19 +53,17 @@ const AdvancedFilter = ({
                     }
                 });
 
-                const [locations, organizers, audiences] = await Promise.all([
-                    api.get('/events/distinct/location', { params }),
-                    api.get('/events/distinct/organizer', { params }),
-                    api.get('/events/distinct/target_audience', { params })
+                const [locations, organizers, audiences] = await Promise.allSettled([
+                    api.get('/events/distinct/location', { params, silent: true }),
+                    api.get('/events/distinct/organizer', { params, silent: true }),
+                    api.get('/events/distinct/target_audience', { params, silent: true })
                 ]);
 
                 setOptions({
-                    location: locations.data.map(item => ({ value: item, label: item })),
-                    organizer: organizers.data.map(item => ({ value: item, label: item })),
-                    target_audience: audiences.data.map(item => ({ value: item, label: item }))
+                    location: locations.status === 'fulfilled' ? locations.value.data.map(item => ({ value: item, label: item })) : [],
+                    organizer: organizers.status === 'fulfilled' ? organizers.value.data.map(item => ({ value: item, label: item })) : [],
+                    target_audience: audiences.status === 'fulfilled' ? audiences.value.data.map(item => ({ value: item, label: item })) : []
                 });
-            } catch (error) {
-                console.error("Failed to fetch filter options", error);
             } finally {
                 setLoading(false);
             }
@@ -96,10 +98,10 @@ const AdvancedFilter = ({
 
     const isSheetVariant = variant === 'sheet';
     const containerClasses = variant === 'card'
-        ? "bg-black/20 border border-white/10 rounded-3xl p-4 md:p-6 shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
+        ? `${isDayMode ? 'bg-white/82 border border-slate-200/80 shadow-[0_18px_44px_rgba(148,163,184,0.14)]' : 'bg-black/20 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)]'} rounded-3xl p-4 md:p-6`
         : "";
 
-    if (loading) return <div className="animate-pulse h-24 bg-white/5 rounded-2xl w-full mb-4"></div>;
+    if (loading) return <div className={`animate-pulse h-24 rounded-2xl w-full mb-4 ${isDayMode ? 'bg-white/75 border border-slate-200/80' : 'bg-white/5'}`}></div>;
 
     return (
         <div className={`w-full relative z-20 ${className}`}>
@@ -122,14 +124,14 @@ const AdvancedFilter = ({
                           <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 shadow-[0_0_15px_-5px_rgba(99,102,241,0.3)]">
                               <SlidersHorizontal size={20} />
                           </div>
-                          <h3 className="text-lg font-bold text-white tracking-wide">
+                          <h3 className={`text-lg font-bold tracking-wide ${isDayMode ? 'text-slate-900' : 'text-white'}`}>
                               {t('advanced_filter.title')}
                           </h3>
                           {isMobile && (
                               <motion.div
                                   animate={{ rotate: isCollapsed ? 0 : 180 }}
                                   transition={{ duration: 0.2 }}
-                                  className="ml-2 text-gray-500"
+                                  className={`ml-2 ${isDayMode ? 'text-slate-400' : 'text-gray-500'}`}
                               >
                                   <ChevronDown size={16} />
                               </motion.div>
@@ -141,7 +143,7 @@ const AdvancedFilter = ({
                               initial={{ opacity: 0, scale: 0.9 }}
                               animate={{ opacity: 1, scale: 1 }}
                               onClick={clearFilters}
-                              className="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all border border-red-500/10"
+                              className={`text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all border ${isDayMode ? 'bg-red-50 text-red-500 hover:bg-red-100 border-red-200/80' : 'bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 border-red-500/10'}`}
                           >
                               <X size={12} />
                               {t('advanced_filter.clear')}
@@ -171,7 +173,7 @@ const AdvancedFilter = ({
                                         icon={icon}
                                         placeholder={t(labelKey)}
                                         variant={variant}
-                                        buttonClassName={`${isSheetVariant ? 'w-full py-3.5 rounded-2xl text-sm backdrop-blur-sm transition-all shadow-sm' : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-indigo-500/30 hover:shadow-[0_0_20px_-5px_rgba(99,102,241,0.3)] w-full py-2.5 rounded-xl text-white text-sm backdrop-blur-sm transition-all shadow-lg'}`}
+                                        buttonClassName={`${isSheetVariant ? 'w-full py-3.5 rounded-2xl text-sm backdrop-blur-sm transition-all shadow-sm' : isDayMode ? 'bg-white/88 border border-slate-200/80 hover:bg-white hover:border-indigo-200/80 w-full py-2.5 rounded-xl text-slate-700 text-sm backdrop-blur-sm transition-all shadow-[0_12px_28px_rgba(148,163,184,0.12)]' : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-indigo-500/30 hover:shadow-[0_0_20px_-5px_rgba(99,102,241,0.3)] w-full py-2.5 rounded-xl text-white text-sm backdrop-blur-sm transition-all shadow-lg'}`}
                                     />
                                 ))}
                                 {/* Lifecycle filter lives here alongside attribute filters */}
@@ -182,7 +184,7 @@ const AdvancedFilter = ({
                                         options={lifecycleOptions}
                                         icon={Filter}
                                         variant={variant}
-                                        buttonClassName={`${isSheetVariant ? 'w-full py-3.5 rounded-2xl text-sm backdrop-blur-sm transition-all shadow-sm' : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-indigo-500/30 hover:shadow-[0_0_20px_-5px_rgba(99,102,241,0.3)] w-full py-2.5 rounded-xl text-white text-sm backdrop-blur-sm transition-all shadow-lg'}`}
+                                        buttonClassName={`${isSheetVariant ? 'w-full py-3.5 rounded-2xl text-sm backdrop-blur-sm transition-all shadow-sm' : isDayMode ? 'bg-white/88 border border-slate-200/80 hover:bg-white hover:border-indigo-200/80 w-full py-2.5 rounded-xl text-slate-700 text-sm backdrop-blur-sm transition-all shadow-[0_12px_28px_rgba(148,163,184,0.12)]' : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-indigo-500/30 hover:shadow-[0_0_20px_-5px_rgba(99,102,241,0.3)] w-full py-2.5 rounded-xl text-white text-sm backdrop-blur-sm transition-all shadow-lg'}`}
                                     />
                                 )}
                             </div>

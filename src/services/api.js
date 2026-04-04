@@ -41,7 +41,9 @@ api.interceptors.response.use(
         return api(config);
     }
 
-    console.error('API Error:', error.response ? error.response.data : error.message);
+    if (!config?.silent) {
+      console.error('API Error:', error.response ? error.response.data : error.message);
+    }
     return Promise.reject(error);
   }
 );

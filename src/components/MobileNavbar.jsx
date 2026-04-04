@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Image, Music, Film, Grid3X3, X, Calendar, FileText, Info, UserCircle, LogIn } from 'lucide-react';
+import { Home, Image, Music, Film, Grid3X3, X, Calendar, FileText, Info, UserCircle, LogIn, Sun, Moon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useBackClose } from '../hooks/useBackClose';
 import { useReducedMotion } from '../utils/animations';
+import { useSettings } from '../context/SettingsContext';
 
 import AuthModal from './AuthModal';
 
@@ -13,9 +14,11 @@ const MobileNavbar = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const { user } = useAuth();
+  const { uiMode, changeUiMode } = useSettings();
   const prefersReducedMotion = useReducedMotion();
   const [showMenu, setShowMenu] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const isDayMode = uiMode === 'day';
   
   const { onNavigate } = useBackClose(showMenu, () => setShowMenu(false));
   useBackClose(showAuthModal, () => setShowAuthModal(false));
@@ -32,7 +35,7 @@ const MobileNavbar = () => {
     { key: 'music', path: '/music', icon: Music },
     { key: 'videos', path: '/videos', icon: Film },
     { key: 'articles', path: '/articles', icon: FileText },
-    ...(user ? [{ key: 'profile', path: `/user/${user.id}`, icon: UserCircle }] : [{ key: 'login', action: 'login', icon: LogIn }])
+    ...(user ? [{ key: 'profile', path: `/public-profile/${user.id}`, icon: UserCircle }] : [{ key: 'login', action: 'login', icon: LogIn }])
   ];
 
   const handleAction = (action) => {
@@ -52,7 +55,7 @@ const MobileNavbar = () => {
 
   return (
     <>
-      <nav className="fixed left-3 right-3 bottom-[max(env(safe-area-inset-bottom),12px)] sm:left-4 sm:right-4 z-[100] bg-[#1a1a1a]/80 backdrop-blur-2xl border border-white/10 rounded-2xl md:hidden app-select-none shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+      <nav className={`fixed left-3 right-3 bottom-[max(env(safe-area-inset-bottom),12px)] sm:left-4 sm:right-4 z-[100] backdrop-blur-2xl border rounded-2xl md:hidden app-select-none ${isDayMode ? 'bg-white/85 border-slate-200/80 shadow-[0_12px_28px_rgba(148,163,184,0.2)]' : 'bg-[#1a1a1a]/80 border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)]'}`}>
         <div className="flex justify-around items-center h-16 px-2">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
@@ -63,7 +66,7 @@ const MobileNavbar = () => {
                   <button
                     key={item.key}
                     onClick={() => handleAction(item.action)}
-                    className={`relative flex flex-col items-center justify-center w-full h-full transition-colors ${showMenu && item.action === 'menu' ? 'text-white' : 'text-gray-400 hover:text-white'}`}
+                    className={`relative flex flex-col items-center justify-center w-full h-full transition-colors ${showMenu && item.action === 'menu' ? (isDayMode ? 'text-slate-900' : 'text-white') : (isDayMode ? 'text-slate-500 hover:text-slate-900' : 'text-gray-400 hover:text-white')}`}
                   >
                     <motion.div
                       whileTap={prefersReducedMotion ? undefined : { scale: 0.85 }}
@@ -86,7 +89,7 @@ const MobileNavbar = () => {
                 to={item.path}
                 onClick={handleNavClick}
                 className={`relative flex flex-col items-center justify-center w-full h-full transition-colors ${
-                  isActive && !showMenu ? 'text-white' : 'text-gray-400 hover:text-white'
+                  isActive && !showMenu ? (isDayMode ? 'text-slate-900' : 'text-white') : (isDayMode ? 'text-slate-500 hover:text-slate-900' : 'text-gray-400 hover:text-white')
                 }`}
               >
                 <motion.div
@@ -122,22 +125,31 @@ const MobileNavbar = () => {
                     }
                 }}
                 transition={prefersReducedMotion ? undefined : { type: "spring", damping: 30, stiffness: 400 }}
-                className="fixed inset-0 z-[100] bg-[#0a0a0a]/80 backdrop-blur-xl md:hidden flex flex-col touch-none"
+                className={`fixed inset-0 z-[100] backdrop-blur-xl md:hidden flex flex-col touch-none ${isDayMode ? 'bg-[#f8fafc]/92' : 'bg-[#0a0a0a]/80'}`}
             >
                 {/* Drag Handle */}
                 <div className="w-full flex justify-center pt-3 pb-1" onClick={() => setShowMenu(false)}>
-                    <div className="w-12 h-1.5 bg-white/20 rounded-full" />
+                    <div className={`w-12 h-1.5 rounded-full ${isDayMode ? 'bg-slate-300/80' : 'bg-white/20'}`} />
                 </div>
                 
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 pt-[max(env(safe-area-inset-top),24px)] pb-6 border-b border-white/10 bg-black/20 backdrop-blur-3xl">
-                    <h2 className="text-2xl font-bold text-white">{t('nav.more', 'Menu')}</h2>
-                    <button 
-                        onClick={() => setShowMenu(false)}
-                        className="p-2 bg-white/10 rounded-full text-white hover:bg-white/20"
-                    >
-                        <X size={24} />
-                    </button>
+                <div className={`flex items-center justify-between px-6 pt-[max(env(safe-area-inset-top),24px)] pb-6 border-b backdrop-blur-3xl ${isDayMode ? 'border-slate-200/80 bg-white/70' : 'border-white/10 bg-black/20'}`}>
+                    <h2 className={`text-2xl font-bold ${isDayMode ? 'text-slate-900' : 'text-white'}`}>{t('nav.more', 'Menu')}</h2>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => changeUiMode(isDayMode ? 'dark' : 'day')}
+                        className={`p-2 rounded-full transition-colors ${isDayMode ? 'bg-amber-100 text-amber-500' : 'bg-white/10 text-yellow-300'}`}
+                        title={t(isDayMode ? 'nav.night_mode' : 'nav.day_mode')}
+                      >
+                        {isDayMode ? <Moon size={20} /> : <Sun size={20} />}
+                      </button>
+                      <button 
+                          onClick={() => setShowMenu(false)}
+                          className={`p-2 rounded-full transition-colors ${isDayMode ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                      >
+                          <X size={24} />
+                      </button>
+                    </div>
                 </div>
 
                 {/* Grid Menu */}
