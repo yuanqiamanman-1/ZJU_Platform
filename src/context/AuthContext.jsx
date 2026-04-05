@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import api from '../services/api';
-import toast from 'react-hot-toast';
+import { showSuccess, showError } from '../utils/notify';
+import errorMonitor from '../utils/errorMonitor';
 import { useTranslation } from 'react-i18next';
 
 const AuthContext = createContext();
@@ -45,11 +46,12 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(user);
-      toast.success(t('auth.welcome_back_user', { username: user.username }));
+      errorMonitor.setUser(user);
+      showSuccess(t('auth.welcome_back_user', { username: user.username }));
       return true;
     } catch (err) {
-      // 错误已在 API 拦截器中处理
-      toast.error(getAuthErrorMessage(err, 'auth.login_failed'));
+      errorMonitor.report(err, { action: 'login', username });
+      showError(getAuthErrorMessage(err, 'auth.login_failed'));
       return false;
     }
   };
@@ -61,11 +63,12 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(user);
-      toast.success(t('auth.welcome_user', { username: user.username }));
+      errorMonitor.setUser(user);
+      showSuccess(t('auth.welcome_user', { username: user.username }));
       return true;
     } catch (err) {
-      // 错误已在 API 拦截器中处理
-      toast.error(getAuthErrorMessage(err, 'auth.registration_failed'));
+      errorMonitor.report(err, { action: 'register', username });
+      showError(getAuthErrorMessage(err, 'auth.registration_failed'));
       return false;
     }
   };
@@ -74,7 +77,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     delete api.defaults.headers.common['Authorization'];
     setUser(null);
-    toast.success(t('auth.logout_success'));
+    errorMonitor.setUser(null);
+    showSuccess(t('auth.logout_success'));
   };
 
   const refreshUser = async () => {

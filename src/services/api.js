@@ -1,4 +1,5 @@
 import axios from 'axios';
+import errorMonitor from '../utils/errorMonitor';
 
 // Create an axios instance
 // We use a relative path '/api' which Vite will proxy to the backend
@@ -41,15 +42,23 @@ api.interceptors.response.use(
         return api(config);
     }
 
-    // 仅在生产环境且非静默模式下记录错误
-    if (!config?.silent && process.env.NODE_ENV === 'development') {
-      // 开发环境下记录详细错误信息用于调试
-      console.error('[API Error]', {
+    // 报告错误到监控系统
+    if (!config?.silent) {
+      errorMonitor.report(error, {
         url: error.config?.url,
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message
+        method: error.config?.method,
+        status: error.response?.status
       });
+      
+      // 开发环境下记录详细错误信息用于调试
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[API Error]', {
+          url: error.config?.url,
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+      }
     }
     
     return Promise.reject(error);

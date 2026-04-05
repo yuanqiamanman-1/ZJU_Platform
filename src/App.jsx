@@ -13,6 +13,8 @@ import { usePerformanceMonitor } from './hooks/usePerformanceMonitor';
 import { useServiceWorker } from './hooks/useServiceWorker';
 import api from './services/api';
 import SEO from './components/SEO';
+import errorMonitor from './utils/errorMonitor';
+import performanceMonitor from './utils/performanceMonitor';
 
 import Navbar from './components/Navbar';
 import ScrollToTop from './components/ScrollToTop';

@@ -1,457 +1,253 @@
 /**
- * Accessibility Utilities
- * ARIA labels, keyboard navigation, focus management, screen reader support
+ * 可访问性工具函数
+ * 提升网站的无障碍体验
  */
 
-import React, { useEffect, useRef, useCallback, useState } from 'react';
+/**
+ * 管理焦点
+ */
 
-// ============================================
-// ARIA Labels and Roles
-// ============================================
-
-export const ariaLabels = {
-  // Navigation
-  mainNav: '主导航',
-  breadcrumb: '面包屑导航',
-  skipLink: '跳转到主要内容',
+/**
+ * 将焦点设置到指定元素
+ * @param {HTMLElement} element - 目标元素
+ */
+export const focusElement = (element) => {
+  if (!element) return;
   
-  // Actions
-  close: '关闭',
-  open: '打开',
-  expand: '展开',
-  collapse: '折叠',
-  submit: '提交',
-  cancel: '取消',
-  delete: '删除',
-  edit: '编辑',
-  save: '保存',
-  search: '搜索',
-  filter: '筛选',
-  sort: '排序',
+  element.focus();
   
-  // Media
-  play: '播放',
-  pause: '暂停',
-  mute: '静音',
-  unmute: '取消静音',
-  fullscreen: '全屏',
-  exitFullscreen: '退出全屏',
-  
-  // Gallery
-  previousImage: '上一张图片',
-  nextImage: '下一张图片',
-  zoomIn: '放大',
-  zoomOut: '缩小',
-  favorite: '收藏',
-  unfavorite: '取消收藏',
-  
-  // Upload
-  uploadImage: '上传图片',
-  uploadVideo: '上传视频',
-  dragDrop: '拖放文件到此处',
-  
-  // Form
-  required: '必填项',
-  optional: '选填项',
-  error: '错误',
-  success: '成功',
-  loading: '加载中'
-};
-
-// ============================================
-// Keyboard Navigation
-// ============================================
-
-export const keyCodes = {
-  ENTER: 'Enter',
-  SPACE: ' ',
-  ESCAPE: 'Escape',
-  TAB: 'Tab',
-  ARROW_UP: 'ArrowUp',
-  ARROW_DOWN: 'ArrowDown',
-  ARROW_LEFT: 'ArrowLeft',
-  ARROW_RIGHT: 'ArrowRight',
-  HOME: 'Home',
-  END: 'End',
-  PAGE_UP: 'PageUp',
-  PAGE_DOWN: 'PageDown'
+  // 如果是可点击元素，添加可见的焦点样式
+  if (element.tabIndex >= 0) {
+    element.classList.add('focus-visible:outline-none', 'focus-visible:ring-2', 'focus-visible:ring-indigo-500');
+  }
 };
 
 /**
- * Handle keyboard navigation for lists
+ * 将焦点设置到第一个可聚焦元素
+ * @param {HTMLElement} container - 容器元素
  */
-export const useListKeyboardNavigation = (itemCount, onSelect) => {
-  const [focusedIndex, setFocusedIndex] = useState(-1);
-  const containerRef = useRef(null);
-
-  const handleKeyDown = useCallback((event) => {
-    switch (event.key) {
-      case keyCodes.ARROW_DOWN:
-        event.preventDefault();
-        setFocusedIndex(prev => (prev + 1) % itemCount);
-        break;
-      case keyCodes.ARROW_UP:
-        event.preventDefault();
-        setFocusedIndex(prev => (prev - 1 + itemCount) % itemCount);
-        break;
-      case keyCodes.HOME:
-        event.preventDefault();
-        setFocusedIndex(0);
-        break;
-      case keyCodes.END:
-        event.preventDefault();
-        setFocusedIndex(itemCount - 1);
-        break;
-      case keyCodes.ENTER:
-      case keyCodes.SPACE:
-        event.preventDefault();
-        if (focusedIndex >= 0) {
-          onSelect?.(focusedIndex);
-        }
-        break;
-      default:
-        break;
-    }
-  }, [itemCount, focusedIndex, onSelect]);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener('keydown', handleKeyDown);
-      return () => container.removeEventListener('keydown', handleKeyDown);
-    }
-  }, [handleKeyDown]);
-
-  useEffect(() => {
-    if (focusedIndex >= 0 && containerRef.current) {
-      const items = containerRef.current.querySelectorAll('[role="listitem"]');
-      items[focusedIndex]?.focus();
-    }
-  }, [focusedIndex]);
-
-  return { containerRef, focusedIndex, setFocusedIndex };
+export const focusFirstElement = (container) => {
+  if (!container) return;
+  
+  const focusableElements = container.querySelectorAll(
+    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+  );
+  
+  if (focusableElements.length > 0) {
+    focusableElements[0].focus();
+  }
 };
 
-// ============================================
-// Focus Management
-// ============================================
+/**
+ * 将焦点设置到最后一个可聚焦元素
+ * @param {HTMLElement} container - 容器元素
+ */
+export const focusLastElement = (container) => {
+  if (!container) return;
+  
+  const focusableElements = container.querySelectorAll(
+    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+  );
+  
+  if (focusableElements.length > 0) {
+    focusableElements[focusableElements.length - 1].focus();
+  }
+};
 
 /**
- * Trap focus within a modal or dialog
+ * 陷阱焦点在容器内（用于模态框）
+ * @param {HTMLElement} container - 容器元素
+ * @returns {Function} 清理函数
  */
-export const useFocusTrap = (isActive) => {
-  const containerRef = useRef(null);
-  const previousFocusRef = useRef(null);
-
-  useEffect(() => {
-    if (isActive) {
-      // Store current focus
-      previousFocusRef.current = document.activeElement;
-      
-      // Focus first focusable element
-      const container = containerRef.current;
-      if (container) {
-        const focusableElements = container.querySelectorAll(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        
-        if (focusableElements.length > 0) {
-          focusableElements[0].focus();
-        }
-      }
-
-      // Restore focus on unmount
-      return () => {
-        previousFocusRef.current?.focus();
-      };
-    }
-  }, [isActive]);
-
-  const handleTabKey = useCallback((event) => {
-    if (event.key !== keyCodes.TAB) return;
-
-    const container = containerRef.current;
-    if (!container) return;
-
-    const focusableElements = container.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
+export const trapFocus = (container) => {
+  if (!container) return () => {};
+  
+  const focusableElements = container.querySelectorAll(
+    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+  );
+  
+  const firstElement = focusableElements[0];
+  const lastElement = focusableElements[focusableElements.length - 1];
+  
+  const handleKeyDown = (e) => {
+    if (e.key !== 'Tab') return;
     
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
-
-    if (event.shiftKey) {
+    if (e.shiftKey) {
       if (document.activeElement === firstElement) {
-        event.preventDefault();
+        e.preventDefault();
         lastElement.focus();
       }
     } else {
       if (document.activeElement === lastElement) {
-        event.preventDefault();
+        e.preventDefault();
         firstElement.focus();
       }
     }
-  }, []);
-
-  useEffect(() => {
-    if (isActive) {
-      document.addEventListener('keydown', handleTabKey);
-      return () => document.removeEventListener('keydown', handleTabKey);
-    }
-  }, [isActive, handleTabKey]);
-
-  return containerRef;
+  };
+  
+  container.addEventListener('keydown', handleKeyDown);
+  
+  // 初始聚焦到第一个元素
+  firstElement?.focus();
+  
+  return () => {
+    container.removeEventListener('keydown', handleKeyDown);
+  };
 };
 
 /**
- * Announce changes to screen readers
+ * 生成唯一的 ID（用于 ARIA 标签）
  */
-export const useAnnouncer = () => {
-  const announce = useCallback((message, priority = 'polite') => {
-    const announcer = document.createElement('div');
-    announcer.setAttribute('role', 'status');
-    announcer.setAttribute('aria-live', priority);
-    announcer.setAttribute('aria-atomic', 'true');
-    announcer.className = 'sr-only';
-    announcer.textContent = message;
-    
-    document.body.appendChild(announcer);
-    
-    setTimeout(() => {
-      document.body.removeChild(announcer);
-    }, 1000);
-  }, []);
-
-  return announce;
+let idCounter = 0;
+export const generateId = (prefix = 'id') => {
+  return `${prefix}-${++idCounter}`;
 };
 
-// ============================================
-// Skip Links
-// ============================================
-
-export const SkipLink = ({ targetId, children = '跳转到主要内容' }) => {
-  const handleClick = (e) => {
-    e.preventDefault();
-    const target = document.getElementById(targetId);
-    if (target) {
-      target.focus();
-      target.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
+/**
+ * 检查元素是否可见
+ * @param {HTMLElement} element - 要检查的元素
+ * @returns {boolean} 是否可见
+ */
+export const isElementVisible = (element) => {
+  if (!element) return false;
+  
+  const style = window.getComputedStyle(element);
   return (
-    <a
-      href={`#${targetId}`}
-      onClick={handleClick}
-      className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 
-                 bg-indigo-600 text-white px-4 py-2 rounded-lg z-50"
-    >
-      {children}
-    </a>
+    style.display !== 'none' &&
+    style.visibility !== 'hidden' &&
+    style.opacity !== '0' &&
+    element.offsetParent !== null
   );
 };
 
-// ============================================
-// High Contrast Mode Detection
-// ============================================
-
-export const useHighContrast = () => {
-  const [isHighContrast, setIsHighContrast] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-contrast: high)');
-    setIsHighContrast(mediaQuery.matches);
-
-    const handleChange = (e) => {
-      setIsHighContrast(e.matches);
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-
-  return isHighContrast;
-};
-
-// ============================================
-// Reduced Motion
-// ============================================
-
-export const usePrefersReducedMotion = () => {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mediaQuery.matches);
-
-    const handleChange = (e) => {
-      setPrefersReducedMotion(e.matches);
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-
-  return prefersReducedMotion;
-};
-
-// ============================================
-// Color Contrast Utilities
-// ============================================
-
 /**
- * Calculate relative luminance of a color
+ * 为屏幕阅读器创建实时区域
+ * @param {string} message - 要宣布的消息
+ * @param {string} priority - 'polite' 或 'assertive'
  */
-export const getLuminance = (r, g, b) => {
-  const [rs, gs, bs] = [r, g, b].map(val => {
-    val = val / 255;
-    return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
-  });
-  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+export const announceToScreenReader = (message, priority = 'polite') => {
+  const announcement = document.createElement('div');
+  announcement.setAttribute('role', 'status');
+  announcement.setAttribute('aria-live', priority);
+  announcement.setAttribute('aria-atomic', 'true');
+  announcement.className = 'sr-only';
+  announcement.textContent = message;
+  
+  document.body.appendChild(announcement);
+  
+  // 清理
+  setTimeout(() => {
+    document.body.removeChild(announcement);
+  }, 1000);
 };
 
 /**
- * Calculate contrast ratio between two colors
+ * 键盘导航工具
+ */
+
+/**
+ * 处理键盘导航
+ * @param {KeyboardEvent} e - 键盘事件
+ * @param {Object} handlers - 处理函数对象
+ */
+export const handleKeyboardNavigation = (e, handlers = {}) => {
+  const keyHandlers = {
+    Enter: handlers.onEnter,
+    Space: handlers.onSpace,
+    Escape: handlers.onEscape,
+    Tab: handlers.onTab,
+    ArrowUp: handlers.onArrowUp,
+    ArrowDown: handlers.onArrowDown,
+    ArrowLeft: handlers.onArrowLeft,
+    ArrowRight: handlers.onArrowRight,
+    Home: handlers.onHome,
+    End: handlers.onEnd,
+    ...handlers
+  };
+  
+  const handler = keyHandlers[e.key] || keyHandlers[e.code];
+  if (handler) {
+    e.preventDefault();
+    handler(e);
+  }
+};
+
+/**
+ * 创建可访问的按钮
+ * @param {React.ReactNode} children - 按钮内容
+ * @param {Object} props - 按钮属性
+ * @returns {Object} 可访问的按钮属性
+ */
+export const getAccessibleButtonProps = (props = {}) => ({
+  role: 'button',
+  tabIndex: 0,
+  'aria-pressed': props['aria-pressed'],
+  'aria-disabled': props['aria-disabled'],
+  'aria-label': props['aria-label'],
+  'aria-labelledby': props['aria-labelledby'],
+  ...props
+});
+
+/**
+ * 颜色对比度工具
+ */
+
+/**
+ * 计算颜色对比度
+ * @param {string} color1 - 第一个颜色（hex）
+ * @param {string} color2 - 第二个颜色（hex）
+ * @returns {number} 对比度比率
  */
 export const getContrastRatio = (color1, color2) => {
-  const lum1 = getLuminance(...color1);
-  const lum2 = getLuminance(...color2);
-  const brightest = Math.max(lum1, lum2);
-  const darkest = Math.min(lum1, lum2);
-  return (brightest + 0.05) / (darkest + 0.05);
+  const getLuminance = (hex) => {
+    const rgb = parseInt(hex.slice(1), 16);
+    const r = ((rgb >> 16) & 0xff) / 255;
+    const g = ((rgb >> 8) & 0xff) / 255;
+    const b = (rgb & 0xff) / 255;
+    
+    const a = [r, g, b].map((v) => {
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    
+    return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+  };
+  
+  const l1 = getLuminance(color1);
+  const l2 = getLuminance(color2);
+  
+  return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
 };
 
 /**
- * Check if color combination meets WCAG standards
+ * 检查颜色对比度是否符合 WCAG 标准
+ * @param {string} color1 - 第一个颜色
+ * @param {string} color2 - 第二个颜色
+ * @param {string} level - 'AA' 或 'AAA'
+ * @returns {boolean} 是否符合标准
  */
-export const meetsWCAG = (foreground, background, level = 'AA') => {
-  const ratio = getContrastRatio(foreground, background);
-  const thresholds = {
-    'AA': { normal: 4.5, large: 3 },
-    'AAA': { normal: 7, large: 4.5 }
+export const meetsContrastRequirements = (color1, color2, level = 'AA') => {
+  const ratio = getContrastRatio(color1, color2);
+  
+  const requirements = {
+    AA: 4.5, // 普通文本
+    AAA: 7, // 增强对比度
+    'AA-large': 3, // 大文本
+    'AAA-large': 4.5 // 大文本增强
   };
-  return ratio >= thresholds[level].normal;
-};
-
-// ============================================
-// Focus Visible
-// ============================================
-
-export const useFocusVisible = () => {
-  const [isFocusVisible, setIsFocusVisible] = useState(false);
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Tab') {
-        setIsFocusVisible(true);
-      }
-    };
-
-    const handleMouseDown = () => {
-      setIsFocusVisible(false);
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('mousedown', handleMouseDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('mousedown', handleMouseDown);
-    };
-  }, []);
-
-  return isFocusVisible;
-};
-
-// ============================================
-// Screen Reader Only Text
-// ============================================
-
-export const VisuallyHidden = ({ children, ...props }) => {
-  return (
-    <span
-      className="absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0"
-      style={{
-        clip: 'rect(0, 0, 0, 0)',
-        clipPath: 'inset(50%)'
-      }}
-      {...props}
-    >
-      {children}
-    </span>
-  );
-};
-
-// ============================================
-// Accessible Button
-// ============================================
-
-export const AccessibleButton = ({
-  children,
-  onClick,
-  ariaLabel,
-  ariaPressed,
-  ariaExpanded,
-  disabled,
-  className = '',
-  ...props
-}) => {
-  const handleKeyDown = (e) => {
-    if (e.key === keyCodes.ENTER || e.key === keyCodes.SPACE) {
-      e.preventDefault();
-      onClick?.(e);
-    }
-  };
-
-  return (
-    <button
-      onClick={onClick}
-      onKeyDown={handleKeyDown}
-      aria-label={ariaLabel}
-      aria-pressed={ariaPressed}
-      aria-expanded={ariaExpanded}
-      disabled={disabled}
-      className={`focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 
-                  focus-visible:ring-offset-2 ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-};
-
-// ============================================
-// Live Region
-// ============================================
-
-export const LiveRegion = ({ id, ariaLive = 'polite', children }) => {
-  return (
-    <div
-      id={id}
-      role="status"
-      aria-live={ariaLive}
-      aria-atomic="true"
-      className="sr-only"
-    >
-      {children}
-    </div>
-  );
+  
+  return ratio >= requirements[level];
 };
 
 export default {
-  ariaLabels,
-  keyCodes,
-  useListKeyboardNavigation,
-  useFocusTrap,
-  useAnnouncer,
-  SkipLink,
-  useHighContrast,
-  usePrefersReducedMotion,
-  getLuminance,
+  focusElement,
+  focusFirstElement,
+  focusLastElement,
+  trapFocus,
+  generateId,
+  isElementVisible,
+  announceToScreenReader,
+  handleKeyboardNavigation,
+  getAccessibleButtonProps,
   getContrastRatio,
-  meetsWCAG,
-  useFocusVisible,
-  VisuallyHidden,
-  AccessibleButton,
-  LiveRegion
+  meetsContrastRequirements
 };
