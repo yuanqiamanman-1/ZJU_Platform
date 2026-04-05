@@ -24,6 +24,7 @@ import PWAInstallPrompt from './components/PWAInstallPrompt';
 import MobileNavbar from './components/MobileNavbar';
 import Footer from './components/Footer';
 import LoadingScreen from './components/LoadingScreen';
+import PerformancePanel from './components/PerformancePanel';
 
 // Lazy load page components
 const Hero = lazy(() => import('./components/Hero'));
@@ -245,6 +246,7 @@ const AppContent = () => {
       {!isAdminRoute && <MobileNavbar />}
       <ScrollToTop />
       <PWAInstallPrompt />
+      <PerformancePanel />
     </div>
   );
 };
