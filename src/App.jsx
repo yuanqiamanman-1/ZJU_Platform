@@ -62,7 +62,12 @@ const useDeferredMount = (delay = 0) => {
 
 const PageTransition = ({ children }) => {
   // Check if we are on a mobile device to disable heavy filters
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  // Use useState to avoid hydration mismatch
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+  }, []);
   
   return (
     <motion.div

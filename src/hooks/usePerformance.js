@@ -357,7 +357,9 @@ export const useInteractionTiming = () => {
     if (startTime.current) {
       const duration = performance.now() - startTime.current;
       
-      console.log(`[Performance] ${label}: ${duration.toFixed(2)}ms`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[Performance] ${label}: ${duration.toFixed(2)}ms`);
+      }
       
       errorReporter.addBreadcrumb({
         type: 'performance',

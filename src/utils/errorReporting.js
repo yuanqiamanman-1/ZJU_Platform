@@ -250,9 +250,11 @@ class ErrorReporter {
    * Send event to endpoint
    */
   sendEvent(event) {
-    // If no endpoint configured, just log to console
+    // If no endpoint configured, just log to console in development
     if (!this.config.endpoint) {
-      console.log('[ErrorReporter] Event:', event);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[ErrorReporter] Event:', event);
+      }
       return;
     }
     

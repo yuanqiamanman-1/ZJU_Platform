@@ -16,7 +16,9 @@ export const useServiceWorker = () => {
           scope: '/',
         });
 
-        console.log('[SW] Service Worker 注册成功:', registration.scope);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[SW] Service Worker 注册成功:', registration.scope);
+        }
 
         // 检查更新
         registration.addEventListener('updatefound', () => {
@@ -26,8 +28,9 @@ export const useServiceWorker = () => {
 
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // 有新版本可用
-              console.log('[SW] 新版本可用，刷新后生效');
+              if (process.env.NODE_ENV === 'development') {
+                console.log('[SW] 新版本可用，刷新后生效');
+              }
               
               // 可以在这里显示更新提示
               if (window.confirm('有新版本可用，是否刷新？')) {
@@ -51,7 +54,9 @@ export const useServiceWorker = () => {
 export const useNetworkStatus = () => {
   useEffect(() => {
     const handleOnline = () => {
-      console.log('[Network] 网络已连接');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Network] 网络已连接');
+      }
       // 可以在这里触发后台同步
       if ('serviceWorker' in navigator && 'sync' in window.registration) {
         navigator.serviceWorker.ready.then((registration) => {
@@ -61,7 +66,9 @@ export const useNetworkStatus = () => {
     };
 
     const handleOffline = () => {
-      console.log('[Network] 网络已断开');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Network] 网络已断开');
+      }
       // 可以在这里显示离线提示
     };
 
